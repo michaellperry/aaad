@@ -1,0 +1,79 @@
+import type {
+  LoginResponse,
+  UserInfo,
+  TenantDto,
+  CreateTenantDto,
+} from '../types/api';
+
+const API_BASE_URL = '';
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API Error: ${response.status} - ${errorText}`);
+  }
+  return response.json();
+}
+
+export async function login(
+  username: string,
+  password: string
+): Promise<LoginResponse> {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ username, password }),
+  });
+  return handleResponse<LoginResponse>(response);
+}
+
+export async function logout(): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!response.ok) {
+    throw new Error(`Logout failed: ${response.status}`);
+  }
+}
+
+export async function getCurrentUser(): Promise<UserInfo> {
+  const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<UserInfo>(response);
+}
+
+export async function getTenants(): Promise<TenantDto[]> {
+  const response = await fetch(`${API_BASE_URL}/api/tenants`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<TenantDto[]>(response);
+}
+
+export async function getTenant(id: number): Promise<TenantDto> {
+  const response = await fetch(`${API_BASE_URL}/api/tenants/${id}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<TenantDto>(response);
+}
+
+export async function createTenant(
+  dto: CreateTenantDto
+): Promise<TenantDto> {
+  const response = await fetch(`${API_BASE_URL}/api/tenants`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(dto),
+  });
+  return handleResponse<TenantDto>(response);
+}
