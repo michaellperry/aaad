@@ -33,6 +33,48 @@ Before you begin, ensure you have the following installed:
 - **Visual Studio 2022** (Community, Professional, or Enterprise)
 - **JetBrains Rider**
 
+## Choosing Your Development Scripts
+
+This project includes developer scripts to simplify common tasks. Both PowerShell and Bash versions are available with identical functionality.
+
+### Script Options Overview
+
+- **PowerShell scripts** (`scripts/powershell/*.ps1`): Work on Windows, Mac, and Linux (requires PowerShell Core)
+- **Bash scripts** (`scripts/bash/*.sh`): Work on Mac, Linux, and Windows (via WSL or Git Bash)
+
+Both sets provide identical functionality - choose the one that works best for your environment.
+
+### Installation Requirements
+
+**PowerShell:**
+- Verify installation: `pwsh --version`
+- If not installed:
+  - Windows: Download from [PowerShell GitHub](https://github.com/PowerShell/PowerShell/releases)
+  - Mac: `brew install --cask powershell`
+  - Linux: Follow [installation guide](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux)
+
+**Bash:**
+- Usually pre-installed on Mac/Linux
+- Windows: Use Git Bash (included with Git) or WSL
+
+### Usage Examples
+
+**PowerShell:**
+```powershell
+# From project root
+pwsh scripts/powershell/db-update.ps1
+pwsh scripts/powershell/db-migrate-add.ps1 -MigrationName "AddEventTable"
+```
+
+**Bash:**
+```bash
+# From project root
+./scripts/bash/db-update.sh
+./scripts/bash/db-migrate-add.sh AddEventTable
+```
+
+For complete script documentation, see [`scripts/README.md`](scripts/README.md).
+
 ## 🚀 Step-by-Step Setup
 
 ### Step 1: Clone the Repository
@@ -46,6 +88,16 @@ cd aaad
 
 The project uses SQL Server 2022 running in Docker.
 
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/docker-up.ps1
+
+# Bash
+./scripts/bash/docker-up.sh
+```
+
+**Or manually:**
 ```bash
 # Navigate to docker directory
 cd docker
@@ -55,6 +107,9 @@ docker compose up -d
 
 # Verify container is running and healthy
 docker compose ps
+
+# Return to project root
+cd ..
 ```
 
 **Expected output:**
@@ -66,6 +121,8 @@ globoticket-sqlserver   Up X minutes (healthy)
 **Wait for the container to become healthy** (indicated by the "healthy" status). This may take 30-60 seconds.
 
 ### Step 3: Return to Project Root
+
+If you used the manual Docker commands, return to the project root:
 
 ```bash
 cd ..
@@ -80,6 +137,16 @@ dotnet restore
 
 ### Step 5: Apply Database Migrations
 
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/db-update.ps1
+
+# Bash
+./scripts/bash/db-update.sh
+```
+
+**Or manually:**
 ```bash
 # Run EF Core migrations to create database schema
 dotnet ef database update --project src/GloboTicket.Infrastructure --startup-project src/GloboTicket.API
@@ -97,6 +164,16 @@ docker compose -f docker/docker-compose.yml exec sqlserver /opt/mssql-tools18/bi
 
 ### Step 6: Build the Solution
 
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/build.ps1
+
+# Bash
+./scripts/bash/build.sh
+```
+
+**Or manually:**
 ```bash
 # Build all projects
 dotnet build GloboTicket.sln
@@ -106,6 +183,16 @@ dotnet build GloboTicket.sln
 
 ### Step 7: Run Tests (Optional but Recommended)
 
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/test.ps1
+
+# Bash
+./scripts/bash/test.sh
+```
+
+**Or manually:**
 ```bash
 # Run all tests
 dotnet test --verbosity normal
@@ -120,6 +207,16 @@ dotnet test --verbosity normal
 
 ### Starting the API
 
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/run-api.ps1
+
+# Bash
+./scripts/bash/run-api.sh
+```
+
+**Or manually:**
 ```bash
 cd src/GloboTicket.API
 dotnet run
@@ -208,6 +305,16 @@ curl http://localhost:5028/api/tenants -b cookies.txt
 
 The React frontend is configured but requires implementation of components.
 
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/run-web.ps1
+
+# Bash
+./scripts/bash/run-web.sh
+```
+
+**Or manually:**
 ```bash
 # Navigate to frontend directory
 cd src/GloboTicket.Web
@@ -224,16 +331,49 @@ The frontend will be available at: `http://localhost:5173`
 ## 🧪 Running Tests
 
 ### Run All Tests
+
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/test.ps1
+
+# Bash
+./scripts/bash/test.sh
+```
+
+**Or manually:**
 ```bash
 dotnet test --verbosity normal
 ```
 
 ### Run Unit Tests Only
+
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/test-unit.ps1
+
+# Bash
+./scripts/bash/test-unit.sh
+```
+
+**Or manually:**
 ```bash
 dotnet test tests/GloboTicket.UnitTests --verbosity normal
 ```
 
 ### Run Integration Tests Only
+
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/test-integration.ps1
+
+# Bash
+./scripts/bash/test-integration.sh
+```
+
+**Or manually:**
 ```bash
 dotnet test tests/GloboTicket.IntegrationTests --verbosity normal
 ```
@@ -247,41 +387,158 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ### Create a New Migration
 
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/db-migrate-add.ps1 -MigrationName "MigrationName"
+
+# Bash
+./scripts/bash/db-migrate-add.sh MigrationName
+```
+
+**Or manually:**
 ```bash
 dotnet ef migrations add MigrationName \
   --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API
+  --startup-project src/GloboTicket.API \
+  --output-dir Data/Migrations
 ```
 
 ### Apply Migrations
 
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/db-update.ps1
+
+# Bash
+./scripts/bash/db-update.sh
+```
+
+**Or manually:**
 ```bash
 dotnet ef database update \
+  --project src/GloboTicket.Infrastructure \
+  --startup-project src/GloboTicket.API \
+  --connection "Server=localhost,1433;Database=GloboTicket;User Id=migration_user;Password=Migration@Pass123;TrustServerCertificate=True;Encrypt=True"
+```
+
+### List Migrations
+
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/db-migrate-list.ps1
+
+# Bash
+./scripts/bash/db-migrate-list.sh
+```
+
+**Or manually:**
+```bash
+dotnet ef migrations list \
   --project src/GloboTicket.Infrastructure \
   --startup-project src/GloboTicket.API
 ```
 
 ### Remove Last Migration
 
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/db-migrate-remove.ps1
+
+# Bash
+./scripts/bash/db-migrate-remove.sh
+```
+
+**Or manually:**
 ```bash
 dotnet ef migrations remove \
   --project src/GloboTicket.Infrastructure \
   --startup-project src/GloboTicket.API
 ```
 
+**Note:** This only works if the migration hasn't been applied to any database. If it has been applied, use `db-migrate-rollback` first.
+
+### Rollback to a Previous Migration
+
+**Using scripts (recommended):**
+```bash
+# PowerShell - rollback to specific migration
+pwsh scripts/powershell/db-migrate-rollback.ps1 -TargetMigration "PreviousMigrationName"
+
+# PowerShell - rollback all migrations
+pwsh scripts/powershell/db-migrate-rollback.ps1 -TargetMigration "0"
+
+# Bash - rollback to specific migration
+./scripts/bash/db-migrate-rollback.sh PreviousMigrationName
+
+# Bash - rollback all migrations
+./scripts/bash/db-migrate-rollback.sh 0
+```
+
+**Or manually:**
+```bash
+dotnet ef database update PreviousMigrationName \
+  --project src/GloboTicket.Infrastructure \
+  --startup-project src/GloboTicket.API \
+  --connection "Server=localhost,1433;Database=GloboTicket;User Id=migration_user;Password=Migration@Pass123;TrustServerCertificate=True;Encrypt=True"
+```
+
+### Delete a Migration (if not applied)
+
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/db-migrate-delete.ps1 -MigrationName "MigrationName"
+
+# Bash
+./scripts/bash/db-migrate-delete.sh MigrationName
+```
+
+**Or manually:**
+```bash
+# First check if migration is applied
+dotnet ef migrations list \
+  --project src/GloboTicket.Infrastructure \
+  --startup-project src/GloboTicket.API
+
+# If not applied (no * marker), remove it
+dotnet ef migrations remove \
+  --project src/GloboTicket.Infrastructure \
+  --startup-project src/GloboTicket.API
+```
+
+**Note:** The script automatically checks if the migration is applied and prevents deletion if it is.
+
 ### Reset Database
 
+**Using scripts (recommended):**
+```bash
+# PowerShell
+pwsh scripts/powershell/db-reset.ps1
+
+# Bash
+./scripts/bash/db-reset.sh
+```
+
+**Or manually:**
 ```bash
 # Drop database
 dotnet ef database drop --force \
   --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API
+  --startup-project src/GloboTicket.API \
+  --connection "Server=localhost,1433;Database=GloboTicket;User Id=migration_user;Password=Migration@Pass123;TrustServerCertificate=True;Encrypt=True"
 
 # Recreate with migrations
 dotnet ef database update \
   --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API
+  --startup-project src/GloboTicket.API \
+  --connection "Server=localhost,1433;Database=GloboTicket;User Id=migration_user;Password=Migration@Pass123;TrustServerCertificate=True;Encrypt=True"
 ```
+
+**Warning:** This will delete all data in the database!
 
 ### View Connection String
 
