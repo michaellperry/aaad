@@ -24,8 +24,7 @@ public static class TenantEndpoints
             var allTenants = await tenantService.GetAllTenantsAsync(cancellationToken);
             return Results.Ok(allTenants);
         })
-        .WithName("GetAllTenants")
-        .WithOpenApi();
+        .WithName("GetAllTenants");
 
         // GET /api/tenants/{id}
         tenants.MapGet("/{id:int}", async (int id, ITenantService tenantService, CancellationToken cancellationToken) =>
@@ -39,8 +38,7 @@ public static class TenantEndpoints
 
             return Results.Ok(tenant);
         })
-        .WithName("GetTenantById")
-        .WithOpenApi();
+        .WithName("GetTenantById");
 
         // POST /api/tenants
         tenants.MapPost("/", async (CreateTenantDto dto, ITenantService tenantService, CancellationToken cancellationToken) =>
@@ -48,8 +46,7 @@ public static class TenantEndpoints
             var tenant = await tenantService.CreateTenantAsync(dto, cancellationToken);
             return Results.Created($"/api/tenants/{tenant.Id}", tenant);
         })
-        .WithName("CreateTenant")
-        .WithOpenApi();
+        .WithName("CreateTenant");
 
         return app;
     }

@@ -97,21 +97,6 @@ pwsh scripts/powershell/docker-up.ps1
 ./scripts/bash/docker-up.sh
 ```
 
-**Or manually:**
-```bash
-# Navigate to docker directory
-cd docker
-
-# Start SQL Server container
-docker compose up -d
-
-# Verify container is running and healthy
-docker compose ps
-
-# Return to project root
-cd ..
-```
-
 **Expected output:**
 ```
 NAME                    STATUS
@@ -146,12 +131,6 @@ pwsh scripts/powershell/db-update.ps1
 ./scripts/bash/db-update.sh
 ```
 
-**Or manually:**
-```bash
-# Run EF Core migrations to create database schema
-dotnet ef database update --project src/GloboTicket.Infrastructure --startup-project src/GloboTicket.API
-```
-
 This will:
 - Create the `GloboTicket` database
 - Create the `Tenants` table
@@ -173,12 +152,6 @@ pwsh scripts/powershell/build.ps1
 ./scripts/bash/build.sh
 ```
 
-**Or manually:**
-```bash
-# Build all projects
-dotnet build GloboTicket.sln
-```
-
 **Expected output:** `Build succeeded in X.Xs`
 
 ### Step 7: Run Tests (Optional but Recommended)
@@ -190,12 +163,6 @@ pwsh scripts/powershell/test.ps1
 
 # Bash
 ./scripts/bash/test.sh
-```
-
-**Or manually:**
-```bash
-# Run all tests
-dotnet test --verbosity normal
 ```
 
 **Expected results:**
@@ -216,12 +183,6 @@ pwsh scripts/powershell/run-api.ps1
 ./scripts/bash/run-api.sh
 ```
 
-**Or manually:**
-```bash
-cd src/GloboTicket.API
-dotnet run
-```
-
 The API will start on: `http://localhost:5028`
 
 **You should see:**
@@ -236,33 +197,58 @@ Leave this terminal running and open a new terminal for testing.
 
 ### Testing the API
 
+The easiest way to test the API is using Swagger UI, which provides an interactive interface for exploring and testing all endpoints. Swagger UI is available in Development environment only.
+
+**Access Swagger UI:**
+Open your browser and navigate to `http://localhost:5028/swagger`. You'll see a visual interface listing all available API endpoints. Each endpoint can be expanded to view its details, parameters, and response schemas.
+
 #### 1. Health Check
-```bash
-curl http://localhost:5028/health
-```
+
+1. Find the `GET /health` endpoint in Swagger UI
+2. Click on it to expand the details
+3. Click the **"Try it out"** button
+4. Click **"Execute"**
+5. Review the response in the **"Responses"** section
 
 **Expected response:**
 ```json
-{"status":"healthy","timestamp":"2025-11-22T..."}
+{
+  "status": "healthy",
+  "timestamp": "2025-11-22T..."
+}
 ```
 
-#### 2. Login (Get Authentication Cookie)
-```bash
-curl -X POST http://localhost:5028/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"prod","password":"prod123"}' \
-  -c cookies.txt -v
-```
+#### 2. Login (Authenticate)
+
+1. Find the `POST /auth/login` endpoint
+2. Click to expand and then click **"Try it out"**
+3. In the **Request body** field, enter:
+   ```json
+   {
+     "username": "prod",
+     "password": "prod123"
+   }
+   ```
+4. Click **"Execute"**
+5. The browser will automatically store the authentication cookie for subsequent requests
 
 **Expected response:**
 ```json
-{"username":"prod","tenantId":1,"message":"Login successful"}
+{
+  "username": "prod",
+  "tenantId": 1,
+  "message": "Login successful"
+}
 ```
 
-#### 3. Get Tenants (Authenticated Request)
-```bash
-curl http://localhost:5028/api/tenants -b cookies.txt
-```
+**Note:** After logging in, the authentication cookie is automatically included in all subsequent requests made through Swagger UI. This allows you to test protected endpoints without additional authentication steps.
+
+#### 3. Get All Tenants (Authenticated Request)
+
+1. Find the `GET /api/tenants` endpoint
+2. Click to expand and then click **"Try it out"**
+3. Click **"Execute"**
+4. The request will automatically include the authentication cookie from the previous login
 
 **Expected response:**
 ```json
@@ -284,22 +270,70 @@ curl http://localhost:5028/api/tenants -b cookies.txt
 ]
 ```
 
-#### 4. Logout
-```bash
-curl -X POST http://localhost:5028/auth/logout -b cookies.txt
-```
+#### 4. Get Tenant by ID
+
+1. Find the `GET /api/tenants/{id}` endpoint
+2. Click to expand and then click **"Try it out"**
+3. Enter `1` in the **id** parameter field
+4. Click **"Execute"**
 
 **Expected response:**
 ```json
-{"message":"Logout successful"}
+{
+  "id": 1,
+  "name": "Production",
+  "slug": "production",
+  "isActive": true,
+  "createdAt": "2025-11-22T..."
+}
 ```
 
-#### 5. Verify Logout (Should Fail)
-```bash
-curl http://localhost:5028/api/tenants -b cookies.txt
+#### 5. Get Current User
+
+1. Find the `GET /auth/me` endpoint
+2. Click to expand and then click **"Try it out"**
+3. Click **"Execute"**
+
+**Expected response:**
+```json
+{
+  "username": "prod",
+  "tenantId": 1,
+  "isAuthenticated": true
+}
 ```
+
+#### 6. Logout
+
+1. Find the `POST /auth/logout` endpoint
+2. Click to expand and then click **"Try it out"**
+3. Click **"Execute"**
+
+**Expected response:**
+```json
+{
+  "message": "Logout successful"
+}
+```
+
+#### 7. Verify Logout (Should Fail)
+
+After logging out, try accessing a protected endpoint:
+
+1. Find the `GET /api/tenants` endpoint again
+2. Click **"Try it out"** and then **"Execute"**
+3. You should receive a **401 Unauthorized** response
 
 **Expected response:** HTTP 401 Unauthorized
+
+**Tip:** You can test with different users by logging in again with different credentials:
+- `{"username":"smoke","password":"smoke123"}` for the Smoke Test tenant (ID: 2)
+
+**Note:** Swagger UI is only available when running in Development environment. In Production, the Swagger UI endpoints are disabled for security.
+
+**Alternative: Command Line Testing**
+
+If you prefer using `curl` for testing, you can still use the command-line approach. The API endpoints work the same way regardless of how you call them.
 
 ### Starting the Frontend (Optional)
 
@@ -312,18 +346,6 @@ pwsh scripts/powershell/run-web.ps1
 
 # Bash
 ./scripts/bash/run-web.sh
-```
-
-**Or manually:**
-```bash
-# Navigate to frontend directory
-cd src/GloboTicket.Web
-
-# Install dependencies (first time only)
-npm install
-
-# Start development server
-npm run dev
 ```
 
 The frontend will be available at: `http://localhost:5173`
@@ -341,11 +363,6 @@ pwsh scripts/powershell/test.ps1
 ./scripts/bash/test.sh
 ```
 
-**Or manually:**
-```bash
-dotnet test --verbosity normal
-```
-
 ### Run Unit Tests Only
 
 **Using scripts (recommended):**
@@ -357,11 +374,6 @@ pwsh scripts/powershell/test-unit.ps1
 ./scripts/bash/test-unit.sh
 ```
 
-**Or manually:**
-```bash
-dotnet test tests/GloboTicket.UnitTests --verbosity normal
-```
-
 ### Run Integration Tests Only
 
 **Using scripts (recommended):**
@@ -371,11 +383,6 @@ pwsh scripts/powershell/test-integration.ps1
 
 # Bash
 ./scripts/bash/test-integration.sh
-```
-
-**Or manually:**
-```bash
-dotnet test tests/GloboTicket.IntegrationTests --verbosity normal
 ```
 
 ### Run Tests with Coverage (Optional)
@@ -396,14 +403,6 @@ pwsh scripts/powershell/db-migrate-add.ps1 -MigrationName "MigrationName"
 ./scripts/bash/db-migrate-add.sh MigrationName
 ```
 
-**Or manually:**
-```bash
-dotnet ef migrations add MigrationName \
-  --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API \
-  --output-dir Data/Migrations
-```
-
 ### Apply Migrations
 
 **Using scripts (recommended):**
@@ -413,14 +412,6 @@ pwsh scripts/powershell/db-update.ps1
 
 # Bash
 ./scripts/bash/db-update.sh
-```
-
-**Or manually:**
-```bash
-dotnet ef database update \
-  --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API \
-  --connection "Server=localhost,1433;Database=GloboTicket;User Id=migration_user;Password=Migration@Pass123;TrustServerCertificate=True;Encrypt=True"
 ```
 
 ### List Migrations
@@ -434,13 +425,6 @@ pwsh scripts/powershell/db-migrate-list.ps1
 ./scripts/bash/db-migrate-list.sh
 ```
 
-**Or manually:**
-```bash
-dotnet ef migrations list \
-  --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API
-```
-
 ### Remove Last Migration
 
 **Using scripts (recommended):**
@@ -450,13 +434,6 @@ pwsh scripts/powershell/db-migrate-remove.ps1
 
 # Bash
 ./scripts/bash/db-migrate-remove.sh
-```
-
-**Or manually:**
-```bash
-dotnet ef migrations remove \
-  --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API
 ```
 
 **Note:** This only works if the migration hasn't been applied to any database. If it has been applied, use `db-migrate-rollback` first.
@@ -478,14 +455,6 @@ pwsh scripts/powershell/db-migrate-rollback.ps1 -TargetMigration "0"
 ./scripts/bash/db-migrate-rollback.sh 0
 ```
 
-**Or manually:**
-```bash
-dotnet ef database update PreviousMigrationName \
-  --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API \
-  --connection "Server=localhost,1433;Database=GloboTicket;User Id=migration_user;Password=Migration@Pass123;TrustServerCertificate=True;Encrypt=True"
-```
-
 ### Delete a Migration (if not applied)
 
 **Using scripts (recommended):**
@@ -495,19 +464,6 @@ pwsh scripts/powershell/db-migrate-delete.ps1 -MigrationName "MigrationName"
 
 # Bash
 ./scripts/bash/db-migrate-delete.sh MigrationName
-```
-
-**Or manually:**
-```bash
-# First check if migration is applied
-dotnet ef migrations list \
-  --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API
-
-# If not applied (no * marker), remove it
-dotnet ef migrations remove \
-  --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API
 ```
 
 **Note:** The script automatically checks if the migration is applied and prevents deletion if it is.
@@ -521,21 +477,6 @@ pwsh scripts/powershell/db-reset.ps1
 
 # Bash
 ./scripts/bash/db-reset.sh
-```
-
-**Or manually:**
-```bash
-# Drop database
-dotnet ef database drop --force \
-  --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API \
-  --connection "Server=localhost,1433;Database=GloboTicket;User Id=migration_user;Password=Migration@Pass123;TrustServerCertificate=True;Encrypt=True"
-
-# Recreate with migrations
-dotnet ef database update \
-  --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API \
-  --connection "Server=localhost,1433;Database=GloboTicket;User Id=migration_user;Password=Migration@Pass123;TrustServerCertificate=True;Encrypt=True"
 ```
 
 **Warning:** This will delete all data in the database!
