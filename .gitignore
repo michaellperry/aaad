@@ -482,3 +482,21 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# =====================================================================================
+# Docker Infrastructure
+# =====================================================================================
+# Docker-related files that should not be committed
+
+# Environment files with actual secrets (template .env.example is committed)
+docker/.env
+
+# Local data directories (if used)
+docker/data/
+
+# Docker Compose override files (for local customization)
+docker/docker-compose.override.yml
+
+# Database backup files created during development
+docker/*.bak
+docker/*.sql.bak
