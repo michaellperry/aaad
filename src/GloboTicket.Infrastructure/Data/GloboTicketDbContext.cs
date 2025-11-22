@@ -8,6 +8,10 @@ namespace GloboTicket.Infrastructure.Data;
 /// <summary>
 /// The main Entity Framework Core DbContext for GloboTicket with multi-tenant support.
 /// Implements row-level isolation using global query filters based on TenantId.
+/// 
+/// Tenants provide data isolation within an environment's database. Multiple tenants
+/// can coexist in the same database (e.g., Production tenant and Smoke Test tenant
+/// in a production environment), with complete data isolation between them.
 /// </summary>
 public class GloboTicketDbContext : DbContext
 {
@@ -34,6 +38,10 @@ public class GloboTicketDbContext : DbContext
     /// <summary>
     /// Configures the model using Fluent API and applies entity configurations.
     /// Sets up global query filters for multi-tenant isolation.
+    /// 
+    /// Note: Tenants exist within an environment. An environment is a deployment
+    /// (dev, staging, production) with its own database. Tenants provide isolation
+    /// within that environment's database.
     /// </summary>
     /// <param name="modelBuilder">The model builder.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -88,7 +96,10 @@ public class GloboTicketDbContext : DbContext
 
     /// <summary>
     /// Saves all changes made in this context to the database.
-    /// Automatically sets TenantId for new tenant entities and timestamps for all entities.
+    /// Automatically sets TenantId (environment context) for new tenant entities and timestamps for all entities.
+    /// 
+    /// The TenantId represents the data context within the environment's database,
+    /// ensuring all new entities are associated with the correct tenant.
     /// </summary>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that represents the asynchronous save operation. The task result contains the number of state entries written to the database.</returns>

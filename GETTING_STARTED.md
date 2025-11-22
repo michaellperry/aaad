@@ -88,7 +88,7 @@ dotnet ef database update --project src/GloboTicket.Infrastructure --startup-pro
 This will:
 - Create the `GloboTicket` database
 - Create the `Tenants` table
-- Seed initial tenant data (ACME Corp and TechStart Inc)
+- Seed initial tenant data (Production tenant and Smoke Test tenant)
 
 **Verify database setup:**
 ```bash
@@ -153,13 +153,13 @@ curl http://localhost:5028/health
 ```bash
 curl -X POST http://localhost:5028/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}' \
+  -d '{"username":"prod","password":"prod123"}' \
   -c cookies.txt -v
 ```
 
 **Expected response:**
 ```json
-{"username":"admin","tenantId":1,"message":"Login successful"}
+{"username":"prod","tenantId":1,"message":"Login successful"}
 ```
 
 #### 3. Get Tenants (Authenticated Request)
@@ -172,15 +172,15 @@ curl http://localhost:5028/api/tenants -b cookies.txt
 [
   {
     "id": 1,
-    "name": "ACME Corp",
-    "slug": "acme",
+    "name": "Production",
+    "slug": "production",
     "isActive": true,
     "createdAt": "2025-11-22T..."
   },
   {
     "id": 2,
-    "name": "TechStart Inc",
-    "slug": "techstart",
+    "name": "Smoke Test",
+    "slug": "smoke-test",
     "isActive": true,
     "createdAt": "2025-11-22T..."
   }
@@ -383,7 +383,7 @@ API endpoints return 401 even after login.
    # Login first
    curl -X POST http://localhost:5028/auth/login \
      -H "Content-Type: application/json" \
-     -d '{"username":"admin","password":"admin123"}' \
+     -d '{"username":"prod","password":"prod123"}' \
      -c cookies.txt
    
    # Then use cookie in subsequent requests
@@ -417,10 +417,12 @@ The system includes pre-configured test users for development:
 
 | Username | Password  | Tenant         | Tenant ID |
 |----------|-----------|----------------|-----------|
-| `admin`  | `admin123`| ACME Corp      | 1         |
-| `user`   | `user123` | TechStart Inc  | 2         |
+| `prod`   | `prod123` | Production     | 1         |
+| `smoke`  | `smoke123`| Smoke Test     | 2         |
 
 These are configured in [`src/GloboTicket.API/Configuration/UserConfiguration.cs`](src/GloboTicket.API/Configuration/UserConfiguration.cs).
+
+**Note:** These tenants exist within the same environment's database. In a production environment, you can use the "Smoke Test" tenant to run post-deployment validation tests without affecting the "Production" tenant's data.
 
 **⚠️ Important:** These test credentials are for development only. Do not use in production.
 
@@ -434,7 +436,7 @@ Now that you have GloboTicket running, here are some suggested next steps:
 - Study the multi-tenancy implementation
 
 ### 2. Understand Multi-Tenancy
-- Test with different users (admin vs user)
+- Test with different users (prod vs smoke)
 - Observe tenant isolation in action
 - Review [`TenantResolutionMiddleware.cs`](src/GloboTicket.API/Middleware/TenantResolutionMiddleware.cs)
 

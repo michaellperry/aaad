@@ -6,6 +6,10 @@ namespace GloboTicket.API.Middleware;
 /// <summary>
 /// Implementation of ITenantContext that extracts tenant information from HTTP context claims.
 /// Uses the authenticated user's claims to determine the current tenant.
+/// 
+/// Tenants provide data isolation within an environment's database. Multiple tenants
+/// can coexist in the same database, allowing scenarios like running smoke tests in
+/// production without affecting production tenant data.
 /// </summary>
 public class TenantContext : ITenantContext
 {
@@ -19,6 +23,9 @@ public class TenantContext : ITenantContext
     /// <summary>
     /// Gets the current tenant ID from the authenticated user's claims.
     /// Returns null if the user is not authenticated or if the TenantId claim is not present.
+    /// 
+    /// The tenant ID determines which data context the user accesses within the
+    /// current environment's database.
     /// </summary>
     public int? CurrentTenantId
     {

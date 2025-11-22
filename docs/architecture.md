@@ -2,13 +2,14 @@
 
 ## 1. Overview
 
-GloboTicket is a multi-tenant event ticketing system built with a modern technology stack emphasizing security, testability, and environment isolation. The architecture follows clean architecture principles with clear separation between domain logic, infrastructure, and presentation layers.
+GloboTicket is a multi-tenant event ticketing system built with a modern technology stack emphasizing security, testability, and data isolation. The architecture follows clean architecture principles with clear separation between domain logic, infrastructure, and presentation layers.
 
 ### Design Principles
 
-- **Multi-tenancy by design**: Complete data isolation per tenant using database-level segregation
+- **Multi-tenancy by design**: Complete data isolation per tenant using database-level segregation within each environment
 - **Security first**: Least privilege principle with separate database users for migrations and runtime operations
 - **Test isolation**: Random tenant assignment in integration tests ensures true isolation
+- **Environment vs Tenant**: Environments are separate deployments (dev/staging/production), while tenants provide data isolation within an environment's database
 - **Modern stack**: Leveraging .NET 10, React 19.2, and container-based infrastructure
 
 ## 2. Technology Stack
@@ -38,18 +39,25 @@ GloboTicket is a multi-tenant event ticketing system built with a modern technol
 **Row-Level Isolation**: Each record includes a `TenantId` discriminator column that filters all queries and commands.
 
 **Key Characteristics**:
-- Single database with logical separation
+- Single database per environment with logical separation by tenant
 - `TenantId` column on all domain tables
 - Global query filter in EF Core ensures automatic tenant filtering
 - No cross-tenant data access possible
 - Efficient resource utilization while maintaining strong isolation
+- Multiple tenants can coexist within the same environment's database
+
+**Environments vs Tenants**:
+- **Environments** are separate deployments (Development, Staging, Production) with their own infrastructure
+- **Tenants** provide data isolation within an environment's database
+- Example: A Production environment may contain both a "Production" tenant and a "Smoke Test" tenant
 
 **Benefits**:
 - Easy backup and restore operations
 - Simplified infrastructure management
 - Cost-effective scaling
-- Perfect for test environment isolation
-- Supports unlimited tenants without infrastructure changes
+- **Post-deployment testing**: Run smoke tests in production environment using a separate tenant
+- Supports unlimited tenants per environment without infrastructure changes
+- Complete data isolation between tenants within the same database
 
 ### Implementation Approach
 
@@ -67,6 +75,26 @@ graph TB
 - Middleware extracts and validates tenant from authenticated user
 - Scoped service provides current tenant ID to DbContext
 - EF Core global query filters automatically applied
+
+### Use Case: Smoke Testing in Production
+
+A common pattern is to use tenant isolation for post-deployment validation:
+
+1. **Production Environment** contains two tenants:
+   - **Production Tenant** (ID: 1): Live production data
+   - **Smoke Test Tenant** (ID: 2): Validation test data
+
+2. After deploying to production:
+   - Run smoke tests using credentials mapped to the "Smoke Test" tenant
+   - All test operations are isolated to tenant ID 2
+   - Production tenant data (ID: 1) remains completely unaffected
+   - No need for separate test databases or environments
+
+3. Benefits:
+   - Validate deployments against production infrastructure
+   - Test with production-like data volumes and performance
+   - Zero risk to production data
+   - Cost-effective (no additional infrastructure needed)
 
 ## 4. Database Security Model
 

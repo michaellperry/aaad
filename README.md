@@ -4,7 +4,11 @@ A modern, multi-tenant event ticketing platform built with .NET 10 and React, de
 
 ## 🎯 Project Overview
 
-GloboTicket is a Software-as-a-Service (SaaS) platform that enables multiple organizations to manage their event ticketing independently while sharing the same infrastructure. Each tenant (organization) has complete data isolation, ensuring security and privacy while maximizing resource efficiency.
+GloboTicket is a multi-tenant event ticketing platform built with .NET 10 and React. The platform supports **data isolation through tenants** within each deployment environment. This enables scenarios such as running smoke tests in a production environment without affecting production data, by using separate tenants within the same database.
+
+**Environments vs Tenants:**
+- **Environments** are separate deployments (Development, Staging, Production) with their own servers and databases
+- **Tenants** provide data isolation within an environment's database, allowing multiple data contexts to coexist safely
 
 This project serves as a reference implementation for:
 - **Clean Architecture** with clear separation of concerns
@@ -20,24 +24,24 @@ The application follows Clean Architecture principles with clear boundaries betw
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                  Presentation Layer                      │
-│  ┌──────────────┐              ┌──────────────┐        │
-│  │  Web (React) │              │  API (.NET)  │        │
-│  └──────────────┘              └──────────────┘        │
+│                  Presentation Layer                     │
+│  ┌──────────────┐              ┌──────────────┐         │
+│  │  Web (React) │              │  API (.NET)  │         │
+│  └──────────────┘              └──────────────┘         │
 └─────────────────────────────────────────────────────────┘
                           │
 ┌─────────────────────────────────────────────────────────┐
-│               Application Layer (Use Cases)              │
+│               Application Layer (Use Cases)             │
 │  • DTOs          • Services        • Interfaces         │
 └─────────────────────────────────────────────────────────┘
                           │
 ┌─────────────────────────────────────────────────────────┐
-│              Domain Layer (Business Logic)               │
+│              Domain Layer (Business Logic)              │
 │  • Entities      • Value Objects   • Domain Services    │
 └─────────────────────────────────────────────────────────┘
                           │
 ┌─────────────────────────────────────────────────────────┐
-│           Infrastructure Layer (External)                │
+│           Infrastructure Layer (External)               │
 │  • EF Core       • SQL Server      • Repositories       │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -86,29 +90,36 @@ GloboTicket implements **database-level multi-tenancy** with row-level isolation
 - Each entity implementing [`ITenantEntity`](src/GloboTicket.Domain/Interfaces/ITenantEntity.cs) includes a `TenantId`
 - EF Core query filters ensure automatic tenant filtering
 - No cross-tenant data access is possible
+- Multiple tenants can coexist within the same environment's database
+
+### Use Cases
+- **Multiple Organizations**: Each organization gets its own tenant for complete data isolation
+- **Environment Testing**: Within a production environment, use separate tenants for production data and smoke test data
+- **Data Segregation**: Isolate different data contexts (e.g., production vs. validation) within the same database
 
 ### Benefits
 - **Security**: Complete data isolation between tenants
-- **Efficiency**: Shared infrastructure and codebase
+- **Efficiency**: Shared infrastructure and codebase within an environment
 - **Scalability**: Easy to add new tenants without code changes
-- **Cost Effective**: Single deployment serves multiple customers
+- **Cost Effective**: Single database can serve multiple tenants
+- **Testing**: Run validation tests in production environment without affecting production tenant data
 
 ## 📦 Project Structure
 
 ```
 GloboTicket/
 ├── src/
-│   ├── GloboTicket.Domain/          # Core business entities and interfaces
-│   ├── GloboTicket.Application/     # Use cases, DTOs, and services
-│   ├── GloboTicket.Infrastructure/  # Data access, EF Core, migrations
-│   ├── GloboTicket.API/             # REST API, endpoints, middleware
-│   └── GloboTicket.Web/             # React frontend application
+│   ├── GloboTicket.Domain/           # Core business entities and interfaces
+│   ├── GloboTicket.Application/      # Use cases, DTOs, and services
+│   ├── GloboTicket.Infrastructure/   # Data access, EF Core, migrations
+│   ├── GloboTicket.API/              # REST API, endpoints, middleware
+│   └── GloboTicket.Web/              # React frontend application
 ├── tests/
-│   ├── GloboTicket.UnitTests/       # Unit tests (22 tests)
+│   ├── GloboTicket.UnitTests/        # Unit tests (22 tests)
 │   └── GloboTicket.IntegrationTests/ # Integration tests (10 tests)
-├── docker/                          # Docker Compose and initialization
-├── database/                        # Database documentation
-└── docs/                            # Architecture and requirements
+├── docker/                           # Docker Compose and initialization
+├── database/                         # Database documentation
+└── docs/                             # Architecture and requirements
 ```
 
 ## ⚡ Quick Start
@@ -157,7 +168,7 @@ For detailed setup instructions, see [`GETTING_STARTED.md`](GETTING_STARTED.md).
 
 ## 🧪 Running Tests
 
-### Unit Tests (22 tests)
+### Unit Tests
 ```bash
 dotnet test tests/GloboTicket.UnitTests --verbosity normal
 ```
@@ -167,7 +178,7 @@ Tests cover:
 - Tenant entity validation
 - API middleware functionality
 
-### Integration Tests (10 tests)
+### Integration Tests
 ```bash
 dotnet test tests/GloboTicket.IntegrationTests --verbosity normal
 ```
@@ -181,8 +192,6 @@ Tests cover:
 ```bash
 dotnet test --verbosity normal
 ```
-
-Expected result: **32 tests passing** (22 unit + 10 integration)
 
 ## 🔒 Security Model
 
@@ -200,10 +209,12 @@ Expected result: **32 tests passing** (22 unit + 10 integration)
 
 For development purposes, test users are configured in [`UserConfiguration.cs`](src/GloboTicket.API/Configuration/UserConfiguration.cs):
 
-| Username | Password  | Tenant      | Tenant ID |
-|----------|-----------|-------------|-----------|
-| admin    | admin123  | ACME Corp   | 1         |
-| user     | user123   | TechStart   | 2         |
+| Username | Password  | Tenant         | Tenant ID |
+|----------|-----------|----------------|-----------|
+| prod     | prod123   | Production     | 1         |
+| smoke    | smoke123  | Smoke Test     | 2         |
+
+**Note:** These tenants exist within the same environment's database. In a production environment, you can use the "Smoke Test" tenant to run post-deployment validation tests without affecting the "Production" tenant's data.
 
 **⚠️ Note:** These are test credentials only. Production systems must implement proper user management.
 
@@ -221,8 +232,8 @@ POST /auth/login
 Content-Type: application/json
 
 {
-  "username": "admin",
-  "password": "admin123"
+  "username": "prod",
+  "password": "prod123"
 }
 ```
 
