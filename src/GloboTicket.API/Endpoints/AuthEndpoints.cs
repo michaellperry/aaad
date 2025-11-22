@@ -66,8 +66,7 @@ public static class AuthEndpoints
                 message = "Login successful"
             });
         })
-        .WithName("Login")
-        .WithOpenApi();
+        .WithName("Login");
 
         // POST /auth/logout
         auth.MapPost("/logout", async (HttpContext httpContext) =>
@@ -75,8 +74,7 @@ public static class AuthEndpoints
             await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return Results.Ok(new { message = "Logout successful" });
         })
-        .WithName("Logout")
-        .WithOpenApi();
+        .WithName("Logout");
 
         // GET /auth/me
         auth.MapGet("/me", (HttpContext httpContext) =>
@@ -99,8 +97,7 @@ public static class AuthEndpoints
             });
         })
         .RequireAuthorization()
-        .WithName("GetCurrentUser")
-        .WithOpenApi();
+        .WithName("GetCurrentUser");
 
         return app;
     }
