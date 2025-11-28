@@ -3,7 +3,7 @@ namespace GloboTicket.Domain.Entities;
 /// <summary>
 /// Represents a show, which is a performance by an act at a venue on a specific date.
 /// </summary>
-public class Show : MultiTenantEntity
+public class Show : Entity
 {
     /// <summary>
     /// Gets or sets the unique identifier (GUID) for this show.
