@@ -123,7 +123,7 @@ export const Sidebar = ({
         'h-full',
         'bg-surface-base',
         'border-r border-border-default',
-        'transition-all duration-300',
+        'transition-[width] duration-300',
         collapsed ? 'w-16' : 'w-64'
       )}
     >

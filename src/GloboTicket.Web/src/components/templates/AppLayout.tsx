@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Home, MapPin, Users, Calendar } from 'lucide-react';
 import { AppHeader } from '../organisms/AppHeader';
@@ -6,6 +5,7 @@ import { Sidebar } from '../organisms/Sidebar';
 import type { NavSection } from '../organisms/Sidebar';
 import { Container } from '../layout';
 import { ROUTES } from '../../router/routes';
+import { useTheme } from '../../theme';
 
 /**
  * Main application layout with header, sidebar, and content area.
@@ -13,7 +13,7 @@ import { ROUTES } from '../../router/routes';
  */
 export const AppLayout = () => {
   const location = useLocation();
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { theme, toggleTheme } = useTheme();
 
   // Determine active navigation item based on current path
   const getActiveItemId = () => {
@@ -23,11 +23,6 @@ export const AppLayout = () => {
     if (path.startsWith('/acts')) return 'acts';
     if (path.startsWith('/shows')) return 'shows';
     return undefined;
-  };
-
-  const handleThemeToggle = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-    // TODO: Implement actual theme switching with ThemeProvider
   };
 
   // Sidebar navigation sections
@@ -74,7 +69,7 @@ export const AppLayout = () => {
       <AppHeader
         logo="GloboTicket"
         theme={theme}
-        onThemeToggle={handleThemeToggle}
+        onThemeToggle={toggleTheme}
         userMenu={{
           userName: 'Admin User',
           userEmail: 'admin@globoticket.com',
