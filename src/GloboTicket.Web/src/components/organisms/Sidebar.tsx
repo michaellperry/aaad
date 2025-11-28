@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../utils';
-import { Button, Heading, Text } from '../atoms';
+import { Button, Text } from '../atoms';
 import { Stack } from '../layout';
 import { NavItem } from './NavItem';
 
