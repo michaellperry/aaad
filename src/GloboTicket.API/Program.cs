@@ -26,6 +26,7 @@ builder.Services.AddDbContext<GloboTicketDbContext>(options =>
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContext, TenantContext>();
 builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<IVenueService, VenueService>();
 
 // Configure cookie authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -97,5 +98,8 @@ app.MapAuthEndpoints();
 
 // Map tenant endpoints
 app.MapTenantEndpoints();
+
+// Map venue endpoints
+app.MapVenueEndpoints();
 
 app.Run();
