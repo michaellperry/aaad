@@ -63,8 +63,7 @@ public class ShowConfiguration : IEntityTypeConfiguration<Show>
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
-        // Ignore TicketSales collection for now (will be configured when TicketSale entity exists)
-        builder.Ignore(s => s.TicketSales);
+        // TicketSales collection is configured via the TicketSale entity's HasOne relationship
 
         // CreatedAt property (inherited from Entity)
         builder.Property(s => s.CreatedAt)
