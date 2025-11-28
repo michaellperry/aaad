@@ -125,9 +125,33 @@ GloboTicket/
 ## ⚡ Quick Start
 
 ### Prerequisites
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+
+**IMPORTANT:** This project requires .NET 10 SDK. Verify your installation before proceeding.
+
+- **[.NET 10 SDK](https://dotnet.microsoft.com/download)** (version 10.0 or later) - **REQUIRED**
+  ```bash
+  # Verify you have .NET 10
+  dotnet --version
+  # Should show 10.x.x
+  ```
+  
+  **If you see version 9.x or earlier, you must upgrade to .NET 10 SDK before continuing.**
+
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
 - [Node.js 18+](https://nodejs.org/) (for frontend)
+- **Entity Framework Core Tools** (required for database migrations)
+  ```bash
+  # Install EF Core tools globally (requires .NET 10 SDK)
+  dotnet tool install --global dotnet-ef
+  
+  # Verify installation
+  dotnet ef --version
+  ```
+  
+  **Note:** The EF Core tools version must match your .NET SDK version. If you have .NET 10 SDK installed and the tool installation fails, you may need to specify the version explicitly or update an existing installation:
+  ```bash
+  dotnet tool update --global dotnet-ef
+  ```
 
 ### 1. Start Infrastructure
 

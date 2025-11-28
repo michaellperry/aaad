@@ -7,17 +7,42 @@ This guide will help you set up and run the GloboTicket multi-tenant ticketing p
 Before you begin, ensure you have the following installed:
 
 ### Required
-- **[.NET 10 SDK](https://dotnet.microsoft.com/download)** (version 10.0 or later)
+
+**IMPORTANT:** This project requires .NET 10 SDK. Using an older version will cause installation and runtime errors.
+
+- **[.NET 10 SDK](https://dotnet.microsoft.com/download)** (version 10.0 or later) - **REQUIRED**
   ```bash
-  # Verify installation
+  # Verify you have .NET 10
   dotnet --version
+  # Must show 10.x.x (e.g., 10.0.100)
   ```
+  
+  **⚠️ If you see version 9.x or earlier:**
+  - Download and install .NET 10 SDK from [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
+  - After installation, restart your terminal and verify: `dotnet --version`
 
 - **[Docker Desktop](https://www.docker.com/products/docker-desktop)** (for SQL Server)
   ```bash
   # Verify installation
   docker --version
   docker compose version
+  ```
+
+- **Entity Framework Core Tools** (required for database migrations)
+  
+  **Note:** EF Core tools must be installed AFTER you have .NET 10 SDK installed.
+  
+  ```bash
+  # Install EF Core tools globally
+  dotnet tool install --global dotnet-ef
+  
+  # Verify installation
+  dotnet ef --version
+  ```
+  
+  If you already have an older version installed, update it:
+  ```bash
+  dotnet tool update --global dotnet-ef
   ```
 
 ### Optional (for Frontend Development)
@@ -579,6 +604,70 @@ A network-related or instance-specific error occurred while establishing a conne
    # PowerShell
    pwsh scripts/powershell/docker-test-reset.ps1
    ```
+
+### Issue: Build Failed - .NET SDK Does Not Support .NET 10.0
+
+**Symptoms:**
+```
+error NETSDK1045: The current .NET SDK does not support targeting .NET 10.0.
+Either target .NET 9.0 or lower, or use a version of the .NET SDK that supports .NET 10.0.
+```
+
+**Root Cause:** You have an older .NET SDK installed (e.g., .NET 9 or .NET 8), but this project requires .NET 10.
+
+**Solution:**
+1. Download and install .NET 10 SDK from [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
+2. Restart your terminal
+3. Verify installation: `dotnet --version` should show 10.x.x
+4. Try building again: `dotnet build`
+
+### Issue: EF Core Tools Not Found or Installation Failed
+
+**Symptoms:**
+```
+Could not execute because the specified command or file was not found.
+```
+OR
+```
+Tool 'dotnet-ef' failed to update due to the following:
+The settings file in the tool's NuGet package is invalid
+```
+
+**Root Cause:** This usually means you don't have .NET 10 SDK installed, or the EF Core tools version doesn't match your SDK version.
+
+**Solutions:**
+
+1. **First, verify your .NET SDK version:**
+   ```bash
+   dotnet --version
+   ```
+   
+   **If the version is NOT 10.x.x (e.g., if it shows 9.x.x or 8.x.x):**
+   - This project requires .NET 10 SDK
+   - Download and install .NET 10 SDK from [https://dotnet.microsoft.com/download](https://dotnet.microsoft.com/download)
+   - After installation, restart your terminal
+   - Verify again: `dotnet --version` should show 10.x.x
+
+2. **After confirming you have .NET 10 SDK, install EF Core tools:**
+   ```bash
+   dotnet tool install --global dotnet-ef
+   ```
+
+3. **If you already have EF Core tools installed but for an older .NET version:**
+   ```bash
+   dotnet tool update --global dotnet-ef
+   ```
+
+4. **Verify the installation:**
+   ```bash
+   dotnet ef --version
+   ```
+
+5. **If the tool is installed but not found in PATH:**
+   - Ensure your PATH includes the .NET tools directory:
+     - **Linux/macOS**: `~/.dotnet/tools`
+     - **Windows**: `%USERPROFILE%\.dotnet\tools`
+   - Restart your terminal after installation
 
 ### Issue: Migration Failed
 
