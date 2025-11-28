@@ -108,7 +108,7 @@ public class ShowTests
         var show = new Show(venue, act);
 
         // Assert
-        show.TicketSales.Should().BeAssignableTo<ICollection<object>>();
+        show.TicketSales.Should().BeAssignableTo<ICollection<TicketSale>>();
         show.TicketSales.Count.Should().Be(0);
     }
 
@@ -119,14 +119,14 @@ public class ShowTests
         var venue = new Venue { Name = "Test Venue" };
         var act = new Act { Name = "Test Act" };
         var show = new Show(venue, act);
-        var mockTicketSale = new object(); // Using object since TicketSale doesn't exist yet
+        var ticketSale = new TicketSale(show);
 
         // Act
-        show.TicketSales.Add(mockTicketSale);
+        show.TicketSales.Add(ticketSale);
 
         // Assert
         show.TicketSales.Count.Should().Be(1);
-        show.TicketSales.Should().Contain(mockTicketSale);
+        show.TicketSales.Should().Contain(ticketSale);
     }
 
     [Fact]
