@@ -140,7 +140,7 @@ globoticket-db-init     Exited (0)
 
 **Note:** The `db-init` container runs automatically after SQL Server is healthy and exits when initialization is complete. This ensures database users are created automatically for new developers.
 
-### Step 4: Restore Dependencies
+### Step 3: Restore Dependencies
 
 ```bash
 # Restore NuGet packages for entire solution
@@ -163,7 +163,7 @@ This will:
 - Apply all pending migrations
 - Create all database tables
 
-**Note:** Database users (`migration_user` and `app_user`) were already created automatically by the init container in Step 2.
+**Note:** Database users (`migration_user` and `app_user`) were already created automatically by the init container in Step 2. The migration scripts now automatically run `dotnet restore` before applying migrations, but you can also run it manually if needed.
 
 **Verify database setup:**
 ```bash

@@ -5,6 +5,9 @@ $ErrorActionPreference = "Stop"
 
 $connectionString = "Server=localhost,1433;Database=GloboTicket;User Id=migration_user;Password=Migration@Pass123;TrustServerCertificate=True;Encrypt=True"
 
+Write-Host "Restoring NuGet packages..." -ForegroundColor Cyan
+dotnet restore
+
 Write-Host "Applying database migrations..." -ForegroundColor Cyan
 
 dotnet ef database update `

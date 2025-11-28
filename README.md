@@ -171,10 +171,15 @@ The script automatically:
 ### 2. Run Migrations
 
 ```bash
-# Apply database migrations
+# Apply database migrations (automatically restores NuGet packages)
 ./scripts/bash/db-update.sh
 # OR
 pwsh scripts/powershell/db-update.ps1
+```
+
+**Note:** The migration scripts now automatically run `dotnet restore` before applying migrations. If you prefer to restore packages manually first, you can run:
+```bash
+dotnet restore
 ```
 
 ### 3. Start the API
