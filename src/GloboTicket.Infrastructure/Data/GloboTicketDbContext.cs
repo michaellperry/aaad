@@ -23,6 +23,11 @@ public class GloboTicketDbContext : DbContext
     public DbSet<Tenant> Tenants { get; set; } = null!;
 
     /// <summary>
+    /// Gets or sets the Venues DbSet for managing venue entities.
+    /// </summary>
+    public DbSet<Venue> Venues { get; set; } = null!;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="GloboTicketDbContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
