@@ -1,61 +1,54 @@
-import { MapPin, Plus, Search } from 'lucide-react';
-import { Heading, Text, Button } from '../../components/atoms';
-import { EmptyState } from '../../components/molecules';
-import { Stack } from '../../components/layout';
+/**
+ * VenuesPage
+ * 
+ * Main venues listing page that composes PageHeader and VenueList organisms.
+ * Follows atomic design principles - minimal CSS, mostly composition.
+ */
+
+import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+import { PageHeader } from '../../components/molecules/PageHeader';
+import { VenueList } from '../../components/organisms/VenueList';
+import { Stack } from '../../components/layout/Stack';
+import { Button } from '../../components/atoms/Button';
+import { Icon } from '../../components/atoms/Icon';
 import { ROUTES } from '../../router/routes';
+import type { Venue } from '../../types/venue';
 
 /**
- * Venues list page - placeholder implementation
+ * VenuesPage component displaying all venues.
+ * 
+ * @example
+ * ```tsx
+ * <Route path="/venues" element={<VenuesPage />} />
+ * ```
  */
-export const VenuesPage = () => {
+export function VenuesPage() {
+  const navigate = useNavigate();
+
+  const handleVenueClick = (venue: Venue) => {
+    // Navigate to venue detail page when implemented
+    navigate(`/venues/${venue.id}`);
+  };
+
   return (
     <Stack gap="xl">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Heading level="h1" variant="default" className="mb-2">
-            Venues
-          </Heading>
-          <Text variant="muted">
-            Manage your event venues and locations
-          </Text>
-        </div>
-        <Button
-          variant="primary"
-          onClick={() => (window.location.href = ROUTES.VENUE_CREATE)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Venue
-        </Button>
-      </div>
-
-      {/* Search Bar Placeholder */}
-      <div className="flex items-center gap-2 p-3 border border-border-default rounded-lg bg-surface-base">
-        <Search className="w-5 h-5 text-text-secondary" />
-        <input
-          type="text"
-          placeholder="Search venues..."
-          disabled
-          className="flex-1 bg-transparent border-none outline-none text-text-primary placeholder:text-text-muted"
-        />
-      </div>
-
-      {/* Empty State */}
-      <EmptyState
-        icon={MapPin}
-        title="No venues yet"
-        description="Get started by creating your first venue. Venues are locations where shows and events take place."
-        actionLabel="Create Your First Venue"
-        onAction={() => (window.location.href = ROUTES.VENUE_CREATE)}
+      <PageHeader
+        title="Venues"
+        description="Browse and manage all available venues for your events"
+        action={
+          <Button
+            variant="primary"
+            onClick={() => navigate(ROUTES.VENUE_CREATE)}
+            aria-label="Add new venue"
+          >
+            <Icon icon={Plus} size="sm" />
+            Add Venue
+          </Button>
+        }
       />
-
-      {/* Development Notice */}
-      <div className="mt-8 p-4 bg-surface-elevated rounded-lg border border-border-default">
-        <Text variant="muted" size="sm">
-          <strong>🚧 Placeholder Page:</strong> This is a placeholder for the Venues list page.
-          Real venue data, filtering, sorting, and pagination will be implemented in future iterations.
-        </Text>
-      </div>
+      
+      <VenueList onVenueClick={handleVenueClick} />
     </Stack>
   );
-};
+}

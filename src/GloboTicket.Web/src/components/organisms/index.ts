@@ -16,3 +16,8 @@ export type { SidebarProps, NavSection, NavItemConfig } from './Sidebar';
 
 export { UserMenu } from './UserMenu';
 export type { UserMenuProps } from './UserMenu';
+
+export { VenueList } from './VenueList';
+export type { VenueListProps } from './VenueList';
+
+export { VenueForm } from './VenueForm';

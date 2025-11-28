@@ -13,3 +13,9 @@ export type { DropdownProps, DropdownItem } from './Dropdown';
 
 export { EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';
+
+export { PageHeader } from './PageHeader';
+export type { PageHeaderProps } from './PageHeader';
+
+export { VenueCard } from './VenueCard';
+export type { VenueCardProps } from './VenueCard';
