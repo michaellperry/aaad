@@ -132,17 +132,25 @@ GloboTicket/
 ### 1. Start Infrastructure
 
 ```bash
-# Start SQL Server in Docker
-cd docker
-docker compose up -d
-cd ..
+# Start SQL Server in Docker (automatically initializes database users)
+./scripts/bash/docker-up.sh
+# OR
+pwsh scripts/powershell/docker-up.ps1
 ```
+
+The script automatically:
+- Starts SQL Server container
+- Waits for SQL Server to become healthy
+- Runs database initialization (creates `migration_user` and `app_user`)
+- Verifies initialization completed successfully
 
 ### 2. Run Migrations
 
 ```bash
 # Apply database migrations
-dotnet ef database update --project src/GloboTicket.Infrastructure --startup-project src/GloboTicket.API
+./scripts/bash/db-update.sh
+# OR
+pwsh scripts/powershell/db-update.ps1
 ```
 
 ### 3. Start the API

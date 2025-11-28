@@ -19,11 +19,12 @@ services:
       # Map container port 1433 to host port 1433
       # This allows connection via localhost:1433 from the host machine
       - "1433:1433"
-      
-    # Note: Volumes removed to avoid permission issues on macOS/Apple Silicon
-    # Data will not persist between container removals (docker compose down)
-    # For production, use managed SQL Server or configure volumes appropriately
     
+    volumes:
+      # Named volume for persistent data storage
+      # On macOS/Apple Silicon, this avoids permission issues compared to bind mounts
+      - sqlserver-data:/var/opt/mssql
+      
     healthcheck:
       # Health check command to verify SQL Server is ready to accept connections
       # Uses sqlcmd18 (SQL Server 2022) to execute a simple SELECT query
@@ -47,6 +48,30 @@ services:
     
     networks:
       - globoticket-network
+
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: globoticket-db-init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      SQL_SERVER: "sqlserver"
+    volumes:
+      # Mount initialization scripts
+      - ./init-db:/init-db:ro
+      # Mount initialization script runner
+      - ./scripts:/scripts:ro
+    command: ["/bin/bash", "/scripts/init-db.sh"]
+    networks:
+      - globoticket-network
+    restart: "no"
+
+volumes:
+  sqlserver-data:
+    # Named volume for SQL Server data persistence
+    # Use 'docker compose down -v' to remove this volume and start fresh
 
 networks:
   globoticket-network:
