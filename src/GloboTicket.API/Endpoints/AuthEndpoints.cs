@@ -85,6 +85,7 @@ public static class AuthEndpoints
 
             return Results.Ok(new
             {
+                success = true,
                 username = user.Username,
                 tenantId = tenantDbId,
                 tenantIdentifier = user.TenantIdentifier,
