@@ -16,9 +16,11 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add DbContext with SQL Server
+// Add DbContext with SQL Server and NetTopologySuite for spatial types
 builder.Services.AddDbContext<GloboTicketDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.UseNetTopologySuite()));
 
 // Register tenant services
 builder.Services.AddHttpContextAccessor();
