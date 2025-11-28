@@ -56,14 +56,10 @@ public class VenueConfiguration : IEntityTypeConfiguration<Venue>
             .IsRequired();
 
         // Foreign key relationship to Tenant with cascade delete
-        builder.HasOne<Tenant>()
+        builder.HasOne(v => v.Tenant)
             .WithMany()
             .HasForeignKey(v => v.TenantId)
             .OnDelete(DeleteBehavior.Cascade)
-            .IsRequired();
-
-        // TenantId property (from MultiTenantEntity)
-        builder.Property(v => v.TenantId)
             .IsRequired();
 
         // CreatedAt property (inherited from Entity)
