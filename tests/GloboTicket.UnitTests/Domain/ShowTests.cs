@@ -129,49 +129,6 @@ public class ShowTests
         show.TicketSales.Should().Contain(ticketSale);
     }
 
-    [Fact]
-    public void GivenShow_WhenChecked_ThenInheritsFromMultiTenantEntity()
-    {
-        // Arrange
-        var venue = new Venue { Name = "Test Venue" };
-        var act = new Act { Name = "Test Act" };
-
-        // Act
-        var show = new Show(venue, act);
-
-        // Assert
-        show.Should().BeAssignableTo<MultiTenantEntity>();
-    }
-
-    [Fact]
-    public void GivenShow_WhenChecked_ThenImplementsITenantEntity()
-    {
-        // Arrange
-        var venue = new Venue { Name = "Test Venue" };
-        var act = new Act { Name = "Test Act" };
-
-        // Act
-        var show = new Show(venue, act);
-
-        // Assert
-        show.Should().BeAssignableTo<ITenantEntity>();
-    }
-
-    [Fact]
-    public void GivenShow_WhenTenantIdSet_ThenCanBeRetrieved()
-    {
-        // Arrange
-        var venue = new Venue { Name = "Test Venue" };
-        var act = new Act { Name = "Test Act" };
-        var show = new Show(venue, act);
-        var expectedTenantId = 42;
-
-        // Act
-        show.TenantId = expectedTenantId;
-
-        // Assert
-        show.TenantId.Should().Be(expectedTenantId);
-    }
 
     [Fact]
     public void GivenShow_WhenChecked_ThenInheritsFromEntity()
@@ -210,23 +167,6 @@ public class ShowTests
     }
 
     [Fact]
-    public void GivenShow_WhenCastToITenantEntity_ThenCanAccessTenantId()
-    {
-        // Arrange
-        var venue = new Venue { Name = "Test Venue" };
-        var act = new Act { Name = "Test Act" };
-        var show = new Show(venue, act);
-        var expectedTenantId = 99;
-        show.TenantId = expectedTenantId;
-
-        // Act
-        ITenantEntity tenantEntity = show;
-
-        // Assert
-        tenantEntity.TenantId.Should().Be(expectedTenantId);
-    }
-
-    [Fact]
     public void GivenShowWithAllProperties_WhenSet_ThenAllRetainValues()
     {
         // Arrange
@@ -235,14 +175,12 @@ public class ShowTests
         var show = new Show(venue, act);
         var showGuid = Guid.NewGuid();
         var date = new DateTimeOffset(2025, 12, 31, 20, 0, 0, TimeSpan.FromHours(-6));
-        var tenantId = 5;
         var id = 100;
         var createdAt = DateTime.UtcNow;
 
         // Act
         show.ShowGuid = showGuid;
         show.Date = date;
-        show.TenantId = tenantId;
         show.Id = id;
         show.CreatedAt = createdAt;
 
@@ -251,26 +189,8 @@ public class ShowTests
         show.Venue.Should().Be(venue);
         show.Act.Should().Be(act);
         show.Date.Should().Be(date);
-        show.TenantId.Should().Be(tenantId);
         show.Id.Should().Be(id);
         show.CreatedAt.Should().Be(createdAt);
-    }
-
-    [Fact]
-    public void GivenShow_WhenTenantSet_ThenCanBeRetrieved()
-    {
-        // Arrange
-        var venue = new Venue { Name = "Test Venue" };
-        var act = new Act { Name = "Test Act" };
-        var show = new Show(venue, act);
-        var expectedTenant = new Tenant("Event Management Co", "event-mgmt");
-
-        // Act
-        show.Tenant = expectedTenant;
-
-        // Assert
-        show.Tenant.Should().Be(expectedTenant);
-        show.Tenant.Name.Should().Be("Event Management Co");
     }
 
     [Fact]
@@ -301,14 +221,12 @@ public class ShowTests
         var act = new Act { Name = "Coldplay" };
         var showGuid = Guid.NewGuid();
         var date = new DateTimeOffset(2026, 6, 15, 19, 30, 0, TimeSpan.Zero);
-        var tenantId = 10;
 
         // Act
         var show = new Show(venue, act)
         {
             ShowGuid = showGuid,
-            Date = date,
-            TenantId = tenantId
+            Date = date
         };
 
         // Assert
@@ -318,7 +236,6 @@ public class ShowTests
         show.Act.Should().Be(act);
         show.Act.Name.Should().Be("Coldplay");
         show.Date.Should().Be(date);
-        show.TenantId.Should().Be(tenantId);
         show.TicketSales.Should().NotBeNull();
         show.TicketSales.Should().BeEmpty();
     }

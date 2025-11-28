@@ -102,8 +102,7 @@ public class TicketSaleService : ITicketSaleService
         var ticketSale = new TicketSale(show)
         {
             TicketSaleGuid = dto.TicketSaleGuid,
-            Quantity = dto.Quantity,
-            TenantId = _tenantContext.CurrentTenantId ?? throw new InvalidOperationException("Tenant context is required for ticket sale creation.")
+            Quantity = dto.Quantity
         };
 
         _dbContext.TicketSales.Add(ticketSale);

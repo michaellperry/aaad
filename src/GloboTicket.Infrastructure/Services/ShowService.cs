@@ -88,8 +88,7 @@ public class ShowService : IShowService
         var show = new Show(venue, act)
         {
             ShowGuid = dto.ShowGuid,
-            Date = dto.Date,
-            TenantId = _tenantContext.CurrentTenantId ?? throw new InvalidOperationException("Tenant context is required for show creation.")
+            Date = dto.Date
         };
 
         _dbContext.Shows.Add(show);
