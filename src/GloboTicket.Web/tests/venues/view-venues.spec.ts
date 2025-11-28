@@ -127,11 +127,12 @@ test.describe('View Venues List', () => {
 
   /**
    * Test 4: Venue Card Interaction Test
-   * 
+   *
    * Verifies that venue cards are properly interactive with correct
-   * accessibility attributes for keyboard navigation.
+   * accessibility attributes for keyboard navigation, and that navigation
+   * uses GUID in the URL.
    */
-  test('should have interactive venue cards with proper accessibility', async ({ authenticatedPage }: { authenticatedPage: Page }) => {
+  test('should have interactive venue cards with proper accessibility and GUID navigation', async ({ authenticatedPage }: { authenticatedPage: Page }) => {
     // Navigate to the venues list page
     await authenticatedPage.goto('/venues');
     
@@ -162,11 +163,17 @@ test.describe('View Venues List', () => {
     await firstCard.focus();
     await authenticatedPage.keyboard.press('Enter');
     
-    // Verify navigation occurred (should go to venue detail page)
-    // The URL should change from /venues to /venues/{id}
+    // Verify navigation occurred (should go to venue detail page with GUID)
     await authenticatedPage.waitForTimeout(1000); // Brief wait for navigation
     const currentUrl = authenticatedPage.url();
-    expect(currentUrl).toMatch(/\/venues\/[a-f0-9-]+/);
+    
+    // Verify URL contains a GUID in the format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    const guidPattern = /\/venues\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    expect(currentUrl).toMatch(guidPattern);
+    
+    // Verify URL does NOT contain just a numeric ID
+    const numericIdPattern = /\/venues\/\d+$/;
+    expect(currentUrl).not.toMatch(numericIdPattern);
   });
 
   /**
@@ -362,10 +369,11 @@ test.describe('View Venues List', () => {
 
   /**
    * Test 9: Venue Card Click Navigation Test
-   * 
-   * Verifies that clicking a venue card navigates to the correct venue detail page.
+   *
+   * Verifies that clicking a venue card navigates to the correct venue detail page
+   * using a GUID (not a numeric ID) in the URL.
    */
-  test('should navigate to venue detail page when card is clicked', async ({ authenticatedPage }: { authenticatedPage: Page }) => {
+  test('should navigate to venue detail page with GUID in URL when card is clicked', async ({ authenticatedPage }: { authenticatedPage: Page }) => {
     // Navigate to the venues list page
     await authenticatedPage.goto('/venues');
     
@@ -387,9 +395,19 @@ test.describe('View Venues List', () => {
     // Wait for navigation
     await authenticatedPage.waitForTimeout(1000);
     
-    // Verify navigation to venue detail page (URL should be /venues/{id})
+    // Verify navigation to venue detail page (URL should be /venues/{guid})
     const currentUrl = authenticatedPage.url();
-    expect(currentUrl).toMatch(/\/venues\/[a-f0-9-]+/);
+    
+    // Verify URL contains a GUID in the format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    // GUID pattern: 8 hex digits, hyphen, 4 hex digits, hyphen, 4 hex digits, hyphen, 4 hex digits, hyphen, 12 hex digits
+    const guidPattern = /\/venues\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    expect(currentUrl).toMatch(guidPattern);
+    
+    // Verify URL does NOT contain just a numeric ID (e.g., /venues/123)
+    const numericIdPattern = /\/venues\/\d+$/;
+    expect(currentUrl).not.toMatch(numericIdPattern);
+    
+    // Verify we navigated away from the venues list page
     expect(currentUrl).not.toBe('/venues');
   });
 

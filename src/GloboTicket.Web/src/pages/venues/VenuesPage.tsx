@@ -28,7 +28,7 @@ export function VenuesPage() {
 
   const handleVenueClick = (venue: Venue) => {
     // Navigate to venue detail page when implemented
-    navigate(`/venues/${venue.id}`);
+    navigate(`/venues/${venue.venueGuid}`);
   };
 
   return (
