@@ -24,8 +24,8 @@ public class ShowConfiguration : IEntityTypeConfiguration<Show>
         builder.Property(s => s.Id)
             .ValueGeneratedOnAdd();
 
-        // Composite alternate key for multi-tenant uniqueness
-        builder.HasAlternateKey(s => new { s.TenantId, s.ShowGuid });
+        // Alternate key for uniqueness
+        builder.HasAlternateKey(s => s.ShowGuid);
 
         // Index on ShowGuid for queries
         builder.HasIndex(s => s.ShowGuid);
@@ -38,28 +38,17 @@ public class ShowConfiguration : IEntityTypeConfiguration<Show>
         builder.Property(s => s.Date)
             .IsRequired();
 
-        // Foreign key relationship to Tenant with cascade delete
-        builder.HasOne(s => s.Tenant)
-            .WithMany()
-            .HasForeignKey(s => s.TenantId)
-            .OnDelete(DeleteBehavior.Cascade)
-            .IsRequired();
-
-        // Foreign key relationship to Venue with compound key for tenant isolation
-        // This ensures a show can only reference venues within the same tenant
+        // Foreign key relationship to Venue
         builder.HasOne(s => s.Venue)
             .WithMany()
-            .HasForeignKey("TenantId", "VenueId")
-            .HasPrincipalKey(v => new { v.TenantId, v.Id })
+            .HasForeignKey("VenueId")
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
-        // Foreign key relationship to Act with compound key for tenant isolation
-        // This ensures a show can only reference acts within the same tenant
+        // Foreign key relationship to Act
         builder.HasOne(s => s.Act)
             .WithMany()
-            .HasForeignKey("TenantId", "ActId")
-            .HasPrincipalKey(a => new { a.TenantId, a.Id })
+            .HasForeignKey("ActId")
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
