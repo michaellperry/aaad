@@ -249,7 +249,7 @@ public class VenueTests
     {
         // Arrange
         var venue = new Venue();
-        var expectedTenant = new Tenant("Venue Management Co", "venue-mgmt");
+        var expectedTenant = new Tenant("venue-mgmt", "Venue Management Co", "venue-mgmt");
 
         // Act
         venue.Tenant = expectedTenant;

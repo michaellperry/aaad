@@ -25,6 +25,14 @@ public interface ITenantService
     Task<TenantDto?> GetTenantBySlugAsync(string slug, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Retrieves a tenant by its unique tenant identifier.
+    /// </summary>
+    /// <param name="tenantIdentifier">The tenant identifier.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The tenant DTO if found; otherwise, null.</returns>
+    Task<TenantDto?> GetTenantByIdentifierAsync(string tenantIdentifier, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Retrieves all tenants in the system.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>

@@ -1,6 +1,9 @@
 using GloboTicket.API.Configuration;
+using GloboTicket.Domain.Entities;
+using GloboTicket.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace GloboTicket.API.Endpoints;
@@ -20,7 +23,7 @@ public static class AuthEndpoints
         var auth = app.MapGroup("/auth");
 
         // POST /auth/login
-        auth.MapPost("/login", async (LoginRequest request, IConfiguration configuration, HttpContext httpContext) =>
+        auth.MapPost("/login", async (LoginRequest request, IConfiguration configuration, HttpContext httpContext, GloboTicketDbContext dbContext) =>
         {
             // Get users from configuration
             var users = configuration.GetSection("Users").Get<List<UserConfiguration>>();
@@ -31,7 +34,7 @@ public static class AuthEndpoints
             }
 
             // Validate credentials
-            var user = users.FirstOrDefault(u => 
+            var user = users.FirstOrDefault(u =>
                 u.Username == request.Username && u.Password == request.Password);
 
             if (user == null)
@@ -39,12 +42,33 @@ public static class AuthEndpoints
                 return Results.Unauthorized();
             }
 
-            // Create claims
+            // Look up or create tenant by identifier
+            var tenant = await dbContext.Tenants
+                .FirstOrDefaultAsync(t => t.TenantIdentifier == user.TenantIdentifier);
+
+            if (tenant == null)
+            {
+                // Auto-create tenant if it doesn't exist
+                tenant = new Tenant
+                {
+                    TenantIdentifier = user.TenantIdentifier,
+                    Name = GetTenantNameFromIdentifier(user.TenantIdentifier),
+                    Slug = GetTenantSlugFromIdentifier(user.TenantIdentifier),
+                    IsActive = true
+                };
+                dbContext.Tenants.Add(tenant);
+                await dbContext.SaveChangesAsync();
+            }
+
+            var tenantDbId = tenant.Id;
+
+            // Create claims with both database ID and natural key
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Username),
                 new Claim(ClaimTypes.Name, user.Username),
-                new Claim("TenantId", user.TenantId.ToString())
+                new Claim("TenantId", tenantDbId.ToString()),
+                new Claim("TenantIdentifier", user.TenantIdentifier)
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -62,7 +86,8 @@ public static class AuthEndpoints
             return Results.Ok(new
             {
                 username = user.Username,
-                tenantId = user.TenantId,
+                tenantId = tenantDbId,
+                tenantIdentifier = user.TenantIdentifier,
                 message = "Login successful"
             });
         })
@@ -88,11 +113,13 @@ public static class AuthEndpoints
 
             var username = user.FindFirst(ClaimTypes.Name)?.Value;
             var tenantIdClaim = user.FindFirst("TenantId")?.Value;
+            var tenantIdentifier = user.FindFirst("TenantIdentifier")?.Value;
             
             return Results.Ok(new
             {
                 username,
                 tenantId = tenantIdClaim != null && int.TryParse(tenantIdClaim, out var tid) ? tid : (int?)null,
+                tenantIdentifier,
                 isAuthenticated = true
             });
         })
@@ -100,6 +127,32 @@ public static class AuthEndpoints
         .WithName("GetCurrentUser");
 
         return app;
+    }
+
+    /// <summary>
+    /// Helper method to get tenant name from identifier.
+    /// </summary>
+    private static string GetTenantNameFromIdentifier(string identifier)
+    {
+        return identifier switch
+        {
+            "production" => "Production",
+            "smoke-test" => "Smoke Test",
+            _ => $"Tenant {identifier}"
+        };
+    }
+
+    /// <summary>
+    /// Helper method to get tenant slug from identifier.
+    /// </summary>
+    private static string GetTenantSlugFromIdentifier(string identifier)
+    {
+        return identifier switch
+        {
+            "production" => "production",
+            "smoke-test" => "smoke-test",
+            _ => identifier.ToLowerInvariant().Replace("_", "-")
+        };
     }
 }
 

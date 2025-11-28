@@ -12,6 +12,11 @@ public class TenantDto
     public int Id { get; set; }
 
     /// <summary>
+    /// Gets or sets the natural key identifier for the tenant.
+    /// </summary>
+    public string TenantIdentifier { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the display name of the tenant.
     /// </summary>
     public string Name { get; set; } = string.Empty;

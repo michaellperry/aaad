@@ -38,6 +38,15 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.HasIndex(t => t.Slug)
             .IsUnique();
 
+        // TenantIdentifier property
+        builder.Property(t => t.TenantIdentifier)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        // Unique index on TenantIdentifier
+        builder.HasIndex(t => t.TenantIdentifier)
+            .IsUnique();
+
         // IsActive property
         builder.Property(t => t.IsActive)
             .IsRequired();

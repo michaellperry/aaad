@@ -54,7 +54,7 @@ public class MultiTenantEntityTests
     {
         // Arrange
         var entity = new TestMultiTenantEntity();
-        var expectedTenant = new Tenant("Test Tenant", "test-tenant");
+        var expectedTenant = new Tenant("test-tenant", "Test Tenant", "test-tenant");
 
         // Act
         entity.Tenant = expectedTenant;
