@@ -1,29 +1,31 @@
 import { useState } from 'react';
-import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import { Text } from '../atoms/Text';
-import { createVenue } from '../../api/client';
-import type { CreateVenueDto, Venue } from '../../types/venue';
+import { createVenue, updateVenue } from '../../api/client';
+import type { CreateVenueDto, UpdateVenueDto, Venue } from '../../types/venue';
 
 interface VenueFormProps {
+  venue?: Venue; // Optional venue for edit mode
   onSuccess?: (venue: Venue) => void;
   onCancel?: () => void;
 }
 
-export function VenueForm({ onSuccess, onCancel }: VenueFormProps) {
+export function VenueForm({ venue, onSuccess, onCancel }: VenueFormProps) {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-  const [address, setAddress] = useState('');
-  const [seatingCapacity, setSeatingCapacity] = useState('');
-  const [description, setDescription] = useState('');
-  const [latitude, setLatitude] = useState('');
-  const [longitude, setLongitude] = useState('');
+  const isEditMode = !!venue;
+  
+  // Initialize state with venue data if in edit mode
+  const [name, setName] = useState(venue?.name || '');
+  const [address, setAddress] = useState(venue?.address || '');
+  const [seatingCapacity, setSeatingCapacity] = useState(venue?.seatingCapacity?.toString() || '');
+  const [description, setDescription] = useState(venue?.description || '');
+  const [latitude, setLatitude] = useState(venue?.latitude?.toString() || '');
+  const [longitude, setLongitude] = useState(venue?.longitude?.toString() || '');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError(null);
 
     // Validation
@@ -63,25 +65,46 @@ export function VenueForm({ onSuccess, onCancel }: VenueFormProps) {
     setIsLoading(true);
 
     try {
-      const dto: CreateVenueDto = {
-        venueGuid: crypto.randomUUID(),
-        name: name.trim(),
-        address: address.trim() || undefined,
-        seatingCapacity: parseInt(seatingCapacity),
-        description: description.trim(),
-        latitude: latitude ? parseFloat(latitude) : undefined,
-        longitude: longitude ? parseFloat(longitude) : undefined,
-      };
+      if (isEditMode && venue) {
+        // Update existing venue
+        const dto: UpdateVenueDto = {
+          name: name.trim(),
+          address: address.trim() || undefined,
+          seatingCapacity: parseInt(seatingCapacity),
+          description: description.trim(),
+          latitude: latitude ? parseFloat(latitude) : undefined,
+          longitude: longitude ? parseFloat(longitude) : undefined,
+        };
 
-      const venue = await createVenue(dto);
+        const updatedVenue = await updateVenue(venue.venueGuid, dto);
 
-      if (onSuccess) {
-        onSuccess(venue);
+        if (onSuccess) {
+          onSuccess(updatedVenue);
+        } else {
+          navigate('/venues');
+        }
       } else {
-        navigate('/venues');
+        // Create new venue
+        const dto: CreateVenueDto = {
+          venueGuid: crypto.randomUUID(),
+          name: name.trim(),
+          address: address.trim() || undefined,
+          seatingCapacity: parseInt(seatingCapacity),
+          description: description.trim(),
+          latitude: latitude ? parseFloat(latitude) : undefined,
+          longitude: longitude ? parseFloat(longitude) : undefined,
+        };
+
+        const newVenue = await createVenue(dto);
+
+        if (onSuccess) {
+          onSuccess(newVenue);
+        } else {
+          navigate('/venues');
+        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create venue');
+      setError(err instanceof Error ? err.message : `Failed to ${isEditMode ? 'update' : 'create'} venue`);
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +119,7 @@ export function VenueForm({ onSuccess, onCancel }: VenueFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
       {error && (
         <div className="p-4 rounded-lg bg-error/10 border border-error/20">
           <Text size="sm" className="text-error">
@@ -212,14 +235,15 @@ export function VenueForm({ onSuccess, onCancel }: VenueFormProps) {
 
       <div className="flex gap-4 pt-4">
         <Button
-          type="submit"
+          type="button"
           variant="primary"
           size="lg"
           isLoading={isLoading}
           disabled={isLoading}
           className="flex-1"
+          onClick={handleSubmit}
         >
-          Create Venue
+          {isEditMode ? 'Update Venue' : 'Create Venue'}
         </Button>
         <Button
           type="button"

@@ -4,7 +4,7 @@ import type {
   TenantDto,
   CreateTenantDto,
 } from '../types/api';
-import type { Venue, CreateVenueDto } from '../types/venue';
+import type { Venue, CreateVenueDto, UpdateVenueDto } from '../types/venue';
 
 const API_BASE_URL = '';
 
@@ -98,6 +98,19 @@ export async function getVenue(id: string): Promise<Venue> {
 export async function createVenue(dto: CreateVenueDto): Promise<Venue> {
   const response = await fetch(`${API_BASE_URL}/api/venues`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(dto),
+  });
+
+  return handleResponse<Venue>(response);
+}
+
+export async function updateVenue(id: string, dto: UpdateVenueDto): Promise<Venue> {
+  const response = await fetch(`${API_BASE_URL}/api/venues/${id}`, {
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
