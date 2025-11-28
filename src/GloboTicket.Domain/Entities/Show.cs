@@ -28,7 +28,7 @@ public class Show : MultiTenantEntity
     /// <summary>
     /// Gets or sets the collection of ticket sales for this show.
     /// </summary>
-    public ICollection<object> TicketSales { get; set; }
+    public ICollection<TicketSale> TicketSales { get; set; }
 
     /// <summary>
     /// Initializes a new instance of the Show class with the specified venue and act.
@@ -39,7 +39,7 @@ public class Show : MultiTenantEntity
     {
         Venue = venue;
         Act = act;
-        TicketSales = new List<object>();
+        TicketSales = new List<TicketSale>();
     }
 
     /// <summary>
