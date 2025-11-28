@@ -72,46 +72,23 @@ public class GloboTicketDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GloboTicketDbContext).Assembly);
 
         // Configure global query filters for multi-tenant entities
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-        {
-            // Check if the entity implements ITenantEntity
-            if (typeof(ITenantEntity).IsAssignableFrom(entityType.ClrType))
-            {
-                // Create the filter expression: entity => _tenantContext.CurrentTenantId == null || entity.TenantId == _tenantContext.CurrentTenantId
-                var parameter = System.Linq.Expressions.Expression.Parameter(entityType.ClrType, "entity");
-                
-                // _tenantContext.CurrentTenantId == null
-                var tenantIdIsNull = System.Linq.Expressions.Expression.Equal(
-                    System.Linq.Expressions.Expression.Property(
-                        System.Linq.Expressions.Expression.Constant(_tenantContext),
-                        nameof(ITenantContext.CurrentTenantId)),
-                    System.Linq.Expressions.Expression.Constant(null, typeof(int?)));
+        // Top-level entities (Venue, Act) filter by their own TenantId
+        modelBuilder.Entity<Venue>()
+            .HasQueryFilter(v => _tenantContext.CurrentTenantId == null ||
+                                v.TenantId == _tenantContext.CurrentTenantId);
 
-                // entity.TenantId
-                var entityTenantId = System.Linq.Expressions.Expression.Property(
-                    parameter,
-                    nameof(ITenantEntity.TenantId));
+        modelBuilder.Entity<Act>()
+            .HasQueryFilter(a => _tenantContext.CurrentTenantId == null ||
+                                a.TenantId == _tenantContext.CurrentTenantId);
 
-                // _tenantContext.CurrentTenantId
-                var currentTenantId = System.Linq.Expressions.Expression.Property(
-                    System.Linq.Expressions.Expression.Constant(_tenantContext),
-                    nameof(ITenantContext.CurrentTenantId));
+        // Relationship-based entities (Show, TicketSale) filter via joins
+        modelBuilder.Entity<Show>()
+            .HasQueryFilter(s => _tenantContext.CurrentTenantId == null ||
+                                s.Venue.TenantId == _tenantContext.CurrentTenantId);
 
-                // entity.TenantId == _tenantContext.CurrentTenantId
-                var tenantIdMatches = System.Linq.Expressions.Expression.Equal(
-                    entityTenantId,
-                    System.Linq.Expressions.Expression.Convert(currentTenantId, typeof(int)));
-
-                // _tenantContext.CurrentTenantId == null || entity.TenantId == _tenantContext.CurrentTenantId
-                var filterExpression = System.Linq.Expressions.Expression.OrElse(
-                    tenantIdIsNull,
-                    tenantIdMatches);
-
-                var lambda = System.Linq.Expressions.Expression.Lambda(filterExpression, parameter);
-
-                modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
-            }
-        }
+        modelBuilder.Entity<TicketSale>()
+            .HasQueryFilter(ts => _tenantContext.CurrentTenantId == null ||
+                                 ts.Show.Venue.TenantId == _tenantContext.CurrentTenantId);
     }
 
     /// <summary>
@@ -141,13 +118,14 @@ public class GloboTicketDbContext : DbContext
                 }
             }
 
-            // Handle ITenantEntity TenantId assignment
-            if (entry.Entity is ITenantEntity tenantEntity && entry.State == EntityState.Added)
+            // Handle MultiTenantEntity TenantId assignment (only for top-level entities: Venue and Act)
+            // Show and TicketSale implement ITenantEntity but don't have TenantId directly
+            if (entry.Entity is MultiTenantEntity multiTenantEntity && entry.State == EntityState.Added)
             {
                 // Only set TenantId if current tenant context is available
                 if (_tenantContext.CurrentTenantId.HasValue)
                 {
-                    tenantEntity.TenantId = _tenantContext.CurrentTenantId.Value;
+                    multiTenantEntity.TenantId = _tenantContext.CurrentTenantId.Value;
                 }
             }
         }
