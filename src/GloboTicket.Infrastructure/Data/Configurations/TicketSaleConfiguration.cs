@@ -6,7 +6,7 @@ namespace GloboTicket.Infrastructure.Data.Configurations;
 
 /// <summary>
 /// Entity Framework Core configuration for the TicketSale entity.
-/// Defines table structure, constraints, indexes, and multi-tenant support with compound foreign keys.
+/// Defines table structure, constraints, indexes, and relationships.
 /// </summary>
 public class TicketSaleConfiguration : IEntityTypeConfiguration<TicketSale>
 {
@@ -24,9 +24,6 @@ public class TicketSaleConfiguration : IEntityTypeConfiguration<TicketSale>
         builder.Property(ts => ts.Id)
             .ValueGeneratedOnAdd();
 
-        // Composite alternate key for multi-tenant uniqueness
-        builder.HasAlternateKey(ts => new { ts.TenantId, ts.TicketSaleGuid });
-
         // Index on TicketSaleGuid for queries
         builder.HasIndex(ts => ts.TicketSaleGuid);
 
@@ -38,19 +35,10 @@ public class TicketSaleConfiguration : IEntityTypeConfiguration<TicketSale>
         builder.Property(ts => ts.Quantity)
             .IsRequired();
 
-        // Foreign key relationship to Tenant with cascade delete
-        builder.HasOne(ts => ts.Tenant)
-            .WithMany()
-            .HasForeignKey(ts => ts.TenantId)
-            .OnDelete(DeleteBehavior.Cascade)
-            .IsRequired();
-
-        // Foreign key relationship to Show with compound key for tenant isolation
-        // This ensures a ticket sale can only reference shows within the same tenant
+        // Foreign key relationship to Show
         builder.HasOne(ts => ts.Show)
             .WithMany(s => s.TicketSales)
-            .HasForeignKey("TenantId", "ShowId")
-            .HasPrincipalKey(s => new { s.TenantId, s.Id })
+            .HasForeignKey(ts => ts.ShowId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
