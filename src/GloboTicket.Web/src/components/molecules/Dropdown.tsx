@@ -1,5 +1,5 @@
 import { Fragment } from 'react';
-import { Menu, Transition } from '@headlessui/react';
+import { Menu, MenuButton, MenuItems, MenuItem, Transition } from '@headlessui/react';
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '../../utils';
@@ -83,9 +83,9 @@ export const Dropdown = ({
 }: DropdownProps) => {
   return (
     <Menu as="div" className="relative inline-block text-left">
-      <Menu.Button as={Fragment}>
+      <MenuButton as={Fragment}>
         {trigger}
-      </Menu.Button>
+      </MenuButton>
 
       <Transition
         as={Fragment}
@@ -96,7 +96,7 @@ export const Dropdown = ({
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <Menu.Items
+        <MenuItems
           className={cn(
             'absolute z-10 mt-2 w-56',
             'origin-top-right rounded-lg',
@@ -109,7 +109,7 @@ export const Dropdown = ({
         >
           {items.map((item) => (
             <Fragment key={item.id}>
-              <Menu.Item disabled={item.disabled}>
+              <MenuItem disabled={item.disabled}>
                 {({ active }) => (
                   <button
                     onClick={item.onClick}
@@ -132,13 +132,13 @@ export const Dropdown = ({
                     <span>{item.label}</span>
                   </button>
                 )}
-              </Menu.Item>
+              </MenuItem>
               {item.divider && (
                 <div className="my-1 border-t border-border-default" />
               )}
             </Fragment>
           ))}
-        </Menu.Items>
+        </MenuItems>
       </Transition>
     </Menu>
   );
