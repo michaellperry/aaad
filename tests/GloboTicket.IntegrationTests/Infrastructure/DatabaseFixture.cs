@@ -1,5 +1,4 @@
 using Testcontainers.MsSql;
-using Xunit;
 
 namespace GloboTicket.IntegrationTests.Infrastructure;
 

@@ -4,7 +4,6 @@ using GloboTicket.Infrastructure.Data;
 using GloboTicket.Infrastructure.Services;
 using GloboTicket.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
 
 namespace GloboTicket.IntegrationTests.MultiTenancy;
 

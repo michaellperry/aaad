@@ -1,6 +1,5 @@
 using FluentAssertions;
 using GloboTicket.Domain.Entities;
-using GloboTicket.Domain.Interfaces;
 
 namespace GloboTicket.UnitTests.Domain;
 
