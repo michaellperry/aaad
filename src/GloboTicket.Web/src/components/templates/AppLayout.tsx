@@ -6,6 +6,7 @@ import type { NavSection } from '../organisms/Sidebar';
 import { Container } from '../layout';
 import { ROUTES } from '../../router/routes';
 import { useTheme } from '../../theme';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Main application layout with header, sidebar, and content area.
@@ -14,6 +15,7 @@ import { useTheme } from '../../theme';
 export const AppLayout = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const { user, logout, isLoading } = useAuth();
 
   // Determine active navigation item based on current path
   const getActiveItemId = () => {
@@ -63,6 +65,24 @@ export const AppLayout = () => {
     },
   ];
 
+  // Get user initials from username
+  const getUserInitials = (username: string): string => {
+    const parts = username.split(/[\s@._-]+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return username.substring(0, 2).toUpperCase();
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-surface-base">
       {/* Header */}
@@ -70,12 +90,16 @@ export const AppLayout = () => {
         logo="GloboTicket"
         theme={theme}
         onThemeToggle={toggleTheme}
-        userMenu={{
-          userName: 'Admin User',
-          userEmail: 'admin@globoticket.com',
-          initials: 'AU',
-          onLogout: () => console.log('Logout clicked'),
-        }}
+        userMenu={
+          user
+            ? {
+                userName: user.username,
+                userEmail: `Tenant ID: ${user.tenantId}`,
+                initials: getUserInitials(user.username),
+                onLogout: handleLogout,
+              }
+            : undefined
+        }
       />
 
       {/* Main layout with sidebar and content */}

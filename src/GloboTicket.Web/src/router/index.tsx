@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '../components/templates';
-import { DashboardPage } from '../pages';
+import { DashboardPage, LoginPage } from '../pages';
 import {
   VenuesPage,
   VenueDetailPage,
@@ -19,6 +19,7 @@ import {
   CreateShowPage,
   EditShowPage,
 } from '../pages/shows';
+import { ProtectedRoute } from '../components/routing/ProtectedRoute';
 import { ROUTES } from './routes';
 
 /**
@@ -43,6 +44,13 @@ const NotFoundPage = () => (
  * Application router configuration
  */
 export const router = createBrowserRouter([
+  // Public login route (outside AppLayout)
+  {
+    path: ROUTES.LOGIN,
+    element: <LoginPage />,
+  },
+  
+  // Protected routes (inside AppLayout)
   {
     path: '/',
     element: <AppLayout />,
@@ -50,61 +58,113 @@ export const router = createBrowserRouter([
       // Dashboard
       {
         index: true,
-        element: <DashboardPage />,
+        element: (
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        ),
       },
       
       // Venues
       {
         path: ROUTES.VENUES,
-        element: <VenuesPage />,
+        element: (
+          <ProtectedRoute>
+            <VenuesPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ROUTES.VENUE_CREATE,
-        element: <CreateVenuePage />,
+        element: (
+          <ProtectedRoute>
+            <CreateVenuePage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ROUTES.VENUE_DETAIL,
-        element: <VenueDetailPage />,
+        element: (
+          <ProtectedRoute>
+            <VenueDetailPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ROUTES.VENUE_EDIT,
-        element: <EditVenuePage />,
+        element: (
+          <ProtectedRoute>
+            <EditVenuePage />
+          </ProtectedRoute>
+        ),
       },
       
       // Acts
       {
         path: ROUTES.ACTS,
-        element: <ActsPage />,
+        element: (
+          <ProtectedRoute>
+            <ActsPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ROUTES.ACT_CREATE,
-        element: <CreateActPage />,
+        element: (
+          <ProtectedRoute>
+            <CreateActPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ROUTES.ACT_DETAIL,
-        element: <ActDetailPage />,
+        element: (
+          <ProtectedRoute>
+            <ActDetailPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ROUTES.ACT_EDIT,
-        element: <EditActPage />,
+        element: (
+          <ProtectedRoute>
+            <EditActPage />
+          </ProtectedRoute>
+        ),
       },
       
       // Shows
       {
         path: ROUTES.SHOWS,
-        element: <ShowsPage />,
+        element: (
+          <ProtectedRoute>
+            <ShowsPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ROUTES.SHOW_CREATE,
-        element: <CreateShowPage />,
+        element: (
+          <ProtectedRoute>
+            <CreateShowPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ROUTES.SHOW_DETAIL,
-        element: <ShowDetailPage />,
+        element: (
+          <ProtectedRoute>
+            <ShowDetailPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: ROUTES.SHOW_EDIT,
-        element: <EditShowPage />,
+        element: (
+          <ProtectedRoute>
+            <EditShowPage />
+          </ProtectedRoute>
+        ),
       },
       
       // 404 Not Found

@@ -2,6 +2,9 @@
  * Route path constants for the application
  */
 export const ROUTES = {
+  // Auth
+  LOGIN: '/login',
+  
   // Dashboard
   DASHBOARD: '/',
   
