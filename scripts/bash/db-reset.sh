@@ -10,8 +10,7 @@ echo "Dropping database..."
 # Ignore errors from drop (database might not exist)
 dotnet ef database drop --force \
   --project src/GloboTicket.Infrastructure \
-  --startup-project src/GloboTicket.API \
-  --connection "$CONNECTION_STRING" || echo "Database drop may have failed or database didn't exist. Continuing..."
+  --startup-project src/GloboTicket.API || echo "Database drop may have failed or database didn't exist. Continuing..."
 
 echo "Recreating database with all migrations..."
 
