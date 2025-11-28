@@ -104,70 +104,6 @@ public class TicketSaleTests
         ticketSale.Quantity.Should().Be(0);
     }
 
-    [Fact]
-    public void GivenTicketSale_WhenChecked_ThenInheritsFromMultiTenantEntity()
-    {
-        // Arrange
-        var venue = new Venue { Name = "Test Venue" };
-        var act = new Act { Name = "Test Act" };
-        var show = new Show(venue, act);
-
-        // Act
-        var ticketSale = new TicketSale(show);
-
-        // Assert
-        ticketSale.Should().BeAssignableTo<MultiTenantEntity>();
-    }
-
-    [Fact]
-    public void GivenTicketSale_WhenChecked_ThenImplementsITenantEntity()
-    {
-        // Arrange
-        var venue = new Venue { Name = "Test Venue" };
-        var act = new Act { Name = "Test Act" };
-        var show = new Show(venue, act);
-
-        // Act
-        var ticketSale = new TicketSale(show);
-
-        // Assert
-        ticketSale.Should().BeAssignableTo<ITenantEntity>();
-    }
-
-    [Fact]
-    public void GivenTicketSale_WhenTenantIdSet_ThenCanBeRetrieved()
-    {
-        // Arrange
-        var venue = new Venue { Name = "Test Venue" };
-        var act = new Act { Name = "Test Act" };
-        var show = new Show(venue, act);
-        var ticketSale = new TicketSale(show);
-        var expectedTenantId = 99;
-
-        // Act
-        ticketSale.TenantId = expectedTenantId;
-
-        // Assert
-        ticketSale.TenantId.Should().Be(expectedTenantId);
-    }
-
-    [Fact]
-    public void GivenTicketSale_WhenTenantSet_ThenCanBeRetrieved()
-    {
-        // Arrange
-        var venue = new Venue { Name = "Test Venue" };
-        var act = new Act { Name = "Test Act" };
-        var show = new Show(venue, act);
-        var ticketSale = new TicketSale(show);
-        var expectedTenant = new Tenant("Ticket Sales Company", "ticket-sales");
-
-        // Act
-        ticketSale.Tenant = expectedTenant;
-
-        // Assert
-        ticketSale.Tenant.Should().Be(expectedTenant);
-        ticketSale.Tenant.Name.Should().Be("Ticket Sales Company");
-    }
 
     [Fact]
     public void GivenTicketSale_WhenChecked_ThenInheritsFromEntity()
@@ -208,24 +144,6 @@ public class TicketSaleTests
     }
 
     [Fact]
-    public void GivenTicketSale_WhenCastToITenantEntity_ThenCanAccessTenantId()
-    {
-        // Arrange
-        var venue = new Venue { Name = "Test Venue" };
-        var act = new Act { Name = "Test Act" };
-        var show = new Show(venue, act);
-        var ticketSale = new TicketSale(show);
-        var expectedTenantId = 77;
-        ticketSale.TenantId = expectedTenantId;
-
-        // Act
-        ITenantEntity tenantEntity = ticketSale;
-
-        // Assert
-        tenantEntity.TenantId.Should().Be(expectedTenantId);
-    }
-
-    [Fact]
     public void GivenTicketSaleWithAllProperties_WhenSet_ThenAllRetainValues()
     {
         // Arrange
@@ -236,7 +154,6 @@ public class TicketSaleTests
         var ticketSaleGuid = Guid.NewGuid();
         var showId = 50;
         var quantity = 10;
-        var tenantId = 5;
         var id = 100;
         var createdAt = DateTime.UtcNow;
 
@@ -244,7 +161,6 @@ public class TicketSaleTests
         ticketSale.TicketSaleGuid = ticketSaleGuid;
         ticketSale.ShowId = showId;
         ticketSale.Quantity = quantity;
-        ticketSale.TenantId = tenantId;
         ticketSale.Id = id;
         ticketSale.CreatedAt = createdAt;
 
@@ -253,7 +169,6 @@ public class TicketSaleTests
         ticketSale.Show.Should().Be(show);
         ticketSale.ShowId.Should().Be(showId);
         ticketSale.Quantity.Should().Be(quantity);
-        ticketSale.TenantId.Should().Be(tenantId);
         ticketSale.Id.Should().Be(id);
         ticketSale.CreatedAt.Should().Be(createdAt);
     }
@@ -293,15 +208,13 @@ public class TicketSaleTests
         var ticketSaleGuid = Guid.NewGuid();
         var showId = 25;
         var quantity = 3;
-        var tenantId = 10;
 
         // Act
         var ticketSale = new TicketSale(show)
         {
             TicketSaleGuid = ticketSaleGuid,
             ShowId = showId,
-            Quantity = quantity,
-            TenantId = tenantId
+            Quantity = quantity
         };
 
         // Assert
@@ -311,6 +224,5 @@ public class TicketSaleTests
         ticketSale.Show.Act.Name.Should().Be("The Rolling Stones");
         ticketSale.ShowId.Should().Be(showId);
         ticketSale.Quantity.Should().Be(quantity);
-        ticketSale.TenantId.Should().Be(tenantId);
     }
 }
