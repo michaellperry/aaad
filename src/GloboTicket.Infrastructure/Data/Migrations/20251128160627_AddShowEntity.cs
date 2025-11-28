@@ -43,19 +43,19 @@ namespace GloboTicket.Infrastructure.Data.Migrations
                         columns: x => new { x.TenantId, x.ActId },
                         principalTable: "Acts",
                         principalColumns: new[] { "TenantId", "Id" },
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_Shows_Tenants_TenantId",
                         column: x => x.TenantId,
                         principalTable: "Tenants",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_Shows_Venues_TenantId_VenueId",
                         columns: x => new { x.TenantId, x.VenueId },
                         principalTable: "Venues",
                         principalColumns: new[] { "TenantId", "Id" },
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateIndex(
