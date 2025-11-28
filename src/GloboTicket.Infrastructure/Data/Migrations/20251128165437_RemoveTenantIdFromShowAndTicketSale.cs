@@ -104,7 +104,7 @@ namespace GloboTicket.Infrastructure.Data.Migrations
                 column: "VenueId",
                 principalTable: "Venues",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.NoAction);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_TicketSales_Shows_ShowId",

@@ -181,14 +181,14 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
     private static GloboTicketDbContext CreateDbContext(string connectionString, int tenantId)
     {
         var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
-            .UseSqlServer(connectionString)
+            .UseSqlServer(connectionString, sqlOptions => sqlOptions.UseNetTopologySuite())
             .Options;
 
         var tenantContext = new TestTenantContext(tenantId);
         var context = new GloboTicketDbContext(options, tenantContext);
         
-        // Ensure database is created for this test
-        context.Database.EnsureCreated();
+        // Apply migrations to ensure database schema matches production behavior
+        context.Database.Migrate();
         
         return context;
     }
