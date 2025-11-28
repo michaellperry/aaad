@@ -9,8 +9,7 @@ Write-Host "Dropping database..." -ForegroundColor Yellow
 
 dotnet ef database drop --force `
   --project src/GloboTicket.Infrastructure `
-  --startup-project src/GloboTicket.API `
-  --connection $connectionString
+  --startup-project src/GloboTicket.API
 
 if ($LASTEXITCODE -ne 0) {
     Write-Warning "Database drop may have failed or database didn't exist. Continuing..."
