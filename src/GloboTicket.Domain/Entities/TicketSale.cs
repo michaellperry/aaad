@@ -3,7 +3,7 @@ namespace GloboTicket.Domain.Entities;
 /// <summary>
 /// Represents a ticket sale for a show.
 /// </summary>
-public class TicketSale : MultiTenantEntity
+public class TicketSale : Entity
 {
     /// <summary>
     /// Gets or sets the unique identifier (GUID) for this ticket sale.
