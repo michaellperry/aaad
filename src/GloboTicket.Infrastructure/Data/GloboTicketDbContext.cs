@@ -1,5 +1,4 @@
 using GloboTicket.Domain.Entities;
-using GloboTicket.Domain.Interfaces;
 using GloboTicket.Infrastructure.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
 

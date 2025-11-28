@@ -1,5 +1,4 @@
 using GloboTicket.Infrastructure.MultiTenancy;
-using System.Security.Claims;
 
 namespace GloboTicket.API.Middleware;
 
