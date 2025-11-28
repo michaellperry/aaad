@@ -33,6 +33,11 @@ public class GloboTicketDbContext : DbContext
     public DbSet<Act> Acts { get; set; } = null!;
 
     /// <summary>
+    /// Gets or sets the Shows DbSet for managing show entities.
+    /// </summary>
+    public DbSet<Show> Shows { get; set; } = null!;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="GloboTicketDbContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
