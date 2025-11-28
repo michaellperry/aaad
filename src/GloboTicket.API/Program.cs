@@ -27,6 +27,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContext, TenantContext>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IVenueService, VenueService>();
+builder.Services.AddScoped<IActService, ActService>();
 
 // Configure cookie authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -101,5 +102,8 @@ app.MapTenantEndpoints();
 
 // Map venue endpoints
 app.MapVenueEndpoints();
+
+// Map act endpoints
+app.MapActEndpoints();
 
 app.Run();
