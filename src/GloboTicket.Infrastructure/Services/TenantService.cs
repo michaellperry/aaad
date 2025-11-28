@@ -44,6 +44,16 @@ public class TenantService : ITenantService
     }
 
     /// <inheritdoc />
+    public async Task<TenantDto?> GetTenantByIdentifierAsync(string tenantIdentifier, CancellationToken cancellationToken = default)
+    {
+        var tenant = await _dbContext.Tenants
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.TenantIdentifier == tenantIdentifier, cancellationToken);
+
+        return tenant == null ? null : MapToDto(tenant);
+    }
+
+    /// <inheritdoc />
     public async Task<IEnumerable<TenantDto>> GetAllTenantsAsync(CancellationToken cancellationToken = default)
     {
         var tenants = await _dbContext.Tenants
@@ -60,6 +70,7 @@ public class TenantService : ITenantService
         {
             Name = dto.Name,
             Slug = dto.Slug,
+            TenantIdentifier = dto.TenantIdentifier,
             IsActive = true
         };
 
@@ -81,6 +92,7 @@ public class TenantService : ITenantService
             Id = tenant.Id,
             Name = tenant.Name,
             Slug = tenant.Slug,
+            TenantIdentifier = tenant.TenantIdentifier,
             IsActive = tenant.IsActive,
             CreatedAt = tenant.CreatedAt
         };

@@ -21,9 +21,10 @@ public class UserConfiguration
     public required string Password { get; set; }
 
     /// <summary>
-    /// Gets or sets the tenant ID associated with this user.
-    /// The tenant determines which data context the user accesses within
-    /// the environment's database.
+    /// Gets or sets the tenant identifier (natural key) associated with this user.
+    /// The tenant identifier is a human-readable string that determines which tenant
+    /// (data context) the user accesses within the environment's database.
+    /// Examples: "production", "smoke-test", "integration-test"
     /// </summary>
-    public int TenantId { get; set; }
+    public required string TenantIdentifier { get; set; }
 }

@@ -105,7 +105,7 @@ public class ActTests
     {
         // Arrange
         var act = new Act();
-        var expectedTenant = new Tenant("Entertainment Company", "entertainment-co");
+        var expectedTenant = new Tenant("entertainment-co", "Entertainment Company", "entertainment-co");
 
         // Act
         act.Tenant = expectedTenant;
