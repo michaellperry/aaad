@@ -29,6 +29,7 @@ builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IVenueService, VenueService>();
 builder.Services.AddScoped<IActService, ActService>();
 builder.Services.AddScoped<IShowService, ShowService>();
+builder.Services.AddScoped<ITicketSaleService, TicketSaleService>();
 
 // Configure cookie authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -109,5 +110,8 @@ app.MapActEndpoints();
 
 // Map show endpoints
 app.MapShowEndpoints();
+
+// Map ticket sale endpoints
+app.MapTicketSaleEndpoints();
 
 app.Run();
