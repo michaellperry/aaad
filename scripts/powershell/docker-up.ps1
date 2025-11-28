@@ -47,25 +47,36 @@ $elapsed = 0
 $initComplete = $false
 
 while ($elapsed -lt $maxWait) {
-    $initContainer = docker compose -f docker/docker-compose.yml ps db-init --format json 2>$null | ConvertFrom-Json -ErrorAction SilentlyContinue
-    if ($initContainer) {
-        $state = $initContainer.State
-        if ($state -eq "exited") {
-            $exitCode = $initContainer.ExitCode
-            if ($exitCode -eq 0) {
-                Write-Host "✓ Database initialization completed successfully!" -ForegroundColor Green
-                $initComplete = $true
-                break
-            } else {
-                Write-Error "Database initialization failed with exit code: $exitCode"
-                Write-Host "Check logs with: docker compose -f docker/docker-compose.yml logs db-init" -ForegroundColor Yellow
-                exit 1
-            }
+    # Check container status using docker inspect (more reliable than docker compose ps)
+    $containerState = docker inspect globoticket-db-init --format='{{.State.Status}}' 2>$null
+    
+    if ($containerState -eq "exited") {
+        $exitCode = docker inspect globoticket-db-init --format='{{.State.ExitCode}}' 2>$null
+        if ($exitCode -eq "0") {
+            Write-Host "✓ Database initialization completed successfully!" -ForegroundColor Green
+            $initComplete = $true
+            break
+        } else {
+            Write-Error "Database initialization failed with exit code: $exitCode"
+            Write-Host "Check logs with: docker compose -f docker/docker-compose.yml logs db-init" -ForegroundColor Yellow
+            exit 1
         }
+    } elseif ($containerState -eq "running") {
+        # Container is still running, keep waiting
+        Start-Sleep -Seconds 2
+        $elapsed += 2
+        Write-Host "  Waiting... (${elapsed}s)" -ForegroundColor Gray
+    } elseif ([string]::IsNullOrEmpty($containerState)) {
+        # Container doesn't exist yet, keep waiting
+        Start-Sleep -Seconds 2
+        $elapsed += 2
+        Write-Host "  Waiting... (${elapsed}s)" -ForegroundColor Gray
+    } else {
+        # Unexpected state
+        Write-Error "Unexpected container state: $containerState"
+        docker compose -f docker/docker-compose.yml ps
+        exit 1
     }
-    Start-Sleep -Seconds 2
-    $elapsed += 2
-    Write-Host "  Waiting... (${elapsed}s)" -ForegroundColor Gray
 }
 
 if (-not $initComplete) {
