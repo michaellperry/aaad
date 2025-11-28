@@ -189,7 +189,7 @@ cd src/GloboTicket.API
 dotnet run
 ```
 
-The API will be available at `http://localhost:5028`
+The API documentation will be available at `http://localhost:5028/swagger`
 
 ### 4. Start the Frontend (Optional)
 
