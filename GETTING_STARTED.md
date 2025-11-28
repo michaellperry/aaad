@@ -86,7 +86,7 @@ cd aaad
 
 ### Step 2: Start Docker Infrastructure
 
-The project uses SQL Server 2022 running in Docker.
+The project uses SQL Server 2022 running in Docker with automatic database initialization.
 
 **Using scripts (recommended):**
 ```bash
@@ -97,21 +97,23 @@ pwsh scripts/powershell/docker-up.ps1
 ./scripts/bash/docker-up.sh
 ```
 
+The script will:
+- Start SQL Server container
+- Wait for SQL Server to become healthy (30-60 seconds)
+- Automatically run database initialization to create users (`migration_user` and `app_user`)
+- Verify initialization completed successfully
+
 **Expected output:**
 ```
+✓ SQL Server is healthy!
+✓ Database initialization completed successfully!
+
 NAME                    STATUS
 globoticket-sqlserver   Up X minutes (healthy)
+globoticket-db-init     Exited (0)
 ```
 
-**Wait for the container to become healthy** (indicated by the "healthy" status). This may take 30-60 seconds.
-
-### Step 3: Return to Project Root
-
-If you used the manual Docker commands, return to the project root:
-
-```bash
-cd ..
-```
+**Note:** The `db-init` container runs automatically after SQL Server is healthy and exits when initialization is complete. This ensures database users are created automatically for new developers.
 
 ### Step 4: Restore Dependencies
 
@@ -120,7 +122,7 @@ cd ..
 dotnet restore
 ```
 
-### Step 5: Apply Database Migrations
+### Step 4: Apply Database Migrations
 
 **Using scripts (recommended):**
 ```bash
@@ -132,16 +134,18 @@ pwsh scripts/powershell/db-update.ps1
 ```
 
 This will:
-- Create the `GloboTicket` database
-- Create the `Tenants` table
-- Seed initial tenant data (Production tenant and Smoke Test tenant)
+- Create the `GloboTicket` database (if it doesn't exist - it was created by the init container)
+- Apply all pending migrations
+- Create all database tables
+
+**Note:** Database users (`migration_user` and `app_user`) were already created automatically by the init container in Step 2.
 
 **Verify database setup:**
 ```bash
 docker compose -f docker/docker-compose.yml exec sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U app_user -P 'YourStrong@Passw0rd' -d GloboTicket -C -Q "SELECT Id, Name, Slug FROM Tenants"
 ```
 
-### Step 6: Build the Solution
+### Step 5: Build the Solution
 
 **Using scripts (recommended):**
 ```bash
@@ -154,7 +158,7 @@ pwsh scripts/powershell/build.ps1
 
 **Expected output:** `Build succeeded in X.Xs`
 
-### Step 7: Run Tests (Optional but Recommended)
+### Step 6: Run Tests (Optional but Recommended)
 
 **Using scripts (recommended):**
 ```bash
@@ -529,9 +533,51 @@ A network-related or instance-specific error occurred while establishing a conne
 
 2. Wait for the container to become healthy (30-60 seconds after startup)
 
-3. Test connection manually:
+3. Verify database initialization completed:
+   ```bash
+   docker compose -f docker/docker-compose.yml ps db-init
+   ```
+   The `db-init` container should show status `Exited (0)`. If it shows a non-zero exit code, check the logs:
+   ```bash
+   docker compose -f docker/docker-compose.yml logs db-init
+   ```
+
+4. Test connection manually:
    ```bash
    docker compose -f docker/docker-compose.yml exec sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U app_user -P 'YourStrong@Passw0rd' -C -Q "SELECT @@VERSION"
+   ```
+
+### Issue: Database Initialization Failed
+
+**Symptoms:**
+- `db-init` container shows non-zero exit code
+- Cannot login with `migration_user` or `app_user`
+
+**Solutions:**
+1. Check initialization logs:
+   ```bash
+   docker compose -f docker/docker-compose.yml logs db-init
+   ```
+
+2. Verify SQL Server is healthy before init runs:
+   ```bash
+   docker compose -f docker/docker-compose.yml ps sqlserver
+   ```
+
+3. Manually run initialization (if needed):
+   ```bash
+   docker compose -f docker/docker-compose.yml exec sqlserver /opt/mssql-tools18/bin/sqlcmd \
+     -S localhost -U sa -P 'YourStrong!Passw0rd' -C \
+     -i /init-db/01-create-users.sql
+   ```
+
+4. Test fresh setup with volume recreation:
+   ```bash
+   # Bash
+   ./scripts/bash/docker-test-reset.sh
+   
+   # PowerShell
+   pwsh scripts/powershell/docker-test-reset.ps1
    ```
 
 ### Issue: Migration Failed

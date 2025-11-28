@@ -89,22 +89,33 @@ docker compose ps
 # globoticket-sqlserver   Up X minutes (healthy)
 ```
 
-### Initializing Database Users
+### Automatic Database Initialization
 
-**IMPORTANT**: SQL Server 2022 containers don't automatically execute scripts from `/docker-entrypoint-initdb.d`. You must manually run the initialization script after first startup.
+**Database users are automatically created** when you start Docker Compose. An init container (`db-init`) runs after SQL Server becomes healthy and executes the initialization script.
 
+**How it works:**
+1. SQL Server container starts and becomes healthy
+2. `db-init` container automatically starts (depends on SQL Server health)
+3. Init script waits for SQL Server to be ready
+4. Initialization script creates `migration_user`, `app_user`, and `GloboTicket` database
+5. Init container exits with success code
+
+**Verifying initialization:**
 ```bash
-# Option 1: Run via docker exec
-docker compose exec sqlserver /opt/mssql-tools/bin/sqlcmd \
-  -S localhost -U sa -P 'YourStrong!Passw0rd' \
-  -i /docker-entrypoint-initdb.d/01-create-users.sql
+# Check init container status (should show "Exited (0)")
+docker compose ps db-init
 
-# Option 2: Run from host (requires sqlcmd installed locally)
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong!Passw0rd' \
-  -i ./init-db/01-create-users.sql
+# View initialization logs
+docker compose logs db-init
 ```
 
-You should see output indicating successful creation of both users and the GloboTicket database.
+**Manual initialization (if needed):**
+If automatic initialization fails, you can manually run the script:
+```bash
+docker compose exec sqlserver /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P 'YourStrong!Passw0rd' -C \
+  -i /init-db/01-create-users.sql
+```
 
 ### Running Migrations
 
@@ -187,10 +198,22 @@ The container status will show:
 - **Image**: `mcr.microsoft.com/mssql/server:2022-latest`
 - **Port**: 1433 (mapped to host 1433)
 - **Volumes**:
-  - `sqlserver-data`: Persistent data storage
-  - `./init-db`: Initialization scripts (read-only)
+  - `sqlserver-data`: Named volume for persistent data storage
 - **Network**: `globoticket-network` (bridge)
 - **Restart Policy**: `unless-stopped`
+- **Health Check**: Verifies SQL Server is ready to accept connections
+
+### db-init
+
+- **Image**: `mcr.microsoft.com/mssql/server:2022-latest` (uses sqlcmd tools)
+- **Purpose**: Automatically initialize database users and GloboTicket database
+- **Dependencies**: Waits for `sqlserver` to be healthy before starting
+- **Volumes**:
+  - `./init-db`: Initialization SQL scripts (read-only)
+  - `./scripts`: Initialization bash script (read-only)
+- **Network**: `globoticket-network` (bridge)
+- **Restart Policy**: `no` (runs once and exits)
+- **Behavior**: Runs automatically on first startup, exits after successful initialization
 
 ## Troubleshooting
 
@@ -239,9 +262,42 @@ docker compose exec sqlserver /opt/mssql-tools/bin/sqlcmd \
 
 **Symptom**: Cannot login with migration_user or app_user
 
-**Cause**: SQL Server 2022 doesn't auto-run init scripts
+**Possible Causes**:
+1. Init container failed to run
+2. Init container exited with error
+3. SQL Server wasn't healthy when init container started
 
-**Solution**: Manually run the initialization script (see "Initializing Database Users" above)
+**Solutions**:
+1. Check init container status:
+   ```bash
+   docker compose ps db-init
+   ```
+
+2. View init container logs:
+   ```bash
+   docker compose logs db-init
+   ```
+
+3. Verify SQL Server was healthy:
+   ```bash
+   docker compose ps sqlserver
+   ```
+
+4. Manually run initialization (if needed):
+   ```bash
+   docker compose exec sqlserver /opt/mssql-tools18/bin/sqlcmd \
+     -S localhost -U sa -P 'YourStrong!Passw0rd' -C \
+     -i /init-db/01-create-users.sql
+   ```
+
+5. Test fresh setup:
+   ```bash
+   # Bash
+   ./scripts/bash/docker-test-reset.sh
+   
+   # PowerShell
+   pwsh scripts/powershell/docker-test-reset.ps1
+   ```
 
 ### Permission Denied Errors
 
@@ -363,33 +419,41 @@ Typical daily workflow for developers:
 
 ```bash
 # 1. Start infrastructure (once per day)
-cd docker
-docker compose up -d
-docker compose ps  # Wait for healthy
+# Using scripts (recommended):
+./scripts/bash/docker-up.sh
+# OR
+pwsh scripts/powershell/docker-up.ps1
 
-# 2. Initialize users (first time only)
-docker compose exec sqlserver /opt/mssql-tools/bin/sqlcmd \
-  -S localhost -U sa -P 'YourStrong!Passw0rd' \
-  -i /docker-entrypoint-initdb.d/01-create-users.sql
+# The script automatically:
+# - Starts SQL Server
+# - Waits for SQL Server to be healthy
+# - Runs database initialization (creates users automatically)
+# - Verifies initialization completed
 
-# 3. Run migrations (when schema changes)
-cd ../src/GloboTicket.Infrastructure
-dotnet ef database update --connection "Server=localhost,1433;Database=GloboTicket;User Id=migration_user;Password=Migration@Pass123;TrustServerCertificate=true"
+# 2. Run migrations (when schema changes)
+./scripts/bash/db-update.sh
+# OR
+pwsh scripts/powershell/db-update.ps1
 
-# 4. Start API (in another terminal)
-cd ../../src/GloboTicket.API
-dotnet run
+# 3. Start API (in another terminal)
+./scripts/bash/run-api.sh
+# OR
+pwsh scripts/powershell/run-api.ps1
 
-# 5. Start frontend (in another terminal)
-cd ../../src/GloboTicket.Web
-npm run dev
+# 4. Start frontend (in another terminal, optional)
+./scripts/bash/run-web.sh
+# OR
+pwsh scripts/powershell/run-web.ps1
 
-# 6. Develop and test...
+# 5. Develop and test...
 
-# 7. Stop infrastructure (end of day)
-cd ../../docker
-docker compose down  # Preserves data
+# 6. Stop infrastructure (end of day)
+docker compose -f docker/docker-compose.yml down  # Preserves data
+# OR to remove volumes and start fresh:
+docker compose -f docker/docker-compose.yml down -v
 ```
+
+**Note:** Database users are automatically created on first startup. No manual initialization is required!
 
 ## Additional Resources
 
