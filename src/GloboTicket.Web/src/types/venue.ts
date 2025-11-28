@@ -45,3 +45,15 @@ export interface CreateVenueDto {
   seatingCapacity: number;
   description: string;
 }
+
+/**
+ * DTO for updating an existing venue
+ */
+export interface UpdateVenueDto {
+  name: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  seatingCapacity: number;
+  description: string;
+}
