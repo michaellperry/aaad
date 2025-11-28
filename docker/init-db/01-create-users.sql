@@ -6,6 +6,8 @@
 -- 1. MIGRATION USER (migration_user)
 --    - Purpose: Execute database migrations and schema changes
 --    - Permissions: Full DDL (CREATE, ALTER, DROP) and DML on migration history
+--    - Server Role: dbcreator (allows creating databases)
+--    - Database Role: db_owner (full access to GloboTicket database)
 --    - Usage: EF Core migration bundle execution only
 --    - Security: Should only be used during deployment/migration windows
 --
@@ -38,6 +40,18 @@ END
 ELSE
 BEGIN
     PRINT '⚠ migration_user login already exists';
+END
+
+-- Grant dbcreator server role to migration_user
+-- This allows EF Core to create databases when they don't exist
+IF IS_SRVROLEMEMBER('dbcreator', 'migration_user') = 0
+BEGIN
+    ALTER SERVER ROLE dbcreator ADD MEMBER migration_user;
+    PRINT '✓ migration_user granted dbcreator server role (required for database creation)';
+END
+ELSE
+BEGIN
+    PRINT '⚠ migration_user already has dbcreator server role';
 END
 
 -- Switch to the GloboTicket database (will be created by first migration)
@@ -127,7 +141,7 @@ PRINT '=========================================================================
 PRINT 'Database initialization complete!';
 PRINT '';
 PRINT 'Users created:';
-PRINT '  • migration_user - Use for EF Core migrations (Elevated privileges)';
+PRINT '  • migration_user - Use for EF Core migrations (dbcreator server role, db_owner database role)';
 PRINT '  • app_user       - Use for API runtime operations (Restricted privileges)';
 PRINT '';
 PRINT 'Next steps:';
