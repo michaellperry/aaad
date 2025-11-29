@@ -1,4 +1,4 @@
-import { test as base, Page } from '@playwright/test';
+import { test as base, type Page } from '@playwright/test';
 import { login, waitForAuthentication } from '../helpers/auth.helpers';
 
 // Test credentials constants - using dedicated Playwright test user with isolated tenant

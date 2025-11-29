@@ -38,7 +38,7 @@ export function EditVenuePage() {
     fetchVenue();
   }, [id]);
 
-  const handleSuccess = (updatedVenue: Venue) => {
+  const handleSuccess = () => {
     navigate('/venues');
   };
 

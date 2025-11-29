@@ -53,7 +53,7 @@ export function EditActPage() {
     fetchAct();
   }, [id]);
 
-  const handleSuccess = (updatedAct: Act) => {
+  const handleSuccess = () => {
     navigate('/acts');
   };
 

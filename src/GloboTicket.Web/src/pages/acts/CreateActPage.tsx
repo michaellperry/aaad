@@ -11,7 +11,6 @@ import { Card } from '../../components/molecules/Card';
 import { ActForm } from '../../components/organisms/ActForm';
 import { Stack } from '../../components/layout/Stack';
 import { Container } from '../../components/layout/Container';
-import type { Act } from '../../types/act';
 
 /**
  * CreateActPage component for creating new acts.
@@ -24,7 +23,7 @@ import type { Act } from '../../types/act';
 export function CreateActPage() {
   const navigate = useNavigate();
 
-  const handleSuccess = (act: Act) => {
+  const handleSuccess = () => {
     navigate('/acts');
   };
 

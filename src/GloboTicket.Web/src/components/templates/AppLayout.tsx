@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Home, MapPin, Users, Calendar } from 'lucide-react';
+import { Home, MapPin, Users } from 'lucide-react';
 import { AppHeader } from '../organisms/AppHeader';
 import { Sidebar } from '../organisms/Sidebar';
 import type { NavSection } from '../organisms/Sidebar';
@@ -15,7 +15,7 @@ import { useAuth } from '../../hooks/useAuth';
 export const AppLayout = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout } = useAuth();
 
   // Determine active navigation item based on current path
   const getActiveItemId = () => {
@@ -23,7 +23,6 @@ export const AppLayout = () => {
     if (path === ROUTES.DASHBOARD) return 'dashboard';
     if (path.startsWith('/venues')) return 'venues';
     if (path.startsWith('/acts')) return 'acts';
-    if (path.startsWith('/shows')) return 'shows';
     return undefined;
   };
 
@@ -54,12 +53,6 @@ export const AppLayout = () => {
           icon: Users,
           label: 'Acts',
           href: ROUTES.ACTS,
-        },
-        {
-          id: 'shows',
-          icon: Calendar,
-          label: 'Shows',
-          href: ROUTES.SHOWS,
         },
       ],
     },

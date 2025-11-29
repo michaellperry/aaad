@@ -13,12 +13,6 @@ import {
   CreateActPage,
   EditActPage,
 } from '../pages/acts';
-import {
-  ShowsPage,
-  ShowDetailPage,
-  CreateShowPage,
-  EditShowPage,
-} from '../pages/shows';
 import { ProtectedRoute } from '../components/routing/ProtectedRoute';
 import { ROUTES } from './routes';
 
@@ -129,40 +123,6 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <EditActPage />
-          </ProtectedRoute>
-        ),
-      },
-      
-      // Shows
-      {
-        path: ROUTES.SHOWS,
-        element: (
-          <ProtectedRoute>
-            <ShowsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: ROUTES.SHOW_CREATE,
-        element: (
-          <ProtectedRoute>
-            <CreateShowPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: ROUTES.SHOW_DETAIL,
-        element: (
-          <ProtectedRoute>
-            <ShowDetailPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: ROUTES.SHOW_EDIT,
-        element: (
-          <ProtectedRoute>
-            <EditShowPage />
           </ProtectedRoute>
         ),
       },

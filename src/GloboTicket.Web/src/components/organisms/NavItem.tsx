@@ -3,7 +3,6 @@ import type { AnchorHTMLAttributes } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '../../utils';
 import { Icon, Text, Badge } from '../atoms';
-import { Row } from '../layout';
 
 export interface NavItemProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   /**
