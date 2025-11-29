@@ -56,9 +56,9 @@ ELAPSED=0
 INIT_SUCCESS=false
 
 while [ $ELAPSED -lt $MAX_WAIT ]; do
-    INIT_STATUS=$(docker compose -f docker/docker-compose.yml ps db-init --format json 2>/dev/null | grep -o '"State":"[^"]*"' | cut -d'"' -f4 || echo "")
+    INIT_STATUS=$(docker compose -f docker/docker-compose.yml ps db-init -a --format json 2>/dev/null | grep -o '"State":"[^"]*"' | cut -d'"' -f4 || echo "")
     if [ "$INIT_STATUS" = "exited" ]; then
-        INIT_EXIT_CODE=$(docker compose -f docker/docker-compose.yml ps db-init --format json 2>/dev/null | grep -o '"ExitCode":[0-9]*' | cut -d':' -f2 || echo "")
+        INIT_EXIT_CODE=$(docker compose -f docker/docker-compose.yml ps db-init -a --format json 2>/dev/null | grep -o '"ExitCode":[0-9]*' | cut -d':' -f2 || echo "")
         if [ "$INIT_EXIT_CODE" = "0" ]; then
             echo "✓ Database initialization completed successfully!"
             INIT_SUCCESS=true
