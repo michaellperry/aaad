@@ -30,15 +30,15 @@ After deploying to a Production environment, you need to validate the deployment
 Use tenant isolation within the Production environment's database:
 
 1. **Production Environment** contains:
-   - **Production Tenant** (ID: 1): Live production data
-   - **Smoke Test Tenant** (ID: 2): Validation test data
+   - **Production Tenant**: Live production data
+   - **Smoke Test Tenant**: Validation test data
 
 2. **Deployment Process**:
    ```
    1. Deploy application to Production environment
    2. Run smoke tests using "smoke" user credentials
-   3. All smoke test operations isolated to Tenant ID 2
-   4. Production tenant data (ID: 1) completely unaffected
+   3. All smoke test operations isolated to the Smoke Test tenant
+   4. Production tenant data completely unaffected
    ```
 
 3. **Benefits**:
@@ -53,32 +53,39 @@ Use tenant isolation within the Production environment's database:
 
 Each environment typically includes:
 
-- **Production Tenant** (ID: 1)
+- **Production Tenant**
   - Purpose: Live production data
   - User: `prod` / `prod123`
+  - Tenant Identifier: `production`
   
-- **Smoke Test Tenant** (ID: 2)
+- **Smoke Test Tenant**
   - Purpose: Post-deployment validation
   - User: `smoke` / `smoke123`
+  - Tenant Identifier: `smoke-test`
+
+- **Playwright Test Tenant**
+  - Purpose: End-to-end test automation
+  - User: `playwright` / `playwright123`
+  - Tenant Identifier: `playwright-test`
 
 ### Adding New Tenants
 
 To add a new tenant to an environment:
 
-1. Create tenant record in database:
-   ```sql
-   INSERT INTO Tenants (Name, Slug, IsActive, CreatedAt)
-   VALUES ('Integration Test', 'integration-test', 1, GETUTCDATE());
-   ```
-
-2. Add user configuration in `appsettings.json`:
+1. Add user configuration in `appsettings.json`:
    ```json
    {
      "Username": "integration",
      "Password": "integration123",
-     "TenantId": 3
+     "TenantIdentifier": "integration-test"
    }
    ```
+
+2. The tenant will be automatically created on first login with:
+   - TenantIdentifier: "integration-test"
+   - Name: "Integration Test" (derived from identifier)
+   - Slug: "integration-test" (derived from identifier)
+   - IsActive: true
 
 3. Use new credentials to access the tenant's isolated data context
 
@@ -118,7 +125,19 @@ curl -X POST http://production-api/auth/login \
   -d '{"username":"smoke","password":"smoke123"}'
 
 # Execute smoke test scenarios
-# All operations isolated to Smoke Test tenant (ID: 2)
+# All operations isolated to Smoke Test tenant
+```
+
+### Running Playwright Tests
+
+```bash
+# Login as playwright test user
+curl -X POST http://localhost:5028/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"playwright","password":"playwright123"}'
+
+# Execute Playwright test scenarios
+# All operations isolated to Playwright Test tenant
 ```
 
 ### Production Operations
@@ -129,7 +148,7 @@ curl -X POST http://production-api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"prod","password":"prod123"}'
 
-# All operations isolated to Production tenant (ID: 1)
+# All operations isolated to Production tenant
 ```
 
 ## Summary

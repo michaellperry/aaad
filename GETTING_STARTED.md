@@ -356,7 +356,8 @@ After logging out, try accessing a protected endpoint:
 **Expected response:** HTTP 401 Unauthorized
 
 **Tip:** You can test with different users by logging in again with different credentials:
-- `{"username":"smoke","password":"smoke123"}` for the Smoke Test tenant (ID: 2)
+- `{"username":"smoke","password":"smoke123"}` for the Smoke Test tenant
+- `{"username":"playwright","password":"playwright123"}` for the Playwright Test tenant
 
 **Note:** Swagger UI is only available when running in Development environment. In Production, the Swagger UI endpoints are disabled for security.
 
@@ -748,14 +749,15 @@ Unable to bind to http://localhost:5028 on the IPv4 loopback interface: 'Address
 
 The system includes pre-configured test users for development:
 
-| Username | Password  | Tenant         | Tenant ID |
-|----------|-----------|----------------|-----------|
-| `prod`   | `prod123` | Production     | 1         |
-| `smoke`  | `smoke123`| Smoke Test     | 2         |
+| Username     | Password       | Tenant          |
+|--------------|----------------|-----------------|
+| `prod`       | `prod123`      | Production      |
+| `smoke`      | `smoke123`     | Smoke Test      |
+| `playwright` | `playwright123`| Playwright Test |
 
 These are configured in [`src/GloboTicket.API/Configuration/UserConfiguration.cs`](src/GloboTicket.API/Configuration/UserConfiguration.cs).
 
-**Note:** These tenants exist within the same environment's database. In a production environment, you can use the "Smoke Test" tenant to run post-deployment validation tests without affecting the "Production" tenant's data.
+**Note:** These tenants exist within the same environment's database. The "Smoke Test" tenant can be used for post-deployment validation tests, and the "Playwright Test" tenant is dedicated for end-to-end test automation, ensuring complete isolation from other tenants' data.
 
 **⚠️ Important:** These test credentials are for development only. Do not use in production.
 

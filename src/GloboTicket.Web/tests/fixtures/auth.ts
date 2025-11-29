@@ -1,10 +1,10 @@
 import { test as base, Page } from '@playwright/test';
 import { login, waitForAuthentication } from '../helpers/auth.helpers';
 
-// Test credentials constants
+// Test credentials constants - using dedicated Playwright test user with isolated tenant
 export const TEST_CREDENTIALS = {
-  username: 'prod',
-  password: 'prod123',
+  username: 'playwright',
+  password: 'playwright123',
 } as const;
 
 // Storage state path for persisting authentication

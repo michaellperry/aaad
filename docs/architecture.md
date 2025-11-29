@@ -81,13 +81,13 @@ graph TB
 A common pattern is to use tenant isolation for post-deployment validation:
 
 1. **Production Environment** contains two tenants:
-   - **Production Tenant** (ID: 1): Live production data
-   - **Smoke Test Tenant** (ID: 2): Validation test data
+   - **Production Tenant**: Live production data
+   - **Smoke Test Tenant**: Validation test data
 
 2. After deploying to production:
    - Run smoke tests using credentials mapped to the "Smoke Test" tenant
-   - All test operations are isolated to tenant ID 2
-   - Production tenant data (ID: 1) remains completely unaffected
+   - All test operations are isolated to the Smoke Test tenant
+   - Production tenant data remains completely unaffected
    - No need for separate test databases or environments
 
 3. Benefits:
