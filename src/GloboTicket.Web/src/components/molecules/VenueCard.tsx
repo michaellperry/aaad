@@ -58,7 +58,7 @@ export function VenueCard({ venue, onClick }: VenueCardProps) {
     >
       <Stack gap="md">
         <div className="flex items-start justify-between gap-sm">
-          <Heading level="h3" className="flex-1">
+          <Heading level="h3" className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap mr-2">
             {venue.name}
           </Heading>
           <Badge variant="info">
@@ -74,7 +74,7 @@ export function VenueCard({ venue, onClick }: VenueCardProps) {
               size="sm" 
               className="text-text-secondary flex-shrink-0 mt-0.5" 
             />
-            <Text variant="muted" size="sm" className="flex-1">
+            <Text variant="muted" size="sm" className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
               {venue.address}
             </Text>
           </div>
