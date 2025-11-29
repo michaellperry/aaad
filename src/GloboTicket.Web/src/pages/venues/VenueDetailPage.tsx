@@ -1,22 +1,83 @@
-import { useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, MapPin, Trash2 } from 'lucide-react';
-import { Heading, Text, Button, Badge } from '../../components/atoms';
+import { Heading, Text, Button, Badge, Spinner } from '../../components/atoms';
 import { Card } from '../../components/molecules';
 import { Stack, Row } from '../../components/layout';
 import { ROUTES, routeHelpers } from '../../router/routes';
+import { getVenue, deleteVenue } from '../../api/client';
+import type { Venue } from '../../types/venue';
 
 /**
- * Venue detail page - placeholder implementation
+ * Venue detail page - displays venue information and management options
  */
 export const VenueDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [venue, setVenue] = useState<Venue | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchVenue = async () => {
+      if (!id) {
+        setError('Venue ID is required');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getVenue(id);
+        setVenue(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load venue');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchVenue();
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!venue) return;
+    
+    if (window.confirm(`Are you sure you want to delete "${venue.name}"? This action cannot be undone.`)) {
+      try {
+        await deleteVenue(venue.venueGuid);
+        navigate('/venues');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to delete venue');
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error || !venue) {
+    return (
+      <Stack gap="xl">
+        <Card>
+          <div className="p-8 text-center">
+            <Text className="text-error">{error || 'Venue not found'}</Text>
+          </div>
+        </Card>
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap="xl">
       {/* Back Button */}
       <Button
         variant="ghost"
-        onClick={() => (window.location.href = ROUTES.VENUES)}
+        onClick={() => navigate('/venues')}
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Venues
@@ -30,24 +91,24 @@ export const VenueDetailPage = () => {
           </div>
           <div>
             <Heading level="h1" variant="default" className="mb-2">
-              Venue #{id}
+              {venue.name}
             </Heading>
             <Text variant="muted">
-              Placeholder venue details
+              {venue.address}
             </Text>
           </div>
         </div>
         <Row gap="sm">
           <Button
             variant="secondary"
-            onClick={() => (window.location.href = routeHelpers.venueEdit(id!))}
+            onClick={() => navigate(`/venues/${id}/edit`)}
           >
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
           <Button
             variant="danger"
-            onClick={() => alert('Delete functionality not implemented')}
+            onClick={handleDelete}
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Delete
@@ -62,25 +123,31 @@ export const VenueDetailPage = () => {
             <Text variant="muted" size="sm" className="mb-1">
               Name
             </Text>
-            <Text>Sample Venue Name</Text>
+            <Text>{venue.name}</Text>
           </div>
           <div>
             <Text variant="muted" size="sm" className="mb-1">
               Address
             </Text>
-            <Text>123 Main Street, City, State 12345</Text>
+            <Text>{venue.address}</Text>
           </div>
           <div>
             <Text variant="muted" size="sm" className="mb-1">
               Capacity
             </Text>
-            <Text>5,000 people</Text>
+            <Text>{venue.seatingCapacity?.toLocaleString() || 'N/A'}</Text>
           </div>
           <div>
             <Text variant="muted" size="sm" className="mb-1">
-              Status
+              Description
             </Text>
-            <Badge variant="success">Active</Badge>
+            <Text>{venue.description || 'No description available'}</Text>
+          </div>
+          <div>
+            <Text variant="muted" size="sm" className="mb-1">
+              Coordinates
+            </Text>
+            <Text>Latitude: {venue.latitude}, Longitude: {venue.longitude}</Text>
           </div>
         </Stack>
       </Card>
@@ -92,13 +159,6 @@ export const VenueDetailPage = () => {
         </Text>
       </Card>
 
-      {/* Development Notice */}
-      <div className="p-4 bg-surface-elevated rounded-lg border border-border-default">
-        <Text variant="muted" size="sm">
-          <strong>🚧 Placeholder Page:</strong> This is a placeholder for the Venue detail page.
-          Real venue data, show listings, and management features will be implemented in future iterations.
-        </Text>
-      </div>
     </Stack>
   );
 };
