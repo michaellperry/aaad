@@ -5,6 +5,7 @@ import type {
   CreateTenantDto,
 } from '../types/api';
 import type { Venue, CreateVenueDto, UpdateVenueDto } from '../types/venue';
+import type { Act, CreateActDto, UpdateActDto } from '../types/act';
 
 const API_BASE_URL = '';
 
@@ -123,6 +124,58 @@ export async function updateVenue(id: string, dto: UpdateVenueDto): Promise<Venu
 
 export async function deleteVenue(id: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/venues/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API Error: ${response.status} - ${errorText}`);
+  }
+}
+
+export async function getActs(): Promise<Act[]> {
+  const response = await fetch(`${API_BASE_URL}/api/acts`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<Act[]>(response);
+}
+
+export async function getAct(id: string): Promise<Act> {
+  const response = await fetch(`${API_BASE_URL}/api/acts/${id}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<Act>(response);
+}
+
+export async function createAct(dto: CreateActDto): Promise<Act> {
+  const response = await fetch(`${API_BASE_URL}/api/acts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(dto),
+  });
+  return handleResponse<Act>(response);
+}
+
+export async function updateAct(id: string, dto: UpdateActDto): Promise<Act> {
+  const response = await fetch(`${API_BASE_URL}/api/acts/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(dto),
+  });
+  return handleResponse<Act>(response);
+}
+
+export async function deleteAct(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/acts/${id}`, {
     method: 'DELETE',
     credentials: 'include',
   });

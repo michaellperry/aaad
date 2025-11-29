@@ -1,4 +1,8 @@
-export { ActsPage } from './ActsPage';
-export { ActDetailPage } from './ActDetailPage';
-export { CreateActPage } from './CreateActPage';
-export { EditActPage } from './EditActPage';
+/**
+ * Acts pages barrel export
+ */
+
+export * from './ActsPage';
+export * from './CreateActPage';
+export * from './EditActPage';
+export * from './ActDetailPage';
