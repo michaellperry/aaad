@@ -32,16 +32,6 @@ public class GloboTicketDbContext : DbContext
     public DbSet<Act> Acts { get; set; } = null!;
 
     /// <summary>
-    /// Gets or sets the Shows DbSet for managing show entities.
-    /// </summary>
-    public DbSet<Show> Shows { get; set; } = null!;
-
-    /// <summary>
-    /// Gets or sets the TicketSales DbSet for managing ticket sale entities.
-    /// </summary>
-    public DbSet<TicketSale> TicketSales { get; set; } = null!;
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="GloboTicketDbContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
@@ -71,7 +61,6 @@ public class GloboTicketDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GloboTicketDbContext).Assembly);
 
         // Configure global query filters for multi-tenant entities
-        // Top-level entities (Venue, Act) filter by their own TenantId
         modelBuilder.Entity<Venue>()
             .HasQueryFilter(v => _tenantContext.CurrentTenantId == null ||
                                 v.TenantId == _tenantContext.CurrentTenantId);
@@ -79,15 +68,6 @@ public class GloboTicketDbContext : DbContext
         modelBuilder.Entity<Act>()
             .HasQueryFilter(a => _tenantContext.CurrentTenantId == null ||
                                 a.TenantId == _tenantContext.CurrentTenantId);
-
-        // Relationship-based entities (Show, TicketSale) filter via joins
-        modelBuilder.Entity<Show>()
-            .HasQueryFilter(s => _tenantContext.CurrentTenantId == null ||
-                                s.Venue.TenantId == _tenantContext.CurrentTenantId);
-
-        modelBuilder.Entity<TicketSale>()
-            .HasQueryFilter(ts => _tenantContext.CurrentTenantId == null ||
-                                 ts.Show.Venue.TenantId == _tenantContext.CurrentTenantId);
     }
 
     /// <summary>
@@ -117,8 +97,7 @@ public class GloboTicketDbContext : DbContext
                 }
             }
 
-            // Handle MultiTenantEntity TenantId assignment (only for top-level entities: Venue and Act)
-            // Show and TicketSale implement ITenantEntity but don't have TenantId directly
+            // Handle MultiTenantEntity TenantId assignment
             if (entry.Entity is MultiTenantEntity multiTenantEntity && entry.State == EntityState.Added)
             {
                 // Only set TenantId if current tenant context is available

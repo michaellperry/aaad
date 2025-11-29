@@ -224,10 +224,8 @@ sequenceDiagram
 - Health checks
 
 **Authenticated Endpoints** (all require valid tenant):
-- Show management (CRUD operations)
 - Venue management
 - Act management
-- Ticket sales
 - Location-based search
 
 ## 7. Frontend Architecture
