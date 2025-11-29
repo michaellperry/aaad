@@ -59,7 +59,7 @@ export function ActCard({ act, onClick }: ActCardProps) {
     >
       <Stack gap="md">
         <Row justify="between" align="start">
-          <Heading level="h3" className="flex-1">
+          <Heading level="h3" className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap mr-2">
             {act.name}
           </Heading>
           <Badge variant="info">

@@ -106,7 +106,7 @@ export const NavItem = forwardRef<HTMLAnchorElement, NavItemProps>(
             <Text
               as="span"
               size="sm"
-              className="flex-1"
+              className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
             >
               {label}
             </Text>
