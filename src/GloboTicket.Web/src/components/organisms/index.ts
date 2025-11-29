@@ -5,6 +5,11 @@
  * of an interface. No new visual styles, only composition.
  */
 
+export { ActForm } from './ActForm';
+
+export { ActList } from './ActList';
+export type { ActListProps } from './ActList';
+
 export { AppHeader } from './AppHeader';
 export type { AppHeaderProps, NavLink } from './AppHeader';
 

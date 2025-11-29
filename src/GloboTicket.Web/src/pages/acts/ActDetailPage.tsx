@@ -1,22 +1,82 @@
-import { useParams } from 'react-router-dom';
-import { ArrowLeft, Edit, Users, Trash2 } from 'lucide-react';
-import { Heading, Text, Button, Badge } from '../../components/atoms';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Edit, Music, Trash2 } from 'lucide-react';
+import { Heading, Text, Button, Spinner } from '../../components/atoms';
 import { Card } from '../../components/molecules';
 import { Stack, Row } from '../../components/layout';
-import { ROUTES, routeHelpers } from '../../router/routes';
+import { getAct, deleteAct } from '../../api/client';
+import type { Act } from '../../types/act';
 
 /**
- * Act detail page - placeholder implementation
+ * Act detail page - displays act information and management options
  */
 export const ActDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [act, setAct] = useState<Act | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAct = async () => {
+      if (!id) {
+        setError('Act ID is required');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getAct(id);
+        setAct(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load act');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAct();
+  }, [id]);
+
+  const handleDelete = async () => {
+    if (!act) return;
+    
+    if (window.confirm(`Are you sure you want to delete "${act.name}"? This action cannot be undone.`)) {
+      try {
+        await deleteAct(act.actGuid);
+        navigate('/acts');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to delete act');
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error || !act) {
+    return (
+      <Stack gap="xl">
+        <Card>
+          <div className="p-8 text-center">
+            <Text className="text-error">{error || 'Act not found'}</Text>
+          </div>
+        </Card>
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap="xl">
       {/* Back Button */}
       <Button
         variant="ghost"
-        onClick={() => (window.location.href = ROUTES.ACTS)}
+        onClick={() => navigate('/acts')}
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Acts
@@ -26,28 +86,28 @@ export const ActDetailPage = () => {
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded-lg bg-brand-primary/10 flex items-center justify-center">
-            <Users className="w-8 h-8 text-brand-primary" />
+            <Music className="w-8 h-8 text-brand-primary" />
           </div>
           <div>
             <Heading level="h1" variant="default" className="mb-2">
-              Act #{id}
+              {act.name}
             </Heading>
             <Text variant="muted">
-              Placeholder act details
+              Created {new Date(act.createdAt).toLocaleDateString()}
             </Text>
           </div>
         </div>
         <Row gap="sm">
           <Button
             variant="secondary"
-            onClick={() => (window.location.href = routeHelpers.actEdit(id!))}
+            onClick={() => navigate(`/acts/${id}/edit`)}
           >
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
           <Button
             variant="danger"
-            onClick={() => alert('Delete functionality not implemented')}
+            onClick={handleDelete}
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Delete
@@ -62,26 +122,22 @@ export const ActDetailPage = () => {
             <Text variant="muted" size="sm" className="mb-1">
               Name
             </Text>
-            <Text>Sample Act Name</Text>
+            <Text>{act.name}</Text>
           </div>
           <div>
             <Text variant="muted" size="sm" className="mb-1">
-              Genre
+              Created
             </Text>
-            <Text>Rock / Pop</Text>
+            <Text>{new Date(act.createdAt).toLocaleString()}</Text>
           </div>
-          <div>
-            <Text variant="muted" size="sm" className="mb-1">
-              Description
-            </Text>
-            <Text>A talented performer with years of experience in live entertainment.</Text>
-          </div>
-          <div>
-            <Text variant="muted" size="sm" className="mb-1">
-              Status
-            </Text>
-            <Badge variant="success">Active</Badge>
-          </div>
+          {act.updatedAt && (
+            <div>
+              <Text variant="muted" size="sm" className="mb-1">
+                Last Updated
+              </Text>
+              <Text>{new Date(act.updatedAt).toLocaleString()}</Text>
+            </div>
+          )}
         </Stack>
       </Card>
 
@@ -92,13 +148,6 @@ export const ActDetailPage = () => {
         </Text>
       </Card>
 
-      {/* Development Notice */}
-      <div className="p-4 bg-surface-elevated rounded-lg border border-border-default">
-        <Text variant="muted" size="sm">
-          <strong>🚧 Placeholder Page:</strong> This is a placeholder for the Act detail page.
-          Real act data, show listings, and management features will be implemented in future iterations.
-        </Text>
-      </div>
     </Stack>
   );
 };

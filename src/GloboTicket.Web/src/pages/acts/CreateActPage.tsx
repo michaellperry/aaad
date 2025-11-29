@@ -1,50 +1,48 @@
-import { ArrowLeft, Users } from 'lucide-react';
-import { Heading, Text, Button } from '../../components/atoms';
-import { Card, EmptyState } from '../../components/molecules';
-import { Stack } from '../../components/layout';
-import { ROUTES } from '../../router/routes';
+/**
+ * CreateActPage
+ * 
+ * Page for creating a new act.
+ * Follows atomic design principles - composes organisms and molecules.
+ */
+
+import { useNavigate } from 'react-router-dom';
+import { PageHeader } from '../../components/molecules/PageHeader';
+import { Card } from '../../components/molecules/Card';
+import { ActForm } from '../../components/organisms/ActForm';
+import { Stack } from '../../components/layout/Stack';
+import { Container } from '../../components/layout/Container';
+import type { Act } from '../../types/act';
 
 /**
- * Create act page - placeholder implementation
+ * CreateActPage component for creating new acts.
+ * 
+ * @example
+ * ```tsx
+ * <Route path="/acts/new" element={<CreateActPage />} />
+ * ```
  */
-export const CreateActPage = () => {
+export function CreateActPage() {
+  const navigate = useNavigate();
+
+  const handleSuccess = (act: Act) => {
+    navigate('/acts');
+  };
+
+  const handleCancel = () => {
+    navigate('/acts');
+  };
+
   return (
-    <Stack gap="xl">
-      {/* Back Button */}
-      <Button
-        variant="ghost"
-        onClick={() => (window.location.href = ROUTES.ACTS)}
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Acts
-      </Button>
-
-      {/* Page Header */}
-      <div>
-        <Heading level="h1" variant="default" className="mb-2">
-          Add New Act
-        </Heading>
-        <Text variant="muted">
-          Add a new performer or entertainment act to your system
-        </Text>
-      </div>
-
-      {/* Form Placeholder */}
-      <Card>
-        <EmptyState
-          icon={Users}
-          title="Form Not Implemented"
-          description="The act creation form will be implemented in a future iteration. This will include fields for act name, genre, description, contact information, and more."
+    <Container>
+      <Stack gap="xl">
+        <PageHeader
+          title="Create Act"
+          description="Add a new performing act to the system"
         />
-      </Card>
-
-      {/* Development Notice */}
-      <div className="p-4 bg-surface-elevated rounded-lg border border-border-default">
-        <Text variant="muted" size="sm">
-          <strong>🚧 Placeholder Page:</strong> This is a placeholder for the Create Act page.
-          Form validation, API integration, and act creation logic will be implemented in future iterations.
-        </Text>
-      </div>
-    </Stack>
+        <Card>
+          <ActForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        </Card>
+      </Stack>
+    </Container>
   );
-};
+}

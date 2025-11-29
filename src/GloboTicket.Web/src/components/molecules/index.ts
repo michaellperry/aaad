@@ -5,6 +5,9 @@
  * using layout primitives for structure.
  */
 
+export { ActCard } from './ActCard';
+export type { ActCardProps } from './ActCard';
+
 export { Card } from './Card';
 export type { CardProps } from './Card';
 

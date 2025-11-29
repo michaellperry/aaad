@@ -3,3 +3,7 @@ export { LoginPage } from './auth/LoginPage';
 export { VenuesPage } from './venues/VenuesPage';
 export { CreateVenuePage } from './venues/CreateVenuePage';
 export { EditVenuePage } from './venues/EditVenuePage';
+export { ActsPage } from './acts/ActsPage';
+export { CreateActPage } from './acts/CreateActPage';
+export { EditActPage } from './acts/EditActPage';
+export { ActDetailPage } from './acts/ActDetailPage';
