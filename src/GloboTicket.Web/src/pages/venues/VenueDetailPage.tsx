@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, MapPin, Trash2 } from 'lucide-react';
-import { Heading, Text, Button, Badge, Spinner } from '../../components/atoms';
+import { Heading, Text, Button, Spinner } from '../../components/atoms';
 import { Card } from '../../components/molecules';
 import { Stack, Row } from '../../components/layout';
-import { ROUTES, routeHelpers } from '../../router/routes';
 import { getVenue, deleteVenue } from '../../api/client';
 import type { Venue } from '../../types/venue';
 

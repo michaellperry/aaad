@@ -1,5 +1,5 @@
 import { test, expect } from '../setup/base';
-import { login, waitForAuthentication, isAuthenticated } from '../helpers/auth.helpers';
+import { waitForAuthentication, isAuthenticated } from '../helpers/auth.helpers';
 import { TEST_CREDENTIALS } from '../fixtures/auth';
 import type { Page } from '@playwright/test';
 
@@ -220,10 +220,6 @@ test.describe('Login Page', () => {
     
     // Submit the form
     await page.click('button[type="submit"]');
-    
-    // Verify loading state (button should show loading text or be disabled)
-    // Note: This check happens quickly, so we check immediately after click
-    const submitButton = page.locator('button[type="submit"]');
     
     // Wait for successful authentication
     await waitForAuthentication(page);

@@ -4,12 +4,11 @@ import { Card } from '../../components/molecules/Card';
 import { VenueForm } from '../../components/organisms/VenueForm';
 import { Stack } from '../../components/layout/Stack';
 import { Container } from '../../components/layout/Container';
-import type { Venue } from '../../types/venue';
 
 export function CreateVenuePage() {
   const navigate = useNavigate();
 
-  const handleSuccess = (venue: Venue) => {
+  const handleSuccess = () => {
     // Navigate back to venues list after successful creation
     navigate('/venues');
   };

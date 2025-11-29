@@ -1,4 +1,4 @@
-import { BarChart3, Calendar, MapPin, Users } from 'lucide-react';
+import { BarChart3, MapPin, Users } from 'lucide-react';
 import { Heading, Text, Button } from '../components/atoms';
 import { Card } from '../components/molecules';
 import { Grid, Stack } from '../components/layout';
@@ -23,13 +23,6 @@ export const DashboardPage = () => {
       value: '48',
       icon: Users,
       href: ROUTES.ACTS,
-    },
-    {
-      id: 'shows',
-      label: 'Upcoming Shows',
-      value: '24',
-      icon: Calendar,
-      href: ROUTES.SHOWS,
     },
     {
       id: 'sales',
@@ -92,7 +85,7 @@ export const DashboardPage = () => {
           <Heading level="h2" variant="default">
             Quick Actions
           </Heading>
-          <Grid cols={1} gap="md" responsive={{ sm: 2, lg: 3 }}>
+          <Grid cols={1} gap="md" responsive={{ sm: 2 }}>
             <Button
               variant="primary"
               size="lg"
@@ -108,14 +101,6 @@ export const DashboardPage = () => {
               className="w-full"
             >
               Add Act
-            </Button>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => (window.location.href = ROUTES.SHOW_CREATE)}
-              className="w-full"
-            >
-              Schedule Show
             </Button>
           </Grid>
         </Stack>
