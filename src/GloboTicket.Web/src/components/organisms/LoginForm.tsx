@@ -195,7 +195,7 @@ export const LoginForm = ({ onSuccess, onError }: LoginFormProps) => {
         {/* Test Credentials Hint */}
         <div className="mt-4 p-3 rounded-lg bg-surface-elevated border border-border-default">
           <Text size="xs" variant="muted" className="text-center">
-            Test credentials: <strong>prod</strong> / <strong>prod123</strong> or <strong>smoke</strong> / <strong>smoke123</strong>
+            Test credentials: <strong>prod</strong> / <strong>prod123</strong>, <strong>smoke</strong> / <strong>smoke123</strong>, or <strong>playwright</strong> / <strong>playwright123</strong>
           </Text>
         </div>
       </form>

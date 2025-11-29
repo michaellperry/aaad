@@ -246,10 +246,11 @@ dotnet test --verbosity normal
 
 For development purposes, test users are configured in [`UserConfiguration.cs`](src/GloboTicket.API/Configuration/UserConfiguration.cs):
 
-| Username | Password  | Tenant         | Tenant ID |
-|----------|-----------|----------------|-----------|
-| prod     | prod123   | Production     | 1         |
-| smoke    | smoke123  | Smoke Test     | 2         |
+| Username   | Password      | Tenant          |
+|------------|---------------|-----------------|
+| prod       | prod123       | Production      |
+| smoke      | smoke123      | Smoke Test      |
+| playwright | playwright123 | Playwright Test |
 
 **Note:** These tenants exist within the same environment's database. In a production environment, you can use the "Smoke Test" tenant to run post-deployment validation tests without affecting the "Production" tenant's data.
 

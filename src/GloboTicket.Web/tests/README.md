@@ -125,9 +125,12 @@ Default test credentials are defined in `fixtures/auth.ts`:
 ```typescript
 import { TEST_CREDENTIALS } from './fixtures/auth';
 
-// username: 'prod'
-// password: 'prod123'
+// username: 'playwright'
+// password: 'playwright123'
+// tenant: 'playwright-test'
 ```
+
+The Playwright tests use a dedicated test user with its own isolated tenant (`playwright-test`) to ensure test data doesn't interfere with production or smoke test data.
 
 ### Helper Functions
 
@@ -139,7 +142,7 @@ Performs login via the UI using the login form.
 ```typescript
 import { login } from './helpers/auth.helpers';
 
-await login(page, 'prod', 'prod123');
+await login(page, 'playwright', 'playwright123');
 ```
 
 #### `waitForAuthentication(page)`
@@ -219,7 +222,7 @@ import { login, waitForAuthentication } from './helpers/auth.helpers';
 
 test('manual login test', async ({ page }) => {
   await page.goto('/login');
-  await login(page, 'prod', 'prod123');
+  await login(page, 'playwright', 'playwright123');
   await waitForAuthentication(page);
   await expect(page).toHaveURL('/');
 });
@@ -263,7 +266,7 @@ After successful login, the application redirects to `/` (dashboard).
 - Check network connectivity
 
 **Authentication tests fail**
-- Verify test credentials: username `prod`, password `prod123`
+- Verify test credentials: username `playwright`, password `playwright123`
 - Clear authentication state: `rm -rf playwright/.auth`
 - Check login page selectors haven't changed
 
