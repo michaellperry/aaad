@@ -14,894 +14,273 @@ This document defines the complete architecture for the GloboTicket web applicat
 
 ## 1. Project Structure
 
+The application follows a layered architecture organized by responsibility:
+
 ```
 src/GloboTicket.Web/src/
-├── main.tsx                          # Application entry point
-├── App.tsx                           # Root component with providers
-├── index.css                         # Global styles and Tailwind imports
+├── main.tsx & App.tsx              # Application entry
+├── index.css                       # Global styles + Tailwind
 │
-├── config/
-│   ├── theme.config.ts              # Theme token definitions
-│   ├── tailwind.config.ts           # Tailwind configuration
-│   └── routes.config.ts             # Route definitions
+├── config/                         # Configuration files
+├── theme/                          # Design tokens + ThemeProvider
+├── layouts/                        # Layout primitives + page layouts
+├── components/                     # Atomic design components
+│   ├── atoms/                      # Primitive UI elements
+│   ├── molecules/                  # Composite UI patterns
+│   └── organisms/                  # Complex components
 │
-├── theme/
-│   ├── ThemeProvider.tsx            # Theme context provider
-│   ├── tokens.ts                    # Design tokens (colors, spacing, etc.)
-│   └── types.ts                     # Theme-related TypeScript types
+├── pages/                          # Route-level page components
+│   ├── auth/, venues/, acts/, shows/, dashboard/
 │
-├── layouts/
-│   ├── primitives/
-│   │   ├── Stack.tsx                # Vertical layout primitive
-│   │   ├── Row.tsx                  # Horizontal layout primitive
-│   │   ├── Column.tsx               # Column within grid
-│   │   ├── Grid.tsx                 # Grid layout primitive
-│   │   ├── Container.tsx            # Max-width container
-│   │   ├── Spacer.tsx               # Flexible spacing component
-│   │   └── index.ts                 # Barrel export
-│   │
-│   ├── AppLayout.tsx                # Main application layout
-│   ├── AuthLayout.tsx               # Authentication pages layout
-│   └── index.ts                     # Barrel export
+├── features/                       # Feature-specific logic
+│   ├── auth/, venues/, acts/, shows/
+│   │   ├── hooks/                  # TanStack Query hooks
+│   │   └── context/                # Feature-specific context
 │
-├── components/
-│   ├── atoms/
-│   │   ├── Button/
-│   │   │   ├── Button.tsx
-│   │   │   ├── Button.types.ts
-│   │   │   └── index.ts
-│   │   ├── Input/
-│   │   │   ├── Input.tsx
-│   │   │   ├── Input.types.ts
-│   │   │   └── index.ts
-│   │   ├── Heading/
-│   │   │   ├── Heading.tsx
-│   │   │   ├── Heading.types.ts
-│   │   │   └── index.ts
-│   │   ├── Text/
-│   │   │   ├── Text.tsx
-│   │   │   ├── Text.types.ts
-│   │   │   └── index.ts
-│   │   ├── Icon/
-│   │   │   ├── Icon.tsx
-│   │   │   ├── Icon.types.ts
-│   │   │   ├── icons/              # SVG icon components
-│   │   │   └── index.ts
-│   │   ├── Badge/
-│   │   │   ├── Badge.tsx
-│   │   │   ├── Badge.types.ts
-│   │   │   └── index.ts
-│   │   ├── Avatar/
-│   │   │   ├── Avatar.tsx
-│   │   │   ├── Avatar.types.ts
-│   │   │   └── index.ts
-│   │   ├── Spinner/
-│   │   │   ├── Spinner.tsx
-│   │   │   └── index.ts
-│   │   └── index.ts                # Barrel export
-│   │
-│   ├── molecules/
-│   │   ├── FormField/
-│   │   │   ├── FormField.tsx       # Label + Input + Error
-│   │   │   ├── FormField.types.ts
-│   │   │   └── index.ts
-│   │   ├── SearchBar/
-│   │   │   ├── SearchBar.tsx       # Input + Icon + Clear button
-│   │   │   ├── SearchBar.types.ts
-│   │   │   └── index.ts
-│   │   ├── Card/
-│   │   │   ├── Card.tsx
-│   │   │   ├── CardHeader.tsx
-│   │   │   ├── CardBody.tsx
-│   │   │   ├── CardFooter.tsx
-│   │   │   ├── Card.types.ts
-│   │   │   └── index.ts
-│   │   ├── EmptyState/
-│   │   │   ├── EmptyState.tsx      # Icon + Heading + Text + Action
-│   │   │   ├── EmptyState.types.ts
-│   │   │   └── index.ts
-│   │   ├── Alert/
-│   │   │   ├── Alert.tsx           # Icon + Message + Close
-│   │   │   ├── Alert.types.ts
-│   │   │   └── index.ts
-│   │   ├── Dropdown/
-│   │   │   ├── Dropdown.tsx        # Built on Headless UI Menu
-│   │   │   ├── Dropdown.types.ts
-│   │   │   └── index.ts
-│   │   ├── Modal/
-│   │   │   ├── Modal.tsx           # Built on Headless UI Dialog
-│   │   │   ├── ModalHeader.tsx
-│   │   │   ├── ModalBody.tsx
-│   │   │   ├── ModalFooter.tsx
-│   │   │   ├── Modal.types.ts
-│   │   │   └── index.ts
-│   │   ├── Tabs/
-│   │   │   ├── Tabs.tsx            # Built on Headless UI Tab
-│   │   │   ├── Tabs.types.ts
-│   │   │   └── index.ts
-│   │   └── index.ts                # Barrel export
-│   │
-│   ├── organisms/
-│   │   ├── Navigation/
-│   │   │   ├── AppHeader.tsx       # Top navigation bar
-│   │   │   ├── Sidebar.tsx         # Side navigation
-│   │   │   ├── NavItem.tsx         # Navigation link component
-│   │   │   ├── UserMenu.tsx        # User dropdown menu
-│   │   │   ├── Navigation.types.ts
-│   │   │   └── index.ts
-│   │   ├── VenueCard/
-│   │   │   ├── VenueCard.tsx       # Venue display card
-│   │   │   ├── VenueCard.types.ts
-│   │   │   └── index.ts
-│   │   ├── ActCard/
-│   │   │   ├── ActCard.tsx         # Act display card
-│   │   │   ├── ActCard.types.ts
-│   │   │   └── index.ts
-│   │   ├── ShowCard/
-│   │   │   ├── ShowCard.tsx        # Show display card
-│   │   │   ├── ShowCard.types.ts
-│   │   │   └── index.ts
-│   │   ├── VenueForm/
-│   │   │   ├── VenueForm.tsx       # Venue create/edit form
-│   │   │   ├── VenueForm.types.ts
-│   │   │   └── index.ts
-│   │   ├── ActForm/
-│   │   │   ├── ActForm.tsx         # Act create/edit form
-│   │   │   ├── ActForm.types.ts
-│   │   │   └── index.ts
-│   │   ├── ShowForm/
-│   │   │   ├── ShowForm.tsx        # Show create/edit form
-│   │   │   ├── ShowForm.types.ts
-│   │   │   └── index.ts
-│   │   ├── DataTable/
-│   │   │   ├── DataTable.tsx       # Reusable data table
-│   │   │   ├── DataTable.types.ts
-│   │   │   └── index.ts
-│   │   └── index.ts                # Barrel export
-│   │
-│   └── index.ts                    # Barrel export for all components
-│
-├── pages/
-│   ├── auth/
-│   │   ├── LoginPage.tsx
-│   │   └── index.ts
-│   ├── venues/
-│   │   ├── VenuesListPage.tsx
-│   │   ├── VenueDetailPage.tsx
-│   │   ├── VenueCreatePage.tsx
-│   │   ├── VenueEditPage.tsx
-│   │   └── index.ts
-│   ├── acts/
-│   │   ├── ActsListPage.tsx
-│   │   ├── ActDetailPage.tsx
-│   │   ├── ActCreatePage.tsx
-│   │   ├── ActEditPage.tsx
-│   │   └── index.ts
-│   ├── shows/
-│   │   ├── ShowsListPage.tsx
-│   │   ├── ShowDetailPage.tsx
-│   │   ├── ShowCreatePage.tsx
-│   │   ├── ShowEditPage.tsx
-│   │   └── index.ts
-│   ├── dashboard/
-│   │   ├── DashboardPage.tsx
-│   │   └── index.ts
-│   └── index.ts                    # Barrel export
-│
-├── features/
-│   ├── auth/
-│   │   ├── hooks/
-│   │   │   ├── useAuth.ts
-│   │   │   ├── useLogin.ts
-│   │   │   └── useLogout.ts
-│   │   ├── context/
-│   │   │   └── AuthContext.tsx
-│   │   └── index.ts
-│   ├── venues/
-│   │   ├── hooks/
-│   │   │   ├── useVenues.ts
-│   │   │   ├── useVenue.ts
-│   │   │   ├── useCreateVenue.ts
-│   │   │   ├── useUpdateVenue.ts
-│   │   │   └── useDeleteVenue.ts
-│   │   └── index.ts
-│   ├── acts/
-│   │   ├── hooks/
-│   │   │   ├── useActs.ts
-│   │   │   ├── useAct.ts
-│   │   │   ├── useCreateAct.ts
-│   │   │   ├── useUpdateAct.ts
-│   │   │   └── useDeleteAct.ts
-│   │   └── index.ts
-│   ├── shows/
-│   │   ├── hooks/
-│   │   │   ├── useShows.ts
-│   │   │   ├── useShow.ts
-│   │   │   ├── useCreateShow.ts
-│   │   │   ├── useUpdateShow.ts
-│   │   │   └── useDeleteShow.ts
-│   │   └── index.ts
-│   └── index.ts
-│
-├── api/
-│   ├── client.ts                   # Base API client (existing)
-│   ├── venues.ts                   # Venue API endpoints
-│   ├── acts.ts                     # Act API endpoints
-│   ├── shows.ts                    # Show API endpoints
-│   └── index.ts
-│
-├── types/
-│   ├── api.ts                      # API types (existing)
-│   ├── venue.ts                    # Venue domain types
-│   ├── act.ts                      # Act domain types
-│   ├── show.ts                     # Show domain types
-│   └── index.ts
-│
-├── utils/
-│   ├── cn.ts                       # Tailwind class name utility
-│   ├── format.ts                   # Date/number formatting
-│   ├── validation.ts               # Form validation helpers
-│   └── index.ts
-│
-└── hooks/
-    ├── useTheme.ts                 # Theme hook
-    ├── useMediaQuery.ts            # Responsive hook
-    ├── useDebounce.ts              # Debounce hook
-    └── index.ts
+├── api/                            # API client + endpoints
+├── types/                          # TypeScript type definitions
+├── utils/                          # Utility functions
+└── hooks/                          # Shared custom hooks
 ```
+
+**Organizational Principles:**
+
+1. **Atomic Design**: Components organized by complexity (atoms → molecules → organisms)
+2. **Feature Colocation**: Domain logic grouped by feature (venues, acts, shows)
+3. **Separation of Concerns**: Theme, layout, components, and data each in dedicated directories
+4. **Barrel Exports**: Each directory exports via `index.ts` for clean imports
+
+**Component File Pattern:**
+- Each component in its own folder
+- `ComponentName.tsx` - Implementation
+- `ComponentName.types.ts` - TypeScript interfaces
+- `index.ts` - Barrel export
 
 ---
 
 ## 2. Theme Token System
 
-### 2.1 Design Tokens Structure
+### 2.1 Design Token Strategy
 
-**File: `src/theme/tokens.ts`**
+**Location**: `src/theme/tokens.ts`
 
-```typescript
-export const tokens = {
-  colors: {
-    // Brand colors
-    brand: {
-      primary: {
-        light: '#3B82F6',      // Blue-500
-        dark: '#60A5FA',       // Blue-400
-      },
-      secondary: {
-        light: '#8B5CF6',      // Violet-500
-        dark: '#A78BFA',       // Violet-400
-      },
-    },
-    
-    // Semantic colors
-    success: {
-      light: '#10B981',        // Green-500
-      dark: '#34D399',         // Green-400
-    },
-    warning: {
-      light: '#F59E0B',        // Amber-500
-      dark: '#FCD34D',         // Amber-300
-    },
-    error: {
-      light: '#EF4444',        // Red-500
-      dark: '#F87171',         // Red-400
-    },
-    info: {
-      light: '#3B82F6',        // Blue-500
-      dark: '#60A5FA',         // Blue-400
-    },
-    
-    // Surface colors
-    surface: {
-      base: {
-        light: '#FFFFFF',
-        dark: '#1F2937',       // Gray-800
-      },
-      elevated: {
-        light: '#F9FAFB',      // Gray-50
-        dark: '#374151',       // Gray-700
-      },
-      overlay: {
-        light: '#F3F4F6',      // Gray-100
-        dark: '#4B5563',       // Gray-600
-      },
-    },
-    
-    // Text colors
-    text: {
-      primary: {
-        light: '#111827',      // Gray-900
-        dark: '#F9FAFB',       // Gray-50
-      },
-      secondary: {
-        light: '#6B7280',      // Gray-500
-        dark: '#D1D5DB',       // Gray-300
-      },
-      tertiary: {
-        light: '#9CA3AF',      // Gray-400
-        dark: '#9CA3AF',       // Gray-400
-      },
-      inverse: {
-        light: '#FFFFFF',
-        dark: '#111827',       // Gray-900
-      },
-      disabled: {
-        light: '#D1D5DB',      // Gray-300
-        dark: '#6B7280',       // Gray-500
-      },
-    },
-    
-    // Border colors
-    border: {
-      default: {
-        light: '#E5E7EB',      // Gray-200
-        dark: '#4B5563',       // Gray-600
-      },
-      subtle: {
-        light: '#F3F4F6',      // Gray-100
-        dark: '#374151',       // Gray-700
-      },
-      strong: {
-        light: '#D1D5DB',      // Gray-300
-        dark: '#6B7280',       // Gray-500
-      },
-    },
-  },
-  
-  spacing: {
-    xs: '0.25rem',    // 4px
-    sm: '0.5rem',     // 8px
-    md: '1rem',       // 16px
-    lg: '1.5rem',     // 24px
-    xl: '2rem',       // 32px
-    '2xl': '3rem',    // 48px
-    '3xl': '4rem',    // 64px
-  },
-  
-  typography: {
-    fontFamily: {
-      sans: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      mono: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
-    },
-    fontSize: {
-      xs: '0.75rem',      // 12px
-      sm: '0.875rem',     // 14px
-      base: '1rem',       // 16px
-      lg: '1.125rem',     // 18px
-      xl: '1.25rem',      // 20px
-      '2xl': '1.5rem',    // 24px
-      '3xl': '1.875rem',  // 30px
-      '4xl': '2.25rem',   // 36px
-    },
-    fontWeight: {
-      normal: '400',
-      medium: '500',
-      semibold: '600',
-      bold: '700',
-    },
-    lineHeight: {
-      tight: '1.25',
-      normal: '1.5',
-      relaxed: '1.75',
-    },
-  },
-  
-  borderRadius: {
-    none: '0',
-    sm: '0.25rem',    // 4px
-    md: '0.375rem',   // 6px
-    lg: '0.5rem',     // 8px
-    xl: '0.75rem',    // 12px
-    full: '9999px',
-  },
-  
-  shadows: {
-    sm: {
-      light: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-      dark: '0 1px 2px 0 rgb(0 0 0 / 0.3)',
-    },
-    md: {
-      light: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-      dark: '0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3)',
-    },
-    lg: {
-      light: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-      dark: '0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3)',
-    },
-    xl: {
-      light: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-      dark: '0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3)',
-    },
-  },
-  
-  transitions: {
-    fast: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
-    base: '200ms cubic-bezier(0.4, 0, 0.2, 1)',
-    slow: '300ms cubic-bezier(0.4, 0, 0.2, 1)',
-  },
-  
-  breakpoints: {
-    sm: '640px',
-    md: '768px',
-    lg: '1024px',
-    xl: '1280px',
-    '2xl': '1536px',
-  },
-} as const;
-```
+Design tokens are the single source of truth for all visual properties. They are organized into semantic categories:
 
-### 2.2 Tailwind Configuration
+**Color Categories:**
+- **Brand**: Primary and secondary brand colors
+- **Semantic**: Success, warning, error, info states
+- **Surface**: Base, elevated, and overlay backgrounds
+- **Text**: Primary through disabled text hierarchies
+- **Border**: Default, subtle, and strong borders
 
-**File: `tailwind.config.ts`**
+**Other Token Categories:**
+- **Spacing**: Consistent spacing scale (xs through 3xl)
+- **Typography**: Font families, sizes, weights, and line heights
+- **Border Radius**: Consistent rounding (sm through full)
+- **Shadows**: Elevation system (sm through xl)
+- **Transitions**: Animation timing (fast, base, slow)
+- **Breakpoints**: Responsive design breakpoints
 
-```typescript
-import type { Config } from 'tailwindcss';
+**Key Principle**: Every color token has explicit light and dark mode values. No runtime color calculations.
 
-export default {
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
-  darkMode: 'class', // Explicit dark mode via class
-  theme: {
-    extend: {
-      colors: {
-        brand: {
-          primary: 'var(--color-brand-primary)',
-          secondary: 'var(--color-brand-secondary)',
-        },
-        success: 'var(--color-success)',
-        warning: 'var(--color-warning)',
-        error: 'var(--color-error)',
-        info: 'var(--color-info)',
-        surface: {
-          base: 'var(--color-surface-base)',
-          elevated: 'var(--color-surface-elevated)',
-          overlay: 'var(--color-surface-overlay)',
-        },
-        text: {
-          primary: 'var(--color-text-primary)',
-          secondary: 'var(--color-text-secondary)',
-          tertiary: 'var(--color-text-tertiary)',
-          inverse: 'var(--color-text-inverse)',
-          disabled: 'var(--color-text-disabled)',
-        },
-        border: {
-          DEFAULT: 'var(--color-border-default)',
-          subtle: 'var(--color-border-subtle)',
-          strong: 'var(--color-border-strong)',
-        },
-      },
-      spacing: {
-        xs: 'var(--spacing-xs)',
-        sm: 'var(--spacing-sm)',
-        md: 'var(--spacing-md)',
-        lg: 'var(--spacing-lg)',
-        xl: 'var(--spacing-xl)',
-        '2xl': 'var(--spacing-2xl)',
-        '3xl': 'var(--spacing-3xl)',
-      },
-      borderRadius: {
-        sm: 'var(--radius-sm)',
-        md: 'var(--radius-md)',
-        lg: 'var(--radius-lg)',
-        xl: 'var(--radius-xl)',
-      },
-      boxShadow: {
-        sm: 'var(--shadow-sm)',
-        md: 'var(--shadow-md)',
-        lg: 'var(--shadow-lg)',
-        xl: 'var(--shadow-xl)',
-      },
-      transitionDuration: {
-        fast: 'var(--transition-fast)',
-        base: 'var(--transition-base)',
-        slow: 'var(--transition-slow)',
-      },
-    },
-  },
-  plugins: [],
-} satisfies Config;
-```
+### 2.2 Theme Implementation Approach
 
-### 2.3 CSS Variables Implementation
+**CSS Variables Bridge**: Tokens are exposed to Tailwind via CSS variables in `src/index.css`:
+- Variables defined in `:root` for light mode (default)
+- Variables redefined in `.dark` class for dark mode
+- Tailwind references these variables via `var(--token-name)`
 
-**File: `src/index.css`**
+**Benefits of this approach:**
+- Single theme switch (add/remove `.dark` class on `<html>`)
+- No duplicate class names (`dark:bg-x`)
+- Theme changes update globally
+- Runtime theme switching without style recalculation
 
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+### 2.3 Tailwind Configuration
 
-@layer base {
-  :root {
-    /* Light mode (default) */
-    --color-brand-primary: #3B82F6;
-    --color-brand-secondary: #8B5CF6;
-    
-    --color-success: #10B981;
-    --color-warning: #F59E0B;
-    --color-error: #EF4444;
-    --color-info: #3B82F6;
-    
-    --color-surface-base: #FFFFFF;
-    --color-surface-elevated: #F9FAFB;
-    --color-surface-overlay: #F3F4F6;
-    
-    --color-text-primary: #111827;
-    --color-text-secondary: #6B7280;
-    --color-text-tertiary: #9CA3AF;
-    --color-text-inverse: #FFFFFF;
-    --color-text-disabled: #D1D5DB;
-    
-    --color-border-default: #E5E7EB;
-    --color-border-subtle: #F3F4F6;
-    --color-border-strong: #D1D5DB;
-    
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
-    --spacing-2xl: 3rem;
-    --spacing-3xl: 4rem;
-    
-    --radius-sm: 0.25rem;
-    --radius-md: 0.375rem;
-    --radius-lg: 0.5rem;
-    --radius-xl: 0.75rem;
-    
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .dark {
-    /* Dark mode - explicit overrides */
-    --color-brand-primary: #60A5FA;
-    --color-brand-secondary: #A78BFA;
-    
-    --color-success: #34D399;
-    --color-warning: #FCD34D;
-    --color-error: #F87171;
-    --color-info: #60A5FA;
-    
-    --color-surface-base: #1F2937;
-    --color-surface-elevated: #374151;
-    --color-surface-overlay: #4B5563;
-    
-    --color-text-primary: #F9FAFB;
-    --color-text-secondary: #D1D5DB;
-    --color-text-tertiary: #9CA3AF;
-    --color-text-inverse: #111827;
-    --color-text-disabled: #6B7280;
-    
-    --color-border-default: #4B5563;
-    --color-border-subtle: #374151;
-    --color-border-strong: #6B7280;
-    
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3);
-  }
-  
-  * {
-    @apply border-border;
-  }
-  
-  body {
-    @apply bg-surface-base text-text-primary;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  }
-}
-```
+**Location**: `tailwind.config.ts`
+
+Tailwind is configured to:
+- Use `class` strategy for dark mode (explicit opt-in)
+- Extend theme with semantic tokens (not override defaults)
+- Reference CSS variables for all custom values
+- Maintain access to standard Tailwind utilities
 
 ---
 
 ## 3. Layout Primitives
 
-### 3.1 Stack Component
+Layout primitives are presentational components that handle spacing and structure without styling. They eliminate the need for custom margins and provide consistent layouts throughout the application.
 
-**Purpose**: Vertical layout with consistent spacing
+### 3.1 Core Principles
 
-```typescript
-// src/layouts/primitives/Stack.tsx
-interface StackProps {
-  children: React.ReactNode;
-  gap?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
-  align?: 'start' | 'center' | 'end' | 'stretch';
-  className?: string;
-}
+1. **Layout components handle spacing, atoms do not** - Atoms should never have external margins
+2. **Composable hierarchy** - Layout primitives can nest to create complex layouts
+3. **Responsive by default** - All primitives support responsive props
+4. **Type-safe gaps** - Only token-based spacing values allowed
 
-// Usage: <Stack gap="md" align="start">...</Stack>
+### 3.2 Available Primitives
+
+| Primitive | Purpose | Key Props |
+|-----------|---------|-----------|
+| **Stack** | Vertical layout with flex-col | `gap`, `align` |
+| **Row** | Horizontal layout with flex-row | `gap`, `align`, `justify`, `wrap` |
+| **Grid** | CSS Grid with columns | `cols`, `gap`, `responsive` |
+| **Container** | Max-width content wrapper | `size`, `padding` |
+| **Column** | Grid column with span control | `span`, `start` |
+| **Spacer** | Flexible spacing element | `size` |
+
+### 3.3 Usage Philosophy
+
+**Bad Practice** (atoms with margins):
+```tsx
+<Button className="mb-4">Submit</Button>
+<Text className="mt-2">Description</Text>
 ```
 
-### 3.2 Row Component
-
-**Purpose**: Horizontal layout with consistent spacing
-
-```typescript
-// src/layouts/primitives/Row.tsx
-interface RowProps {
-  children: React.ReactNode;
-  gap?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
-  align?: 'start' | 'center' | 'end' | 'baseline' | 'stretch';
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-  wrap?: boolean;
-  className?: string;
-}
-
-// Usage: <Row gap="sm" justify="between" align="center">...</Row>
+**Good Practice** (layout primitives):
+```tsx
+<Stack gap="md">
+  <Button>Submit</Button>
+  <Text>Description</Text>
+</Stack>
 ```
 
-### 3.3 Grid Component
-
-**Purpose**: CSS Grid layout with responsive columns
-
-```typescript
-// src/layouts/primitives/Grid.tsx
-interface GridProps {
-  children: React.ReactNode;
-  cols?: 1 | 2 | 3 | 4 | 6 | 12;
-  gap?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
-  responsive?: {
-    sm?: 1 | 2 | 3 | 4 | 6 | 12;
-    md?: 1 | 2 | 3 | 4 | 6 | 12;
-    lg?: 1 | 2 | 3 | 4 | 6 | 12;
-  };
-  className?: string;
-}
-
-// Usage: <Grid cols={3} gap="lg" responsive={{ sm: 1, md: 2 }}>...</Grid>
-```
-
-### 3.4 Container Component
-
-**Purpose**: Max-width container with responsive padding
-
-```typescript
-// src/layouts/primitives/Container.tsx
-interface ContainerProps {
-  children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  padding?: boolean;
-  className?: string;
-}
-
-// Usage: <Container size="lg" padding>...</Container>
-```
+This approach keeps atoms reusable and layout concerns separated.
 
 ---
 
 ## 4. Component Hierarchy
 
-### 4.1 Atoms
+The component system follows strict atomic design principles with clear responsibilities at each level.
 
-**Button Component**
-- Variants: `primary`, `secondary`, `outline`, `ghost`, `danger`
-- Sizes: `sm`, `md`, `lg`
-- States: `default`, `hover`, `active`, `disabled`, `loading`
-- Both light and dark mode styles defined
+### 4.1 Atoms (Primitive UI Elements)
 
-**Input Component**
-- Types: `text`, `email`, `password`, `number`, `search`, `tel`, `url`
-- States: `default`, `focus`, `error`, `disabled`
-- Sizes: `sm`, `md`, `lg`
+Atoms are the smallest, indivisible UI components. They:
+- Define ALL visual styling (light + dark modes explicitly)
+- Accept variant and size props for consistent variations
+- Have NO external margins or layout responsibilities
+- Are fully accessible and keyboard navigable
+- Handle their own internal states (hover, focus, active, disabled)
 
-**Heading Component**
-- Levels: `h1`, `h2`, `h3`, `h4`, `h5`, `h6`
-- Variants: `default`, `display`, `section`
-- Semantic HTML with proper hierarchy
+**Complete Atom Inventory:**
 
-**Text Component**
-- Variants: `body`, `caption`, `label`
-- Sizes: `xs`, `sm`, `base`, `lg`, `xl`
-- Colors: `primary`, `secondary`, `tertiary`, `inverse`, `disabled`
+| Atom | Variants | Sizes | Key Features |
+|------|----------|-------|--------------|
+| **Button** | primary, secondary, outline, ghost, danger | sm, md, lg | Loading state, icon support |
+| **Input** | (type variants) | sm, md, lg | Error state, prefix/suffix |
+| **Heading** | default, display, section | h1-h6 | Semantic HTML |
+| **Text** | body, caption, label | xs-xl | Color semantic tokens |
+| **Icon** | - | xs-xl | SVG-based, inherits color |
+| **Badge** | default, success, warning, error, info | sm, md, lg | Pill/square variants |
+| **Avatar** | - | xs-xl | Initials fallback |
+| **Spinner** | - | sm, md, lg | Smooth animations |
 
-**Icon Component**
-- SVG-based icon system
-- Sizes: `xs`, `sm`, `md`, `lg`, `xl`
-- Colors inherit from parent or explicit prop
+**Critical Atom Requirements:**
+- Must work standalone in Storybook/isolation
+- Must define styles for both `.dark` and default modes
+- Must use only design tokens (no arbitrary values)
+- Must handle all interactive states explicitly
 
-**Badge Component**
-- Variants: `default`, `success`, `warning`, `error`, `info`
-- Sizes: `sm`, `md`, `lg`
+### 4.2 Molecules (Composite UI Patterns)
 
-**Avatar Component**
-- Sizes: `xs`, `sm`, `md`, `lg`, `xl`
-- Fallback to initials
-- Image loading states
+Molecules combine multiple atoms into functional UI patterns. They:
+- Compose atoms without restyling them (use atom variants instead)
+- Add minimal internal layout logic (flex/grid for arrangement)
+- Handle interaction patterns (forms, search, modals)
+- Delegate complex behavior to Headless UI libraries
+- Are still domain-agnostic and reusable
 
-**Spinner Component**
-- Sizes: `sm`, `md`, `lg`
-- Colors: `primary`, `secondary`, `white`
+**Molecule Inventory:**
 
-### 4.2 Molecules
+| Molecule | Composition | Purpose | Technology |
+|----------|-------------|---------|------------|
+| **FormField** | Label + Input + Error | Form input with validation | Native HTML + ARIA |
+| **SearchBar** | Icon + Input + Clear button | Search with debounce | Custom hook |
+| **Card** | Header + Body + Footer | Content containers | Layout primitives |
+| **EmptyState** | Icon + Heading + Text + Button | No data scenarios | Atoms only |
+| **Alert** | Icon + Message + Close | User notifications | Atoms + dismiss logic |
+| **Dropdown** | Trigger + Menu + Items | Selection menus | Headless UI Menu |
+| **Modal** | Header + Body + Footer | Dialogs/overlays | Headless UI Dialog |
+| **Tabs** | Tab list + Panels | Content switching | Headless UI Tab |
 
-**FormField Component**
-- Composition: Label + Input + Error message
-- Handles validation state
-- Accessible with proper ARIA attributes
+**Molecule Responsibilities:**
+- **Pattern composition**: Arrange atoms into common patterns
+- **Accessibility**: Ensure ARIA attributes and keyboard navigation
+- **Internal state**: Simple local state (expanded, selected, dismissed)
+- **NO business logic**: No API calls, no domain knowledge
 
-**SearchBar Component**
-- Composition: Icon + Input + Clear button
-- Debounced search functionality
-- Keyboard navigation support
+### 4.3 Organisms (Complex Components)
 
-**Card Component**
-- Subcomponents: CardHeader, CardBody, CardFooter
-- Variants: `default`, `elevated`, `outlined`
-- Hover states for interactive cards
+Organisms are substantial UI sections that combine molecules and atoms. They CAN be domain-specific and may connect to data/business logic.
 
-**EmptyState Component**
-- Composition: Icon + Heading + Text + Optional action button
-- Used for empty lists, no results, etc.
+**Two Types of Organisms:**
 
-**Alert Component**
-- Variants: `info`, `success`, `warning`, `error`
-- Dismissible option
-- Icon + Message + Close button
+1. **Structural Organisms** (Navigation, Layout)
+   - Reusable across the application
+   - Handle app-wide concerns (navigation, user session)
+   - Example: AppHeader, Sidebar, UserMenu
 
-**Dropdown Component**
-- Built on Headless UI Menu
-- Keyboard navigation
-- Positioning with Floating UI
+2. **Domain Organisms** (Cards, Forms, Tables)
+   - Specific to business domain (Venues, Acts, Shows)
+   - Display and manipulate domain data
+   - Example: VenueCard, ShowForm, DataTable
 
-**Modal Component**
-- Built on Headless UI Dialog
-- Subcomponents: ModalHeader, ModalBody, ModalFooter
-- Focus trap and scroll lock
-- Backdrop click to close
+**Organism Architecture:**
 
-**Tabs Component**
-- Built on Headless UI Tab
-- Keyboard navigation
-- Variants: `line`, `enclosed`, `pills`
+| Category | Components | Domain Knowledge | Data Connection |
+|----------|------------|------------------|-----------------|
+| **Navigation** | AppHeader, Sidebar, NavItem, UserMenu | None (structural) | Auth context only |
+| **Domain Cards** | VenueCard, ActCard, ShowCard | High (entity-specific) | Props only (presentational) |
+| **Domain Forms** | VenueForm, ActForm, ShowForm | High (entity-specific) | Form state + callbacks |
+| **Data Display** | DataTable | Low (generic) | Props-based data |
 
-### 4.3 Organisms
+**Key Principles:**
+- Organisms use **Layout Primitives** for structure (Stack, Row, Grid)
+- Organisms select **atom/molecule variants** (don't create new styles)
+- Domain organisms are **presentational** (receive data via props)
+- Data fetching happens in **pages** or **feature hooks**, not organisms
 
-**Navigation Components**
-
-**AppHeader**
-- Logo/brand
-- Main navigation links
-- User menu dropdown
-- Theme toggle
-- Responsive mobile menu
-
-**Sidebar**
-- Collapsible navigation
-- Active state indication
-- Icon + label navigation items
-- Nested navigation support
-
-**NavItem**
-- Active/inactive states
-- Icon support
-- Badge/count support
-- Keyboard accessible
-
-**UserMenu**
-- User avatar
-- User info display
-- Dropdown with actions (Profile, Settings, Logout)
-
-**Domain-Specific Cards**
-
-**VenueCard**
-- Venue name and address
-- Seating capacity
-- Location map preview
-- Actions: View, Edit, Delete
-
-**ActCard**
-- Act name
-- Performance type/genre
-- Upcoming shows count
-- Actions: View, Edit, Delete
-
-**ShowCard**
-- Show date and time
-- Venue and act information
-- Ticket availability
-- Distance from user (if location search)
-- Actions: View details, Book tickets
-
-**Domain-Specific Forms**
-
-**VenueForm**
-- Name, address fields
-- Location picker (map integration)
-- Seating capacity
-- Description textarea
-- Form validation
-
-**ActForm**
-- Name field
-- Genre/type selection
-- Description textarea
-- Form validation
-
-**ShowForm**
-- Date/time picker
-- Venue selection dropdown
-- Act selection dropdown
-- Form validation
-
-**DataTable**
-- Generic reusable table
-- Sorting, filtering, pagination
-- Row selection
-- Responsive (cards on mobile)
-- Empty state handling
+**Responsiveness Strategy:**
+- Navigation: Hamburger menu (mobile) → Full nav (desktop)
+- Cards: Stack (mobile) → Grid (tablet+)
+- Forms: Full-width (mobile) → Constrained (desktop)
+- Tables: Card view (mobile) → Table (desktop)
 
 ---
 
 ## 5. Navigation Structure
 
-### 5.1 Route Configuration
+### 5.1 Route Architecture
 
-```typescript
-// src/config/routes.config.ts
-export const routes = {
-  auth: {
-    login: '/login',
-  },
-  dashboard: '/',
-  venues: {
-    list: '/venues',
-    detail: '/venues/:id',
-    create: '/venues/new',
-    edit: '/venues/:id/edit',
-  },
-  acts: {
-    list: '/acts',
-    detail: '/acts/:id',
-    create: '/acts/new',
-    edit: '/acts/:id/edit',
-  },
-  shows: {
-    list: '/shows',
-    detail: '/shows/:id',
-    create: '/shows/new',
-    edit: '/shows/:id/edit',
-  },
-} as const;
-```
+Routes are centrally configured in `src/config/routes.config.ts` for consistency and type safety.
 
-### 5.2 Navigation Menu Structure
+**Route Pattern:**
+- List views: `/resource` (e.g., `/venues`)
+- Detail views: `/resource/:id` (e.g., `/venues/123`)
+- Create: `/resource/new` (e.g., `/venues/new`)
+- Edit: `/resource/:id/edit` (e.g., `/venues/123/edit`)
 
-```typescript
-// Primary navigation items
-const navigationItems = [
-  {
-    label: 'Dashboard',
-    path: '/',
-    icon: 'HomeIcon',
-  },
-  {
-    label: 'Venues',
-    path: '/venues',
-    icon: 'BuildingIcon',
-    badge: venueCount, // Optional count badge
-  },
-  {
-    label: 'Acts',
-    path: '/acts',
-    icon: 'UsersIcon',
-    badge: actCount,
-  },
-  {
-    label: 'Shows',
-    path: '/shows',
-    icon: 'CalendarIcon',
-    badge: upcomingShowsCount,
-  },
-];
-```
+**Primary Resources:**
+1. Dashboard: `/` (home page)
+2. Venues: `/venues/*`
+3. Acts: `/acts/*`
+4. Shows: `/shows/*`
+5. Auth: `/login`
+
+### 5.2 Navigation Menu Hierarchy
+
+**Primary Navigation Items:**
+- Dashboard (Home icon)
+- Venues (Building icon, count badge)
+- Acts (Users icon, count badge)
+- Shows (Calendar icon, upcoming count badge)
+
+**User Menu Items:**
+- Profile
+- Settings  
+- Theme Toggle
+- Logout
 
 ### 5.3 Application Layout Structure
 
@@ -938,364 +317,209 @@ const navigationItems = [
 
 ### 6.1 Component Development Rules
 
-1. **Atoms must define both light and dark mode styles**
-   - Use Tailwind's `dark:` prefix for dark mode variants
-   - Never use inline conditional color logic
-   - All visual states must be explicitly defined
-
-2. **Layout primitives handle spacing, not atoms**
-   - Atoms should not have external margins
-   - Use layout primitives (Stack, Row, Grid) for spacing
-   - Atoms can have internal padding
-
-3. **Molecules compose atoms, don't restyle them**
-   - Use atom variants instead of overriding styles
-   - Minimal layout logic (flex/grid for internal arrangement)
-   - No new color or typography definitions
-
-4. **Organisms arrange molecules and atoms**
-   - Use layout primitives for structure
-   - Choose variants, don't create new styles
-   - Responsive behavior through layout primitives
-
-5. **Pages are composition-only**
-   - Wire organisms to data
-   - Handle routing and loading states
-   - No custom CSS or styling
+| Level | Styling Rules | Layout Rules | Data Rules |
+|-------|---------------|--------------|------------|
+| **Atoms** | Define all styles (light + dark) | No external margins | No data fetching |
+| **Molecules** | Use atom variants only | Minimal internal layout | Simple local state only |
+| **Organisms** | Select variants, no new styles | Use layout primitives | Presentational (props-based) |
+| **Pages** | No styling at all | Composition only | Data fetching + routing |
 
 ### 6.2 Styling Conventions
 
-**Tailwind Class Organization:**
-```typescript
-// Use cn() utility for conditional classes
-import { cn } from '@/utils/cn';
+**Use the `cn()` utility** for conditional Tailwind classes:
+- Location: `src/utils/cn.ts`
+- Combines `clsx` and `tailwind-merge`
+- Prevents Tailwind class conflicts
 
-const buttonClasses = cn(
-  // Base styles
-  'inline-flex items-center justify-center',
-  'rounded-md font-medium transition-colors',
-  'focus-visible:outline-none focus-visible:ring-2',
-  
-  // Variant styles
-  variant === 'primary' && 'bg-brand-primary text-text-inverse',
-  variant === 'secondary' && 'bg-surface-elevated text-text-primary',
-  
-  // Size styles
-  size === 'sm' && 'h-9 px-3 text-sm',
-  size === 'md' && 'h-10 px-4 text-base',
-  
-  // State styles
-  disabled && 'opacity-50 cursor-not-allowed',
-  
-  // Custom classes
-  className
-);
-```
+**Class Organization Order:**
+1. Base styles (display, positioning)
+2. Variant styles (colors, backgrounds)
+3. Size styles (dimensions, padding)
+4. State styles (hover, focus, disabled)
+5. Custom className prop (override)
 
-**Component File Structure:**
-```typescript
-// Button.tsx
-import { cn } from '@/utils/cn';
-import type { ButtonProps } from './Button.types';
+**Component File Organization:**
+- `Component.tsx` - Main component implementation
+- `Component.types.ts` - TypeScript interfaces and types
+- `index.ts` - Barrel export
 
-export function Button({
-  variant = 'primary',
-  size = 'md',
-  disabled = false,
-  loading = false,
-  children,
-  className,
-  ...props
-}: ButtonProps) {
-  return (
-    <button
-      className={cn(/* classes */)}
-      disabled={disabled || loading}
-      {...props}
-    >
-      {loading && <Spinner size="sm" />}
-      {children}
-    </button>
-  );
-}
-```
+### 6.3 Theme Management
 
-### 6.3 Theme Context Usage
+**ThemeProvider** (`src/theme/ThemeProvider.tsx`):
+- Manages global theme state ('light' | 'dark')
+- Applies/removes `.dark` class on `<html>`
+- Persists preference to localStorage
+- Provides `useTheme()` hook
 
-```typescript
-// src/theme/ThemeProvider.tsx
-import { createContext, useContext, useState, useEffect } from 'react';
-
-type Theme = 'light' | 'dark';
-
-interface ThemeContextValue {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  toggleTheme: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
-
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('light');
-  
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-  }, [theme]);
-  
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
-  
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
-  }
-  return context;
-}
-```
+**Theme Switching Mechanism:**
+- No per-component theme logic
+- Single class toggle on root element
+- CSS variables automatically update
+- Components reference semantic tokens only
 
 ### 6.4 Accessibility Requirements
 
-1. **Keyboard Navigation**
-   - All interactive elements must be keyboard accessible
-   - Proper focus indicators (using Tailwind's `focus-visible:` utilities)
-   - Logical tab order
+| Requirement | Implementation | Tools |
+|-------------|----------------|-------|
+| **Keyboard Navigation** | Tab order, focus indicators | `focus-visible:` utilities |
+| **ARIA Attributes** | Roles, labels, descriptions | Headless UI (built-in) |
+| **Color Contrast** | WCAG AA (4.5:1 minimum) | Design tokens tested |
+| **Screen Readers** | Semantic HTML, descriptive text | Native HTML elements |
 
-2. **ARIA Attributes**
-   - Proper roles for custom components
-   - aria-label for icon-only buttons
-   - aria-describedby for form errors
-   - aria-live regions for dynamic content
-
-3. **Color Contrast**
-   - WCAG AA compliance minimum (4.5:1 for normal text)
-   - Test both light and dark modes
-   - Use tokens that meet contrast requirements
-
-4. **Screen Reader Support**
-   - Semantic HTML elements
-   - Descriptive labels
-   - Hidden text for context where needed
+**Critical Checks:**
+- All interactive elements keyboard accessible
+- Icon-only buttons have `aria-label`
+- Form errors use `aria-describedby`
+- Dynamic updates use `aria-live`
+- Test with both light and dark modes
 
 ### 6.5 Responsive Design Strategy
 
-**Mobile-First Approach:**
-```typescript
-// Base styles for mobile, then override for larger screens
-<div className="
-  flex flex-col gap-4
-  md:flex-row md:gap-6
-  lg:gap-8
-">
-```
+**Mobile-First Approach**: Base styles target mobile, use breakpoint prefixes for larger screens.
 
-**Breakpoint Usage:**
-- `sm` (640px): Small tablets, large phones in landscape
+**Breakpoints:**
+- `sm` (640px): Large phones, small tablets
 - `md` (768px): Tablets
-- `lg` (1024px): Desktops, laptops
+- `lg` (1024px): Laptops, desktops
 - `xl` (1280px): Large desktops
 - `2xl` (1536px): Extra large screens
 
-**Component Responsiveness:**
-- Navigation: Hamburger menu on mobile, full nav on desktop
-- Cards: Stack on mobile, grid on tablet/desktop
-- Forms: Full width on mobile, constrained on desktop
-- Tables: Card view on mobile, table on desktop
+**Responsive Patterns:**
+- Navigation: Hamburger → Full nav bar
+- Card grids: 1 column → 2 columns → 3+ columns
+- Forms: Full width → Centered constrained width
+- Tables: Card list → Data table
+- Sidebar: Hidden → Overlay → Persistent
 
 ### 6.6 Performance Considerations
 
-1. **Code Splitting**
-   - Lazy load pages with React.lazy()
-   - Lazy load heavy organisms (DataTable, Maps)
-   - Route-based code splitting
-
-2. **Image Optimization**
-   - Use appropriate image formats (WebP with fallbacks)
-   - Lazy load images below the fold
-   - Responsive images with srcset
-
-3. **Bundle Size**
-   - Tree-shake unused Tailwind classes (automatic with Tailwind)
-   - Import only needed Headless UI components
-   - Monitor bundle size with Vite's build analysis
+**Optimization Strategies:**
+- Route-based code splitting (React Router + Vite)
+- Lazy load pages and heavy components (React.lazy)
+- Image optimization (WebP, lazy loading, responsive images)
+- Tree-shaking (Tailwind automatic, Headless UI component-level imports)
+- Bundle analysis (Vite rollup visualizer)
 
 ---
 
 ## 7. Development Workflow
 
-### 7.1 Implementation Order
+### 7.1 Implementation Phases
 
-1. **Phase 1: Foundation**
-   - Set up Tailwind configuration
-   - Implement theme tokens and CSS variables
-   - Create ThemeProvider and context
-   - Build layout primitives (Stack, Row, Grid, Container)
+Build the design system from the foundation up, ensuring each layer is solid before building the next:
 
-2. **Phase 2: Atoms**
-   - Button (all variants and states)
-   - Input (all types and states)
-   - Heading, Text
-   - Icon system
-   - Badge, Avatar, Spinner
+| Phase | Components | Dependencies | Validation |
+|-------|------------|--------------|------------|
+| **1. Foundation** | Tailwind config, Theme tokens, ThemeProvider, Layout primitives | None | Theme switching works |
+| **2. Atoms** | Button, Input, Heading, Text, Icon, Badge, Avatar, Spinner | Phase 1 | Light + dark modes render |
+| **3. Molecules** | FormField, SearchBar, Card, Alert, Dropdown, Modal, Tabs | Phases 1-2, Headless UI | Accessible, composable |
+| **4. Organisms** | Navigation, Domain cards, Domain forms, DataTable | Phases 1-3 | Responsive, domain-aware |
+| **5. Layouts & Pages** | AppLayout, AuthLayout, Page components | Phases 1-4 | Full page rendering |
+| **6. Integration** | API hooks, Routing, Auth flow | Phases 1-5, TanStack Query | End-to-end flows work |
 
-3. **Phase 3: Molecules**
-   - FormField
-   - SearchBar
-   - Card components
-   - Alert
-   - Dropdown (with Headless UI)
-   - Modal (with Headless UI)
-   - Tabs (with Headless UI)
-
-4. **Phase 4: Organisms**
-   - Navigation components (AppHeader, Sidebar, NavItem, UserMenu)
-   - Domain cards (VenueCard, ActCard, ShowCard)
-   - Domain forms (VenueForm, ActForm, ShowForm)
-   - DataTable
-
-5. **Phase 5: Layouts & Pages**
-   - AppLayout
-   - AuthLayout
-   - Page components (list, detail, create, edit for each domain)
-
-6. **Phase 6: Integration**
-   - API client extensions
-   - TanStack Query hooks
-   - Routing setup
-   - Authentication flow
+**Development Principles:**
+- Build bottom-up (foundation → atoms → molecules → organisms → pages)
+- Test each component in isolation before integration
+- Validate accessibility at every level
+- Document patterns as you build
 
 ### 7.2 Testing Strategy
 
-**Component Testing:**
-- Test atoms in isolation with all variants
-- Test light and dark mode rendering
-- Test keyboard navigation and accessibility
-- Test responsive behavior
+**Per-Component Testing:**
+- All variants render correctly
+- Light and dark modes work
+- Keyboard navigation functional
+- Responsive breakpoints behave correctly
 
 **Integration Testing:**
-- Test page flows (create, edit, delete)
-- Test navigation between pages
-- Test form validation and submission
-- Test error states and loading states
-
-### 7.3 Documentation Requirements
-
-Each component should include:
-- TypeScript interface documentation
-- Usage examples
-- Variant showcase
-- Accessibility notes
-- Responsive behavior notes
+- Complete CRUD flows (create, read, update, delete)
+- Navigation between pages
+- Form validation and error handling
+- Loading and error states
 
 ---
 
-## 8. Dependencies to Install
+## 8. Key Dependencies
 
-```json
-{
-  "dependencies": {
-    "@headlessui/react": "^2.2.0",
-    "@tanstack/react-query": "^5.90.10",
-    "@tanstack/react-query-devtools": "^5.91.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router-dom": "^7.1.1",
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^2.7.0"
-  },
-  "devDependencies": {
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.17",
-    "typescript": "~5.9.3",
-    "vite": "^7.2.4"
-  }
-}
-```
+**Production Dependencies:**
+- `@headlessui/react` - Accessible UI component primitives (Dropdown, Modal, Tabs)
+- `@tanstack/react-query` - Server state management
+- `react-router-dom` - Client-side routing
+- `clsx` + `tailwind-merge` - Conditional class names utility
+
+**Development Dependencies:**
+- `tailwindcss` + `autoprefixer` + `postcss` - Styling toolchain
+- `vite` - Build tool and dev server
+- `typescript` - Type safety
+- `@vitejs/plugin-react` - Vite React support
+
+**Note:** React 19.2.0 is assumed as the base. All dependencies should use compatible versions.
 
 ---
 
-## 9. File Creation Checklist
+## 9. Implementation Checklist
 
-### Configuration Files
-- [ ] `tailwind.config.ts` - Tailwind configuration with custom tokens
-- [ ] `postcss.config.js` - PostCSS configuration for Tailwind
-- [ ] `src/config/theme.config.ts` - Theme configuration
-- [ ] `src/config/routes.config.ts` - Route definitions
+This checklist tracks foundational files that must be created before component development. All files live in `src/GloboTicket.Web/src/` unless noted.
 
-### Theme Layer
-- [ ] `src/theme/tokens.ts` - Design token definitions
-- [ ] `src/theme/ThemeProvider.tsx` - Theme context provider
-- [ ] `src/theme/types.ts` - Theme TypeScript types
-- [ ] `src/index.css` - Updated with CSS variables and Tailwind imports
+**Configuration & Theme:**
+- [ ] `tailwind.config.ts` - Custom token configuration
+- [ ] `postcss.config.js` - Tailwind processing
+- [ ] `index.css` - CSS variables (light/dark)
+- [ ] `theme/tokens.ts` - Design token definitions
+- [ ] `theme/ThemeProvider.tsx` - Theme context
+- [ ] `config/routes.config.ts` - Centralized routes
 
-### Layout Primitives
-- [ ] `src/layouts/primitives/Stack.tsx`
-- [ ] `src/layouts/primitives/Row.tsx`
-- [ ] `src/layouts/primitives/Column.tsx`
-- [ ] `src/layouts/primitives/Grid.tsx`
-- [ ] `src/layouts/primitives/Container.tsx`
-- [ ] `src/layouts/primitives/Spacer.tsx`
-- [ ] `src/layouts/primitives/index.ts`
+**Layout Primitives:**
+- [ ] `layouts/primitives/` - Stack, Row, Grid, Container, Column, Spacer + index
 
-### Layouts
-- [ ] `src/layouts/AppLayout.tsx`
-- [ ] `src/layouts/AuthLayout.tsx`
-- [ ] `src/layouts/index.ts`
+**Core Layouts:**
+- [ ] `layouts/AppLayout.tsx` - Main authenticated layout
+- [ ] `layouts/AuthLayout.tsx` - Login/auth pages layout
 
-### Utilities
-- [ ] `src/utils/cn.ts` - Class name utility (clsx + tailwind-merge)
-- [ ] `src/utils/format.ts` - Formatting utilities
-- [ ] `src/utils/validation.ts` - Validation helpers
-- [ ] `src/utils/index.ts`
+**Utilities:**
+- [ ] `utils/cn.ts` - Class name merger (clsx + tailwind-merge)
+- [ ] `utils/format.ts` - Date/number formatting
+- [ ] `utils/validation.ts` - Form validation helpers
 
-### Hooks
-- [ ] `src/hooks/useTheme.ts` - Theme hook
-- [ ] `src/hooks/useMediaQuery.ts` - Responsive hook
-- [ ] `src/hooks/useDebounce.ts` - Debounce hook
-- [ ] `src/hooks/index.ts`
+**Hooks:**
+- [ ] `hooks/useTheme.ts` - Theme management
+- [ ] `hooks/useMediaQuery.ts` - Responsive queries
+- [ ] `hooks/useDebounce.ts` - Debounced values
+
+**Note:** Component files (atoms, molecules, organisms) are tracked separately per implementation phase.
 
 ---
 
-## 10. Success Criteria
+## 10. Architecture Validation
 
-The design system architecture is complete when:
+This architecture is complete when these principles are clearly defined:
 
-1. ✅ All design tokens are defined with explicit light and dark mode values
-2. ✅ Layout primitives provide consistent spacing and structure
-3. ✅ Component hierarchy follows atomic design principles
-4. ✅ Navigation structure supports all PRD requirements
-5. ✅ Styling approach is consistent (Tailwind + CSS variables)
-6. ✅ Accessibility requirements are documented
-7. ✅ Responsive design strategy is defined
-8. ✅ Implementation order is clear and logical
-9. ✅ All dependencies are identified
-10. ✅ File structure supports scalability and maintainability
+✅ **Token System**: Explicit light/dark values, no runtime color calculations  
+✅ **Component Hierarchy**: Clear atomic design levels with distinct responsibilities  
+✅ **Styling Strategy**: Tailwind + CSS variables, consistent conventions  
+✅ **Layout Philosophy**: Separation of spacing (primitives) from styling (atoms)  
+✅ **Accessibility**: WCAG AA standards, keyboard navigation, ARIA support  
+✅ **Responsiveness**: Mobile-first approach with defined breakpoint strategy  
+✅ **Performance**: Code splitting, lazy loading, bundle optimization  
+✅ **Implementation Path**: Clear phase ordering from foundation to integration  
 
 ---
 
 ## 11. Next Steps
 
-After this architecture is approved:
+**From Architecture to Implementation:**
 
-1. **Switch to Code mode** to begin implementation
-2. **Start with Phase 1** (Foundation: Tailwind config, theme tokens, layout primitives)
-3. **Build incrementally** following the implementation order
-4. **Test each layer** before moving to the next
-5. **Document components** as they are built
+1. Begin with Phase 1 (Foundation) - establish the base layer
+2. Build bottom-up through phases 2-6
+3. Validate each component in isolation before integration
+4. Test accessibility and responsiveness at every level
+5. Document component patterns as they emerge
 
-This architecture provides a solid foundation for building a maintainable, accessible, and scalable design system that follows atomic design principles and supports both light and dark modes explicitly.
+**Key Success Factors:**
+- Never skip a phase or build out of order
+- Test light and dark modes for every component
+- Use layout primitives consistently
+- Reference existing code in this document, don't duplicate it
+- Focus on reusability and composability
+
+This architecture provides the strategic foundation. The code implements the details.
