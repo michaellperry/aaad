@@ -39,15 +39,19 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
         using (var adminContext = CreateDbContext(_fixture.ConnectionString, null))
         {
             var adminService = new TenantService(adminContext);
+            var uniqueIdA = Guid.NewGuid().ToString()[..8];
+            var uniqueIdB = Guid.NewGuid().ToString()[..8];
             await adminService.CreateTenantAsync(new CreateTenantDto
             {
+                TenantIdentifier = $"tenant-a-{uniqueIdA}",
                 Name = "Tenant A",
-                Slug = $"tenant-a-{Guid.NewGuid().ToString()[..8]}"
+                Slug = $"tenant-a-{uniqueIdA}"
             });
             await adminService.CreateTenantAsync(new CreateTenantDto
             {
+                TenantIdentifier = $"tenant-b-{uniqueIdB}",
                 Name = "Tenant B",
-                Slug = $"tenant-b-{Guid.NewGuid().ToString()[..8]}"
+                Slug = $"tenant-b-{uniqueIdB}"
             });
         }
 
@@ -82,15 +86,19 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
         using (var adminContext = CreateDbContext(_fixture.ConnectionString, null))
         {
             var adminService = new TenantService(adminContext);
+            var uniqueId1 = Guid.NewGuid().ToString()[..8];
+            var uniqueId2 = Guid.NewGuid().ToString()[..8];
             tenant1 = await adminService.CreateTenantAsync(new CreateTenantDto
             {
-                Name = $"Test-Tenant-1-{Guid.NewGuid().ToString()[..8]}",
-                Slug = $"test1-{Guid.NewGuid().ToString()[..8]}"
+                TenantIdentifier = $"test-tenant-1-{uniqueId1}",
+                Name = $"Test-Tenant-1-{uniqueId1}",
+                Slug = $"test1-{uniqueId1}"
             });
             tenant2 = await adminService.CreateTenantAsync(new CreateTenantDto
             {
-                Name = $"Test-Tenant-2-{Guid.NewGuid().ToString()[..8]}",
-                Slug = $"test2-{Guid.NewGuid().ToString()[..8]}"
+                TenantIdentifier = $"test-tenant-2-{uniqueId2}",
+                Name = $"Test-Tenant-2-{uniqueId2}",
+                Slug = $"test2-{uniqueId2}"
             });
         }
 
@@ -127,10 +135,12 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
         using (var adminContext = CreateDbContext(_fixture.ConnectionString, null))
         {
             var adminService = new TenantService(adminContext);
+            var uniqueId = Guid.NewGuid().ToString()[..8];
             createdTenant = await adminService.CreateTenantAsync(new CreateTenantDto
             {
-                Name = $"Test-{Guid.NewGuid().ToString()[..8]}",
-                Slug = $"test-{Guid.NewGuid().ToString()[..8]}"
+                TenantIdentifier = $"test-{uniqueId}",
+                Name = $"Test-{uniqueId}",
+                Slug = $"test-{uniqueId}"
             });
         }
 
@@ -162,13 +172,15 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
         // this shows that the infrastructure is in place for tenant-isolated entities.
         
         // Arrange - Create tenants in admin context
-        var uniqueSlug = $"demo-{Guid.NewGuid().ToString()[..8]}";
+        var uniqueId = Guid.NewGuid().ToString()[..8];
+        var uniqueSlug = $"demo-{uniqueId}";
         TenantDto createdTenant;
         using (var adminContext = CreateDbContext(_fixture.ConnectionString, null))
         {
             var adminService = new TenantService(adminContext);
             createdTenant = await adminService.CreateTenantAsync(new CreateTenantDto
             {
+                TenantIdentifier = $"demo-{uniqueId}",
                 Name = "Multi-Tenancy Demo",
                 Slug = uniqueSlug
             });

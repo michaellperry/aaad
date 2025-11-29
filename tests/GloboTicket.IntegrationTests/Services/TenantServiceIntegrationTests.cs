@@ -33,10 +33,12 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
         using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
         var service = new TenantService(context);
         
+        var uniqueId = Guid.NewGuid().ToString()[..8];
         var createDto = new CreateTenantDto
         {
+            TenantIdentifier = $"test-tenant-{uniqueId}",
             Name = "Test Tenant",
-            Slug = "test-tenant"
+            Slug = $"test-tenant-{uniqueId}"
         };
 
         // Act
@@ -46,7 +48,7 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
         result.Should().NotBeNull();
         result.Id.Should().BeGreaterThan(0);
         result.Name.Should().Be("Test Tenant");
-        result.Slug.Should().Be("test-tenant");
+        result.Slug.Should().Be($"test-tenant-{uniqueId}");
         result.IsActive.Should().BeTrue();
         result.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
 
@@ -64,10 +66,12 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
         using var setupContext = CreateDbContext(_fixture.ConnectionString, _testTenantId);
         var setupService = new TenantService(setupContext);
         
+        var uniqueId = Guid.NewGuid().ToString()[..8];
         var createDto = new CreateTenantDto
         {
+            TenantIdentifier = $"get-by-id-test-{uniqueId}",
             Name = "Get By ID Test",
-            Slug = "get-by-id-test"
+            Slug = $"get-by-id-test-{uniqueId}"
         };
         var created = await setupService.CreateTenantAsync(createDto);
 
@@ -80,7 +84,7 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
         result.Should().NotBeNull();
         result!.Id.Should().Be(created.Id);
         result.Name.Should().Be("Get By ID Test");
-        result.Slug.Should().Be("get-by-id-test");
+        result.Slug.Should().Be($"get-by-id-test-{uniqueId}");
         result.IsActive.Should().BeTrue();
     }
 
@@ -105,23 +109,26 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
         using var setupContext = CreateDbContext(_fixture.ConnectionString, _testTenantId);
         var setupService = new TenantService(setupContext);
         
+        var uniqueId = Guid.NewGuid().ToString()[..8];
+        var slug = $"get-by-slug-test-{uniqueId}";
         var createDto = new CreateTenantDto
         {
+            TenantIdentifier = $"get-by-slug-test-{uniqueId}",
             Name = "Get By Slug Test",
-            Slug = "get-by-slug-test"
+            Slug = slug
         };
         var created = await setupService.CreateTenantAsync(createDto);
 
         // Act
         using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
         var service = new TenantService(context);
-        var result = await service.GetTenantBySlugAsync("get-by-slug-test");
+        var result = await service.GetTenantBySlugAsync(slug);
 
         // Assert
         result.Should().NotBeNull();
         result!.Id.Should().Be(created.Id);
         result.Name.Should().Be("Get By Slug Test");
-        result.Slug.Should().Be("get-by-slug-test");
+        result.Slug.Should().Be(slug);
         result.IsActive.Should().BeTrue();
     }
 
@@ -146,15 +153,19 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
         using var setupContext = CreateDbContext(_fixture.ConnectionString, _testTenantId);
         var setupService = new TenantService(setupContext);
         
+        var uniqueId1 = Guid.NewGuid().ToString()[..8];
+        var uniqueId2 = Guid.NewGuid().ToString()[..8];
         var tenant1 = new CreateTenantDto
         {
+            TenantIdentifier = $"tenant-one-{uniqueId1}",
             Name = "Tenant One",
-            Slug = "tenant-one"
+            Slug = $"tenant-one-{uniqueId1}"
         };
         var tenant2 = new CreateTenantDto
         {
+            TenantIdentifier = $"tenant-two-{uniqueId2}",
             Name = "Tenant Two",
-            Slug = "tenant-two"
+            Slug = $"tenant-two-{uniqueId2}"
         };
 
         await setupService.CreateTenantAsync(tenant1);
