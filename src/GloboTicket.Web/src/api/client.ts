@@ -120,3 +120,15 @@ export async function updateVenue(id: string, dto: UpdateVenueDto): Promise<Venu
 
   return handleResponse<Venue>(response);
 }
+
+export async function deleteVenue(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/venues/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API Error: ${response.status} - ${errorText}`);
+  }
+}
