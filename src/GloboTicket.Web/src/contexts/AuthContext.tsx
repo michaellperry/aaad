@@ -16,6 +16,8 @@ interface AuthContextValue {
   logout: () => Promise<void>;
 }
 
+// Context export is needed for external access - fast refresh warning is acceptable
+// eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext<AuthContextValue | undefined>(
   undefined
 );
@@ -46,8 +48,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   });
 
   // Mark as initialized once the initial query completes
+  // Using useEffect is necessary to sync initialization state with query loading state
   useEffect(() => {
     if (!isLoading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsInitialized(true);
     }
   }, [isLoading]);

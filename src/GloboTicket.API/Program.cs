@@ -29,6 +29,9 @@ builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IVenueService, VenueService>();
 builder.Services.AddScoped<IActService, ActService>();
 
+// Register rate limiting service
+builder.Services.AddSingleton<GloboTicket.API.Services.IRateLimitService, GloboTicket.API.Services.RateLimitService>();
+
 // Configure cookie authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -90,6 +93,9 @@ app.UseAuthorization();
 // Use custom tenant resolution middleware (after authentication)
 app.UseMiddleware<TenantResolutionMiddleware>();
 
+// Use rate limiting middleware (after authentication, before endpoints)
+app.UseMiddleware<RateLimitingMiddleware>();
+
 // Map health check endpoint
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
     .WithName("HealthCheck");
@@ -105,5 +111,8 @@ app.MapVenueEndpoints();
 
 // Map act endpoints
 app.MapActEndpoints();
+
+// Map geocoding endpoints
+app.MapGeocodingEndpoints();
 
 app.Run();

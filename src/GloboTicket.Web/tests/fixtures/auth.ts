@@ -28,6 +28,8 @@ export const test = base.extend<AuthFixtures>({
     await waitForAuthentication(page);
     
     // Use the authenticated page in tests
+    // Note: 'use' here is Playwright's fixture function, not React's use hook
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(page);
   },
 });

@@ -191,7 +191,71 @@ dotnet run
 
 The API documentation will be available at `http://localhost:5028/swagger`
 
-### 4. Start the Frontend (Optional)
+### 4. Configure Mapbox (Required for Venue Location Features)
+
+The venue location picker feature requires Mapbox access tokens for both geocoding (backend) and map rendering (frontend).
+
+#### Get a Mapbox Access Token
+
+1. **Create a Mapbox account** (if you don't have one):
+   - Go to [https://account.mapbox.com/](https://account.mapbox.com/)
+   - Sign up for a free account (includes 50,000 free map loads per month)
+
+2. **Create an access token**:
+   - Navigate to [Access Tokens](https://account.mapbox.com/access-tokens/)
+   - Click "Create a token"
+   - Name it (e.g., "GloboTicket Development")
+   - For development, you can use the default public token
+   - **For production**: Create separate secret tokens and restrict by URL
+
+#### Configure Backend (API) - Using User Secrets
+
+**User Secrets** is a .NET feature that stores sensitive configuration outside of your project files, preventing secrets from being committed to source control.
+
+1. **Initialize User Secrets** (one-time setup):
+   ```bash
+   cd src/GloboTicket.API
+   dotnet user-secrets init
+   ```
+
+2. **Set the Mapbox access token**:
+   ```bash
+   dotnet user-secrets set "Mapbox:AccessToken" "your_mapbox_secret_token_here"
+   ```
+
+3. **Verify the secret was set** (optional):
+   ```bash
+   dotnet user-secrets list
+   ```
+
+**Note:** 
+- Use a **secret token** for the backend (geocoding API calls). Secret tokens should never be exposed to the client.
+- User Secrets are automatically loaded in Development environment
+- The token is stored in your user profile (not in the project), so it won't be committed to source control
+- For other developers: Each developer must set their own User Secrets locally
+
+#### Configure Frontend (Web)
+
+Create a `.env` file in `src/GloboTicket.Web/` (or add to existing `.env`):
+
+```bash
+VITE_MAPBOX_ACCESS_TOKEN=your_mapbox_public_token_here
+```
+
+**Note:** 
+- For the frontend, you can use a **public token** with URL restrictions. In Mapbox dashboard:
+  - Go to your token settings
+  - Under "URL restrictions", add: `http://localhost:5173/*` (for development)
+  - For production, add your production domain
+- The `.env` file is already included in `.gitignore` and will not be committed to source control
+
+**Security Best Practices:**
+- **Backend token**: Use User Secrets for local development (automatically excluded from source control)
+- **Frontend token**: Use a public token with strict URL restrictions in `.env` file (add `.env` to `.gitignore`)
+- **Production**: Store tokens in environment variables, Azure Key Vault, or other secure configuration management
+- **Never commit secrets**: User Secrets and `.env` files should never be committed to version control
+
+### 5. Start the Frontend (Optional)
 
 ```bash
 cd src/GloboTicket.Web
@@ -200,6 +264,8 @@ npm run dev
 ```
 
 The frontend will be available at `http://localhost:5173`
+
+**Note:** If Mapbox tokens are not configured, the venue location picker will display an error message. The rest of the application will function normally.
 
 For detailed setup instructions, see [`GETTING_STARTED.md`](GETTING_STARTED.md).
 
@@ -345,6 +411,33 @@ Domain-specific features such as:
 - Reporting and analytics
 
 The architectural foundation is complete and ready for domain feature implementation.
+
+## ⚠️ Technical Debt
+
+### Rate Limiting: Distributed Cache Required
+
+**Current Implementation:**
+The rate limiting service (`RateLimitService`) uses in-memory storage (`ConcurrentDictionary`) to track request counts per user. This implementation works for single-server deployments but has significant limitations for production multi-server environments.
+
+**Issues:**
+1. **Horizontal Scaling**: Rate limit state is not shared across application servers. In a load-balanced environment, users can exceed limits by making requests to different servers (effective limit = configured limit × number of servers).
+2. **Server Restarts**: Rate limit counters are lost on server restart, allowing users to immediately make a full quota of requests again.
+3. **Deployment Windows**: During rolling deployments, some servers reset while others maintain state, making rate limiting unreliable.
+
+**Recommended Solution:**
+Migrate to a distributed cache (Redis, NCache, or similar) to:
+- Share rate limit state across all application servers
+- Maintain accuracy in multi-server deployments
+- Provide better resilience (cache can survive app restarts if configured)
+- Support horizontal scaling without compromising rate limit enforcement
+
+**Implementation Approach:**
+- Replace `ConcurrentDictionary` with distributed cache operations
+- Store rate limit entries with TTL matching the rate limit window
+- Use atomic operations for thread-safe increment/decrement
+- Consider using `IDistributedCache` interface for abstraction
+
+**Priority:** Medium (acceptable for single-server deployments, critical for production multi-server environments)
 
 ## 🤝 Contributing
 

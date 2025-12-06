@@ -82,7 +82,7 @@ test.describe('View Venues List', () => {
     
     // Note: Address and description are optional fields, so we check if they exist
     // If address is present, verify it's displayed with MapPin icon context
-    const addressText = firstVenueCard.locator('text=/^[A-Za-z0-9\s,.-]+$/').filter({ hasText: /\d/ });
+    const addressText = firstVenueCard.locator('text=/^[A-Za-z0-9\\s,.-]+$/').filter({ hasText: /\d/ });
     const addressCount = await addressText.count();
     if (addressCount > 0) {
       // Address exists, verify it's visible

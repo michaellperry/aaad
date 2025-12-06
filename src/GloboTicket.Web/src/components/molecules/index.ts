@@ -22,3 +22,9 @@ export type { PageHeaderProps } from './PageHeader';
 
 export { VenueCard } from './VenueCard';
 export type { VenueCardProps } from './VenueCard';
+
+export { AddressSearchInput } from './AddressSearchInput';
+export type { AddressSearchInputProps } from './AddressSearchInput';
+
+export { MapDisplay } from './MapDisplay';
+export type { MapDisplayProps } from './MapDisplay';

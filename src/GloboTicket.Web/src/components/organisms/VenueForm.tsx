@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import { Text } from '../atoms/Text';
+import { VenueLocationPicker } from './VenueLocationPicker';
 import { createVenue, updateVenue } from '../../api/client';
 import type { CreateVenueDto, UpdateVenueDto, Venue } from '../../types/venue';
 
@@ -160,6 +161,17 @@ export function VenueForm({ venue, onSuccess, onCancel }: VenueFormProps) {
           maxLength={300}
         />
       </div>
+
+      <VenueLocationPicker
+        initialLatitude={latitude ? parseFloat(latitude) : undefined}
+        initialLongitude={longitude ? parseFloat(longitude) : undefined}
+        initialAddress={address}
+        onLocationSelect={(lat, lng, addr) => {
+          setLatitude(lat.toString());
+          setLongitude(lng.toString());
+          setAddress(addr);
+        }}
+      />
 
       <div>
         <label htmlFor="seatingCapacity" className="block text-sm font-medium text-text-primary mb-2">
