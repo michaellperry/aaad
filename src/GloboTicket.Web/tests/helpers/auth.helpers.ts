@@ -56,7 +56,7 @@ export async function isAuthenticated(page: Page): Promise<boolean> {
     const isOnDashboard = url.endsWith('/') || url.includes('/venues') || url.includes('/acts');
     
     return isOnDashboard;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

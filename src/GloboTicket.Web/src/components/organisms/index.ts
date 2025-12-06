@@ -26,3 +26,6 @@ export { VenueList } from './VenueList';
 export type { VenueListProps } from './VenueList';
 
 export { VenueForm } from './VenueForm';
+
+export { VenueLocationPicker } from './VenueLocationPicker';
+export type { VenueLocationPickerProps } from './VenueLocationPicker';

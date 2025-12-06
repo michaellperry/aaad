@@ -18,7 +18,10 @@ import { ROUTES } from './routes';
 
 /**
  * 404 Not Found page component
+ * Note: This component is defined here for router configuration.
+ * Fast refresh warning is acceptable as this is a simple static component.
  */
+// eslint-disable-next-line react-refresh/only-export-components
 const NotFoundPage = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
     <div className="text-center">

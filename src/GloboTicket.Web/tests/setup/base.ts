@@ -18,7 +18,9 @@ type BaseFixtures = {
  */
 export const test = base.extend<BaseFixtures>({
   // Base URL fixture
-  baseURL: async ({}, use) => {
+  baseURL: async (_unused, use) => {
+    // Note: 'use' here is Playwright's fixture function, not React's use hook
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(BASE_URL);
   },
 
@@ -40,6 +42,8 @@ export const test = base.extend<BaseFixtures>({
     await page.context().storageState({ path: AUTH_STATE_PATH });
     
     // Provide the authenticated page to tests
+    // Note: 'use' here is Playwright's fixture function, not React's use hook
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(page);
   },
 });

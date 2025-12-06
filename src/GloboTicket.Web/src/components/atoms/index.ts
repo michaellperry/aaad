@@ -25,3 +25,6 @@ export type { SpinnerProps, SpinnerSize } from './Spinner';
 
 export { Text } from './Text';
 export type { TextProps, TextSize, TextVariant } from './Text';
+
+export { MapMarker } from './MapMarker';
+export type { MapMarkerProps } from './MapMarker';
