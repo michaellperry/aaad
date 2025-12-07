@@ -55,7 +55,17 @@ echo "Creating migration_user login..."
     -Q "IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = 'migration_user') CREATE LOGIN migration_user WITH PASSWORD = 'Migration@Pass123';" \
     > /dev/null 2>&1
 
-# Step 3: Create migration_user database user
+# Step 3: Grant dbcreator server role to migration_user (required for CREATE DATABASE)
+echo "Granting dbcreator server role to migration_user..."
+/opt/mssql-tools18/bin/sqlcmd \
+    -S "$SQL_SERVER" \
+    -U sa \
+    -P "$SA_PASSWORD" \
+    -C \
+    -Q "IF IS_SRVROLEMEMBER('dbcreator', 'migration_user') = 0 ALTER SERVER ROLE dbcreator ADD MEMBER migration_user;" \
+    > /dev/null 2>&1
+
+# Step 4: Create migration_user database user
 echo "Creating migration_user database user..."
 /opt/mssql-tools18/bin/sqlcmd \
     -S "$SQL_SERVER" \
@@ -66,7 +76,7 @@ echo "Creating migration_user database user..."
     -Q "IF NOT EXISTS (SELECT * FROM sys.database_principals WHERE name = 'migration_user') CREATE USER migration_user FOR LOGIN migration_user; ALTER ROLE db_owner ADD MEMBER migration_user;" \
     > /dev/null 2>&1
 
-# Step 4: Create app_user login
+# Step 5: Create app_user login
 echo "Creating app_user login..."
 /opt/mssql-tools18/bin/sqlcmd \
     -S "$SQL_SERVER" \
@@ -76,7 +86,7 @@ echo "Creating app_user login..."
     -Q "IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = 'app_user') CREATE LOGIN app_user WITH PASSWORD = 'YourStrong@Passw0rd';" \
     > /dev/null 2>&1
 
-# Step 5: Create app_user database user
+# Step 6: Create app_user database user
 echo "Creating app_user database user..."
 /opt/mssql-tools18/bin/sqlcmd \
     -S "$SQL_SERVER" \
