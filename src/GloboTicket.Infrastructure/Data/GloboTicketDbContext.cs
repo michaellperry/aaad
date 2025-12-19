@@ -32,6 +32,11 @@ public class GloboTicketDbContext : DbContext
     public DbSet<Act> Acts { get; set; } = null!;
 
     /// <summary>
+    /// Gets or sets the Customers DbSet for managing customer entities.
+    /// </summary>
+    public DbSet<Customer> Customers { get; set; } = null!;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="GloboTicketDbContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
@@ -68,6 +73,10 @@ public class GloboTicketDbContext : DbContext
         modelBuilder.Entity<Act>()
             .HasQueryFilter(a => _tenantContext.CurrentTenantId == null ||
                                 a.TenantId == _tenantContext.CurrentTenantId);
+
+        modelBuilder.Entity<Customer>()
+            .HasQueryFilter(c => _tenantContext.CurrentTenantId == null ||
+                                c.TenantId == _tenantContext.CurrentTenantId);
     }
 
     /// <summary>
