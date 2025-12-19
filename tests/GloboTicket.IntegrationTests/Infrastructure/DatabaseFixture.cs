@@ -10,13 +10,19 @@ public class DatabaseFixture : IAsyncLifetime
 {
     private readonly MsSqlContainer _container;
 
+    // NOTE:
+    // `mcr.microsoft.com/mssql/server:2022-latest` is currently failing to start on our CI/WSL2 Docker environment
+    // with: "/opt/mssql/bin/sqlservr: The file archive [/opt/mssql/lib/system.netfx.sfp] is invalid".
+    // Pin to a known-good, reproducible image tag to keep integration tests stable.
+    private const string SqlServerImage = "mcr.microsoft.com/mssql/server:2022-CU15-ubuntu-22.04";
+
     /// <summary>
     /// Initializes a new instance of the <see cref="DatabaseFixture"/> class.
     /// </summary>
     public DatabaseFixture()
     {
         _container = new MsSqlBuilder()
-            .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+            .WithImage(SqlServerImage)
             .Build();
     }
 
