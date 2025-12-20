@@ -1,0 +1,254 @@
+---
+description: Fluent API configuration patterns for Entity Framework entities
+globs:
+  - "**/Configurations/*.cs"
+  - "**/Data/Configurations/*.cs"
+alwaysApply: false
+---
+
+# Entity Framework Configuration Patterns
+
+## Configuration Class Structure
+
+All entity configurations must follow this consistent structure:
+
+### Class Definition
+```csharp
+using GloboTicket.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace GloboTicket.Infrastructure.Data.Configurations;
+
+/// <summary>
+/// Entity Framework Core configuration for the {EntityName} entity.
+/// Defines table structure, constraints, indexes, and multi-tenant support.
+/// </summary>
+public class {EntityName}Configuration : IEntityTypeConfiguration<{EntityName}>
+{
+    /// <summary>
+    /// Configures the {EntityName} entity.
+    /// </summary>
+    /// <param name="builder">The entity type builder.</param>
+    public void Configure(EntityTypeBuilder<{EntityName}> builder)
+    {
+        // Configuration steps in order...
+    }
+}
+```
+
+## Configuration Order
+
+Follow this exact order when configuring entities:
+
+### 1. Table Name
+```csharp
+builder.ToTable("TableName");
+```
+- Use plural form (e.g., "Acts", "Venues", "Customers")
+- Use PascalCase
+
+### 2. Primary Key
+```csharp
+builder.HasKey(e => e.Id);
+builder.Property(e => e.Id)
+    .ValueGeneratedOnAdd();
+```
+- Always use `Id` property from `Entity` base class
+- Always configure as auto-generated
+
+### 3. Composite Alternate Key (Multi-Tenant Entities Only)
+```csharp
+builder.HasAlternateKey(e => new { e.TenantId, e.EntityGuid });
+```
+- Required for all `MultiTenantEntity` types
+- Ensures GUID uniqueness within tenant scope
+- Combines `TenantId` with the entity's GUID property
+
+### 4. Indexes
+```csharp
+builder.HasIndex(e => e.EntityGuid);
+```
+- Always index GUID properties for query performance
+- Add additional indexes for frequently queried properties
+
+### 5. Property Configurations
+Configure each property with:
+- Required/Optional status
+- Max length (for strings)
+- Column type (for special types like geography)
+
+```csharp
+// GUID property
+builder.Property(e => e.EntityGuid)
+    .IsRequired();
+
+// String property
+builder.Property(e => e.Name)
+    .IsRequired()
+    .HasMaxLength(100);
+
+// Optional string property
+builder.Property(e => e.Address)
+    .HasMaxLength(300);
+
+// Numeric property
+builder.Property(e => e.SeatingCapacity)
+    .IsRequired();
+
+// Geospatial property
+builder.Property(e => e.Location)
+    .HasColumnType("geography");
+```
+
+### 6. Foreign Key Relationships
+```csharp
+builder.HasOne(e => e.Tenant)
+    .WithMany()
+    .HasForeignKey(e => e.TenantId)
+    .OnDelete(DeleteBehavior.Cascade)
+    .IsRequired();
+```
+
+### 7. Inherited Property Configurations
+```csharp
+// CreatedAt property (inherited from Entity)
+builder.Property(e => e.CreatedAt)
+    .IsRequired();
+
+// UpdatedAt property (inherited from Entity)
+builder.Property(e => e.UpdatedAt)
+    .IsRequired(false);
+```
+
+### 8. Complex Type Configurations
+See `complex-types.mdc` for detailed patterns.
+
+## Complete Example
+
+```csharp
+public class ActConfiguration : IEntityTypeConfiguration<Act>
+{
+    public void Configure(EntityTypeBuilder<Act> builder)
+    {
+        // 1. Table name
+        builder.ToTable("Acts");
+
+        // 2. Primary key
+        builder.HasKey(a => a.Id);
+        builder.Property(a => a.Id)
+            .ValueGeneratedOnAdd();
+
+        // 3. Composite alternate key for multi-tenant uniqueness
+        builder.HasAlternateKey(a => new { a.TenantId, a.ActGuid });
+
+        // 4. Index on ActGuid for queries
+        builder.HasIndex(a => a.ActGuid);
+
+        // 5. Property configurations
+        builder.Property(a => a.ActGuid)
+            .IsRequired();
+
+        builder.Property(a => a.Name)
+            .IsRequired()
+            .HasMaxLength(100);
+
+        // 6. Foreign key relationship to Tenant
+        builder.HasOne(a => a.Tenant)
+            .WithMany()
+            .HasForeignKey(a => a.TenantId)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired();
+
+        // 7. Inherited property configurations
+        builder.Property(a => a.CreatedAt)
+            .IsRequired();
+
+        builder.Property(a => a.UpdatedAt)
+            .IsRequired(false);
+    }
+}
+```
+
+## Configuration Discovery
+
+Configurations are automatically discovered in `DbContext.OnModelCreating`:
+
+```csharp
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    base.OnModelCreating(modelBuilder);
+
+    // Apply all entity configurations from the current assembly
+    modelBuilder.ApplyConfigurationsFromAssembly(typeof(GloboTicketDbContext).Assembly);
+}
+```
+
+**Do NOT** manually register configurations. The assembly scanning handles discovery automatically.
+
+## Configuration Comments
+
+Use clear, descriptive comments for each configuration section:
+
+```csharp
+// Table name
+builder.ToTable("Acts");
+
+// Primary key
+builder.HasKey(a => a.Id);
+
+// Composite alternate key for multi-tenant uniqueness
+builder.HasAlternateKey(a => new { a.TenantId, a.ActGuid });
+
+// Index on ActGuid for queries
+builder.HasIndex(a => a.ActGuid);
+
+// Foreign key relationship to Tenant with cascade delete
+builder.HasOne(a => a.Tenant)
+    .WithMany()
+    .HasForeignKey(a => a.TenantId)
+    .OnDelete(DeleteBehavior.Cascade)
+    .IsRequired();
+```
+
+## Multi-Tenant Entity Configuration Requirements
+
+For entities inheriting from `MultiTenantEntity`:
+
+1. **Composite Alternate Key**: Required
+   ```csharp
+   builder.HasAlternateKey(e => new { e.TenantId, e.EntityGuid });
+   ```
+
+2. **Tenant Foreign Key**: Required with cascade delete
+   ```csharp
+   builder.HasOne(e => e.Tenant)
+       .WithMany()
+       .HasForeignKey(e => e.TenantId)
+       .OnDelete(DeleteBehavior.Cascade)
+       .IsRequired();
+   ```
+
+3. **TenantId Property**: Inherited, but document in comments
+   ```csharp
+   // TenantId is inherited from MultiTenantEntity
+   // Configured via Tenant relationship above
+   ```
+
+## Non-Tenant Entity Configuration
+
+For entities inheriting from `Entity` (not `MultiTenantEntity`):
+
+- **No composite alternate key** (unless business logic requires it)
+- **No TenantId property** (unless explicitly needed)
+- **No Tenant relationship** (unless explicitly needed)
+
+Example: `Tenant` entity itself does not have tenant isolation.
+
+## Validation Rules
+
+- Always specify `HasMaxLength()` for string properties
+- Always mark GUID properties as `IsRequired()`
+- Always configure inherited `CreatedAt` and `UpdatedAt` properties
+- Always use explicit `IsRequired()` or `IsRequired(false)` for clarity
+- Never skip property configuration - be explicit about all constraints

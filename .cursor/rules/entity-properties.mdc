@@ -1,0 +1,208 @@
+---
+description: Patterns for entity properties including dual keys, initialization, and data types
+globs:
+  - "**/Entities/*.cs"
+  - "**/Domain/Entities/*.cs"
+alwaysApply: false
+---
+
+# Entity Property Patterns
+
+## Dual Key Strategy
+
+All entities use a **dual key strategy** for internal vs external identification:
+
+### Internal Key (Primary Key)
+- **Type**: `int`
+- **Property Name**: `Id`
+- **Purpose**: Internal database relationships, auto-generated
+- **Inherited from**: `Entity` base class
+- **Configuration**: Auto-increment, not exposed in public APIs
+
+### External Key (Public Identifier)
+- **Type**: `Guid`
+- **Property Name**: `{EntityName}Guid` (e.g., `ActGuid`, `VenueGuid`, `CustomerGuid`)
+- **Purpose**: Public API identifier, unique within tenant scope
+- **Required**: Yes (always `IsRequired()`)
+- **Indexed**: Yes (for query performance)
+
+**Pattern:**
+```csharp
+public class Act : MultiTenantEntity
+{
+    // Internal key (inherited from Entity)
+    // public int Id { get; set; }
+
+    // External key (public API identifier)
+    public Guid ActGuid { get; set; }
+}
+```
+
+## Property Initialization
+
+Always initialize properties with sensible defaults:
+
+### String Properties
+```csharp
+public string Name { get; set; } = string.Empty;
+```
+
+### Nullable Reference Types
+```csharp
+public string? Address { get; set; } = null;
+public Tenant? Tenant { get; set; } = null;
+```
+
+### Numeric Properties
+```csharp
+public int TenantId { get; set; } = 0;
+public int SeatingCapacity { get; set; } = 0;
+```
+
+### Boolean Properties
+```csharp
+public bool IsActive { get; set; } = true;
+```
+
+## Required vs Optional Properties
+
+### Required Properties
+- Use `required` keyword (C# 11+) for complex types
+- Use `IsRequired()` in Fluent API configuration
+- Never use nullable reference types for required properties
+
+```csharp
+// Entity
+public required Address BillingAddress { get; set; }
+
+// Configuration
+builder.ComplexProperty(c => c.BillingAddress)
+    .IsRequired();
+```
+
+### Optional Properties
+- Use nullable reference types (`?`)
+- Use `IsRequired(false)` or omit `IsRequired()` in configuration
+- Initialize with `null` or provide default value
+
+```csharp
+// Entity
+public Address? ShippingAddress { get; set; }
+public string? Address { get; set; } = null;
+
+// Configuration
+builder.Property(v => v.Address)
+    .IsRequired(false); // or omit
+```
+
+## String Length Constraints
+
+**Always** specify `HasMaxLength()` for string properties in configuration:
+
+```csharp
+builder.Property(a => a.Name)
+    .IsRequired()
+    .HasMaxLength(100);
+
+builder.Property(t => t.TenantIdentifier)
+    .IsRequired()
+    .HasMaxLength(100);
+```
+
+### Common Max Length Guidelines
+- Short identifiers: 50-100 characters
+- Names/Titles: 100-250 characters
+- Descriptions: 500+ characters (or use `nvarchar(max)`)
+- Address lines: 200 characters
+- Postal codes: 20 characters
+- Country names: 100 characters
+
+## Geospatial Data Types
+
+For geographic location data, use NetTopologySuite:
+
+```csharp
+using NetTopologySuite.Geometries;
+
+public class Venue : MultiTenantEntity
+{
+    /// <summary>
+    /// Gets or sets the geographic location of the venue as a point (longitude, latitude).
+    /// Uses the WGS84 coordinate system (SRID 4326).
+    /// </summary>
+    public Point? Location { get; set; } = null;
+}
+```
+
+**Configuration:**
+```csharp
+builder.Property(v => v.Location)
+    .HasColumnType("geography");
+```
+
+## DateTime Properties
+
+### Timestamps (Inherited from Entity)
+- `CreatedAt`: `DateTime` (required, UTC)
+- `UpdatedAt`: `DateTime?` (optional, UTC, nullable)
+
+### Business Date/Time Properties
+- Use `DateTimeOffset` for timezone-aware dates
+- Use `DateTime` for UTC-only dates
+- Always document timezone assumptions
+
+```csharp
+/// <summary>
+/// Gets or sets the date and time of the show.
+/// </summary>
+public DateTimeOffset Date { get; set; }
+```
+
+## Collection Properties
+
+Use `ICollection<T>` for navigation properties to collections:
+
+```csharp
+public ICollection<TicketSale> TicketSales { get; set; } = new List<TicketSale>();
+```
+
+Initialize with empty collection to avoid null reference issues.
+
+## Property Naming Conventions
+
+- **GUID properties**: `{EntityName}Guid` (e.g., `ActGuid`, `VenueGuid`)
+- **Foreign key properties**: `{RelatedEntity}Id` (e.g., `TenantId`, `ShowId`)
+- **Navigation properties**: `{RelatedEntity}` (e.g., `Tenant`, `Show`)
+- **Boolean properties**: Prefix with `Is` or `Has` (e.g., `IsActive`, `HasShippingAddress`)
+- **Collection properties**: Plural form (e.g., `TicketSales`, `Shows`)
+
+## Property Documentation
+
+Every property must have XML documentation:
+
+```csharp
+/// <summary>
+/// Gets or sets [description].
+/// [Additional context: constraints, relationships, multi-tenant implications]
+/// </summary>
+public PropertyType PropertyName { get; set; }
+```
+
+**Example:**
+```csharp
+/// <summary>
+/// Gets or sets the unique identifier (GUID) for this act.
+/// </summary>
+public Guid ActGuid { get; set; }
+
+/// <summary>
+/// Gets or sets the name of the act.
+/// </summary>
+public string Name { get; set; } = string.Empty;
+
+/// <summary>
+/// Gets or sets the tenant identifier that this entity belongs to.
+/// This property is used for multi-tenant data isolation.
+/// </summary>
+public int TenantId { get; set; } = 0;
+```

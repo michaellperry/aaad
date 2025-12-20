@@ -1,0 +1,297 @@
+---
+description: Patterns for Entity Framework relationships, foreign keys, and navigation properties
+globs:
+  - "**/Entities/*.cs"
+  - "**/Data/Configurations/*.cs"
+alwaysApply: false
+---
+
+# Entity Relationship Patterns
+
+## Foreign Key Relationships
+
+### Tenant Relationship (MultiTenantEntity)
+All entities inheriting from `MultiTenantEntity` must have a relationship to `Tenant`:
+
+```csharp
+builder.HasOne(e => e.Tenant)
+    .WithMany()
+    .HasForeignKey(e => e.TenantId)
+    .OnDelete(DeleteBehavior.Cascade)
+    .IsRequired();
+```
+
+**Pattern:**
+- One-to-many: One tenant has many entities
+- Cascade delete: Deleting tenant deletes all tenant entities
+- Required: TenantId is always required
+- Foreign key: `TenantId` property
+
+### Simple Foreign Keys (Child Entities)
+Child entities use simple foreign keys (no compound keys with TenantId):
+
+```csharp
+// Show → Venue relationship
+builder.HasOne(s => s.Venue)
+    .WithMany()
+    .HasForeignKey("VenueId")
+    .OnDelete(DeleteBehavior.Cascade)
+    .IsRequired();
+
+// Show → Act relationship
+builder.HasOne(s => s.Act)
+    .WithMany()
+    .HasForeignKey("ActId")
+    .OnDelete(DeleteBehavior.Cascade)
+    .IsRequired();
+```
+
+**Pattern:**
+- Simple foreign keys (single column)
+- Cascade delete for referential integrity
+- Required relationships
+- Use shadow properties or explicit foreign key properties
+
+### One-to-Many Relationships
+Parent entity with collection navigation property:
+
+```csharp
+// In Show entity
+public ICollection<TicketSale> TicketSales { get; set; } = new List<TicketSale>();
+
+// In TicketSale configuration
+builder.HasOne(ts => ts.Show)
+    .WithMany(s => s.TicketSales)
+    .HasForeignKey(ts => ts.ShowId)
+    .OnDelete(DeleteBehavior.Cascade)
+    .IsRequired();
+```
+
+**Pattern:**
+- Parent: Collection navigation property (`ICollection<T>`)
+- Child: Single navigation property and foreign key property
+- Initialize collections with empty list
+- Cascade delete from parent to children
+
+## Navigation Properties
+
+### Required Navigation Properties
+For required relationships, navigation properties should be non-nullable:
+
+```csharp
+public class Show : Entity
+{
+    public Venue Venue { get; set; }  // Required, non-nullable
+    public Act Act { get; set; }      // Required, non-nullable
+}
+```
+
+**Configuration:**
+```csharp
+builder.HasOne(s => s.Venue)
+    .WithMany()
+    .IsRequired();
+```
+
+### Optional Navigation Properties
+For optional relationships, use nullable reference types:
+
+```csharp
+public class Customer : MultiTenantEntity
+{
+    public Tenant? Tenant { get; set; } = null;  // Inherited, nullable
+}
+```
+
+## Foreign Key Properties
+
+### Explicit Foreign Key Properties
+When you need direct access to the foreign key value:
+
+```csharp
+public class TicketSale : Entity
+{
+    public Show Show { get; set; }      // Navigation property
+    public int ShowId { get; set; }     // Foreign key property
+}
+```
+
+**Configuration:**
+```csharp
+builder.HasOne(ts => ts.Show)
+    .WithMany(s => s.TicketSales)
+    .HasForeignKey(ts => ts.ShowId)  // Use explicit property
+    .OnDelete(DeleteBehavior.Cascade)
+    .IsRequired();
+```
+
+### Shadow Properties
+When foreign key is not needed in domain model:
+
+```csharp
+// No ShowId property in entity
+
+// Configuration
+builder.HasOne(ts => ts.Show)
+    .WithMany(s => s.TicketSales)
+    .HasForeignKey("ShowId")  // Shadow property
+    .OnDelete(DeleteBehavior.Cascade)
+    .IsRequired();
+```
+
+## Cascade Delete Behavior
+
+### Always Use Cascade Delete
+For parent-child relationships, use `DeleteBehavior.Cascade`:
+
+```csharp
+builder.HasOne(child => child.Parent)
+    .WithMany(parent => parent.Children)
+    .HasForeignKey(child => child.ParentId)
+    .OnDelete(DeleteBehavior.Cascade)
+    .IsRequired();
+```
+
+**Rationale:**
+- Ensures referential integrity
+- Prevents orphaned records
+- Simplifies deletion logic
+
+### Tenant Cascade Delete
+Tenant deletion cascades to all tenant entities:
+
+```csharp
+builder.HasOne(e => e.Tenant)
+    .WithMany()
+    .HasForeignKey(e => e.TenantId)
+    .OnDelete(DeleteBehavior.Cascade)  // Deleting tenant deletes all tenant entities
+    .IsRequired();
+```
+
+## Relationship Configuration Order
+
+In entity configuration, configure relationships after property configurations:
+
+```csharp
+public void Configure(EntityTypeBuilder<Entity> builder)
+{
+    // 1. Table name
+    builder.ToTable("TableName");
+
+    // 2. Primary key
+    builder.HasKey(e => e.Id);
+
+    // 3. Alternate keys
+    builder.HasAlternateKey(...);
+
+    // 4. Indexes
+    builder.HasIndex(...);
+
+    // 5. Property configurations
+    builder.Property(...);
+
+    // 6. Foreign key relationships (HERE)
+    builder.HasOne(...)
+        .WithMany()
+        .HasForeignKey(...)
+        .OnDelete(DeleteBehavior.Cascade)
+        .IsRequired();
+
+    // 7. Inherited properties
+    builder.Property(e => e.CreatedAt).IsRequired();
+}
+```
+
+## Collection Navigation Properties
+
+### Initialization
+Always initialize collection navigation properties:
+
+```csharp
+public ICollection<TicketSale> TicketSales { get; set; } = new List<TicketSale>();
+```
+
+**Benefits:**
+- Prevents null reference exceptions
+- Allows immediate use without null checks
+- Clear intent that collection is always available
+
+### Type Choice
+Use `ICollection<T>` (not `List<T>` or `IList<T>`):
+
+```csharp
+// ✅ Good
+public ICollection<TicketSale> TicketSales { get; set; } = new List<TicketSale>();
+
+// ❌ Avoid
+public List<TicketSale> TicketSales { get; set; } = new List<TicketSale>();
+```
+
+**Rationale:**
+- `ICollection<T>` is more flexible
+- EF Core can use any collection implementation
+- Better encapsulation
+
+## Relationship Documentation
+
+Document relationships in XML comments:
+
+```csharp
+/// <summary>
+/// Gets or sets the venue where this show is held.
+/// </summary>
+public Venue Venue { get; set; }
+
+/// <summary>
+/// Gets or sets the act performing in this show.
+/// </summary>
+public Act Act { get; set; }
+
+/// <summary>
+/// Gets or sets the collection of ticket sales for this show.
+/// </summary>
+public ICollection<TicketSale> TicketSales { get; set; } = new List<TicketSale>();
+```
+
+## Multi-Tenant Relationship Considerations
+
+### Top-Level Entities
+- Have direct `TenantId` and `Tenant` navigation
+- Relationships to other top-level entities must be within same tenant (enforced by query filters)
+
+### Child Entities
+- No direct `TenantId` property
+- Tenant context inherited through parent relationships
+- Query filters ensure cross-tenant relationships are impossible
+
+### Cross-Entity Relationships
+When relating entities from different hierarchies:
+
+```csharp
+// Show relates Venue (top-level) and Act (top-level)
+// Both must have same TenantId (enforced by query filters)
+public class Show : Entity
+{
+    public Venue Venue { get; set; }  // Inherits tenant from Venue
+    public Act Act { get; set; }      // Inherits tenant from Act
+    // Query filter ensures Venue.TenantId == Act.TenantId
+}
+```
+
+## Best Practices
+
+1. **Always configure relationships explicitly** - Don't rely on conventions
+2. **Use cascade delete** - For parent-child relationships
+3. **Initialize collections** - Prevent null reference exceptions
+4. **Document relationships** - In XML comments
+5. **Use explicit foreign keys** - When you need direct access to FK value
+6. **Use shadow properties** - When FK is only needed for EF Core
+7. **Required vs optional** - Be explicit with `IsRequired()` or nullable types
+
+## Anti-Patterns to Avoid
+
+❌ **Don't** use compound foreign keys with `TenantId` for child entities
+❌ **Don't** leave collections uninitialized (null)
+❌ **Don't** use `Restrict` delete behavior (use `Cascade`)
+❌ **Don't** skip relationship configuration (rely on conventions)
+❌ **Don't** create bidirectional relationships without configuring both sides

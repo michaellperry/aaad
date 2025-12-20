@@ -1,0 +1,316 @@
+---
+description: Patterns for Entity Framework complex types and value objects
+globs:
+  - "**/Entities/*.cs"
+  - "**/Data/Configurations/*.cs"
+alwaysApply: false
+---
+
+# Complex Types and Value Objects
+
+## Complex Type Definition
+
+Complex types in EF Core are value objects that don't have their own identity and are stored as part of the owning entity's table.
+
+### Class Definition Pattern
+```csharp
+namespace GloboTicket.Domain.Entities;
+
+/// <summary>
+/// Represents a postal address as a complex type.
+/// Complex types in EF Core are value objects that don't have their own identity
+/// and are stored as part of the owning entity.
+/// </summary>
+public class Address
+{
+    /// <summary>
+    /// Gets or sets the first line of the street address.
+    /// </summary>
+    public required string StreetLine1 { get; set; }
+
+    /// <summary>
+    /// Gets or sets the second line of the street address (optional).
+    /// </summary>
+    public string? StreetLine2 { get; set; }
+
+    /// <summary>
+    /// Gets or sets the city name.
+    /// </summary>
+    public required string City { get; set; }
+
+    /// <summary>
+    /// Gets or sets the state or province.
+    /// </summary>
+    public required string StateOrProvince { get; set; }
+
+    /// <summary>
+    /// Gets or sets the postal or zip code.
+    /// </summary>
+    public required string PostalCode { get; set; }
+
+    /// <summary>
+    /// Gets or sets the country name.
+    /// </summary>
+    public required string Country { get; set; }
+}
+```
+
+**Key Characteristics:**
+- No `Id` property (not an entity)
+- No inheritance from `Entity` or `MultiTenantEntity`
+- Properties use `required` keyword for required fields
+- Properties use nullable types (`?`) for optional fields
+- XML documentation for all properties
+
+## Entity Usage
+
+### Required Complex Type
+```csharp
+public class Customer : MultiTenantEntity
+{
+    /// <summary>
+    /// Gets or sets the billing address for this customer.
+    /// This is a required complex type property.
+    /// </summary>
+    public required Address BillingAddress { get; set; }
+}
+```
+
+### Optional Complex Type
+```csharp
+public class Customer : MultiTenantEntity
+{
+    /// <summary>
+    /// Gets or sets the shipping address for this customer.
+    /// This is an optional complex type property.
+    /// </summary>
+    public Address? ShippingAddress { get; set; }
+}
+```
+
+## Configuration Pattern
+
+Complex types are configured using `ComplexProperty()` in the entity configuration:
+
+### Required Complex Type Configuration
+```csharp
+builder.ComplexProperty(c => c.BillingAddress, address =>
+{
+    address.Property(a => a.StreetLine1)
+        .IsRequired()
+        .HasMaxLength(200)
+        .HasColumnName("BillingStreetLine1");
+
+    address.Property(a => a.StreetLine2)
+        .HasMaxLength(200)
+        .HasColumnName("BillingStreetLine2");
+
+    address.Property(a => a.City)
+        .IsRequired()
+        .HasMaxLength(100)
+        .HasColumnName("BillingCity");
+
+    address.Property(a => a.StateOrProvince)
+        .IsRequired()
+        .HasMaxLength(100)
+        .HasColumnName("BillingStateOrProvince");
+
+    address.Property(a => a.PostalCode)
+        .IsRequired()
+        .HasMaxLength(20)
+        .HasColumnName("BillingPostalCode");
+
+    address.Property(a => a.Country)
+        .IsRequired()
+        .HasMaxLength(100)
+        .HasColumnName("BillingCountry");
+});
+```
+
+### Optional Complex Type Configuration
+```csharp
+builder.ComplexProperty(c => c.ShippingAddress, address =>
+{
+    address.Property(a => a.StreetLine1)
+        .IsRequired()
+        .HasMaxLength(200)
+        .HasColumnName("ShippingStreetLine1");
+
+    address.Property(a => a.StreetLine2)
+        .HasMaxLength(200)
+        .HasColumnName("ShippingStreetLine2");
+
+    address.Property(a => a.City)
+        .IsRequired()
+        .HasMaxLength(100)
+        .HasColumnName("ShippingCity");
+
+    address.Property(a => a.StateOrProvince)
+        .IsRequired()
+        .HasMaxLength(100)
+        .HasColumnName("ShippingStateOrProvince");
+
+    address.Property(a => a.PostalCode)
+        .IsRequired()
+        .HasMaxLength(20)
+        .HasColumnName("ShippingPostalCode");
+
+    address.Property(a => a.Country)
+        .IsRequired()
+        .HasMaxLength(100)
+        .HasColumnName("ShippingCountry");
+});
+```
+
+**Note:** Even for optional complex types, individual properties within the complex type can be required. The complex type itself is optional, but when present, its required properties must have values.
+
+## Column Naming
+
+### Explicit Column Names
+Always specify explicit column names using `HasColumnName()` to:
+- Prevent naming conflicts when multiple complex types exist
+- Provide clear, descriptive column names
+- Follow database naming conventions
+
+**Pattern:**
+```csharp
+address.Property(a => a.StreetLine1)
+    .HasColumnName("BillingStreetLine1");  // Prefix with property name
+```
+
+### Naming Convention
+- Prefix with the entity property name (e.g., "Billing", "Shipping")
+- Use PascalCase matching the property name
+- Be descriptive and clear
+
+## Property Configuration Rules
+
+### Required Properties
+- Use `IsRequired()` in configuration
+- Use `required` keyword in C# class definition
+- Never use nullable types for required properties
+
+```csharp
+// Class
+public required string StreetLine1 { get; set; }
+
+// Configuration
+address.Property(a => a.StreetLine1)
+    .IsRequired()
+    .HasMaxLength(200);
+```
+
+### Optional Properties
+- Use nullable types (`?`) in class definition
+- Omit `IsRequired()` or use `IsRequired(false)` in configuration
+
+```csharp
+// Class
+public string? StreetLine2 { get; set; }
+
+// Configuration
+address.Property(a => a.StreetLine2)
+    .HasMaxLength(200);  // Optional, no IsRequired()
+```
+
+### String Length Constraints
+Always specify `HasMaxLength()` for string properties:
+
+```csharp
+address.Property(a => a.StreetLine1)
+    .HasMaxLength(200);
+
+address.Property(a => a.City)
+    .HasMaxLength(100);
+
+address.Property(a => a.PostalCode)
+    .HasMaxLength(20);
+```
+
+## Multiple Complex Types
+
+When an entity has multiple complex type properties, configure each separately:
+
+```csharp
+// BillingAddress configuration
+builder.ComplexProperty(c => c.BillingAddress, address =>
+{
+    // ... BillingAddress properties with "Billing" prefix
+});
+
+// ShippingAddress configuration
+builder.ComplexProperty(c => c.ShippingAddress, address =>
+{
+    // ... ShippingAddress properties with "Shipping" prefix
+});
+```
+
+**Important:** Use different column name prefixes to avoid conflicts.
+
+## Complex Type vs Entity
+
+### Use Complex Type When:
+- ✅ Value object semantics (no identity)
+- ✅ Always owned by a single entity
+- ✅ Stored in same table as owner
+- ✅ No independent lifecycle
+- ✅ No relationships to other entities
+
+### Use Entity When:
+- ❌ Needs its own identity
+- ❌ Shared across multiple entities
+- ❌ Needs relationships to other entities
+- ❌ Has independent lifecycle
+- ❌ Needs to be queried independently
+
+## Documentation Requirements
+
+### Class Documentation
+```csharp
+/// <summary>
+/// Represents a [description] as a complex type.
+/// Complex types in EF Core are value objects that don't have their own identity
+/// and are stored as part of the owning entity.
+/// </summary>
+public class ComplexTypeName
+{
+    // Properties...
+}
+```
+
+### Property Documentation
+```csharp
+/// <summary>
+/// Gets or sets [description].
+/// [Additional context: optional/required, constraints]
+/// </summary>
+public PropertyType PropertyName { get; set; }
+```
+
+### Entity Property Documentation
+```csharp
+/// <summary>
+/// Gets or sets the [description] for this [entity].
+/// This is a [required/optional] complex type property.
+/// </summary>
+public [required] ComplexTypeName? PropertyName { get; set; }
+```
+
+## Best Practices
+
+1. **Use `required` keyword** - For required properties in complex types
+2. **Explicit column names** - Always use `HasColumnName()` with prefixes
+3. **String length constraints** - Always specify `HasMaxLength()`
+4. **Document all properties** - XML comments for clarity
+5. **Separate configurations** - One `ComplexProperty()` call per complex type property
+6. **Consistent naming** - Use clear prefixes for column names
+7. **Required vs optional** - Be explicit about which properties are required
+
+## Anti-Patterns to Avoid
+
+❌ **Don't** make complex types inherit from `Entity`
+❌ **Don't** add `Id` properties to complex types
+❌ **Don't** skip column name configuration (causes conflicts)
+❌ **Don't** use complex types for shared entities
+❌ **Don't** forget to configure all properties
+❌ **Don't** use nullable types for required properties

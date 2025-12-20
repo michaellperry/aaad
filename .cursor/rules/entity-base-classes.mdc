@@ -1,0 +1,124 @@
+---
+description: Patterns for Entity Framework base classes and inheritance hierarchy
+globs:
+  - "**/Entities/*.cs"
+  - "**/Domain/Entities/*.cs"
+alwaysApply: false
+---
+
+# Entity Base Classes and Inheritance Patterns
+
+## Base Class Hierarchy
+
+All domain entities must follow a consistent inheritance hierarchy:
+
+### Entity (Abstract Base Class)
+- **Location**: `src/GloboTicket.Domain/Entities/Entity.cs`
+- **Purpose**: Provides common properties for all domain entities
+- **Properties**:
+  - `int Id` - Primary key identifier
+  - `DateTime CreatedAt` - UTC timestamp when entity was created
+  - `DateTime? UpdatedAt` - UTC timestamp when entity was last updated (nullable)
+
+**Pattern:**
+```csharp
+public abstract class Entity
+{
+    public int Id { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+}
+```
+
+### MultiTenantEntity (Abstract Base Class)
+- **Location**: `src/GloboTicket.Domain/Entities/MultiTenantEntity.cs`
+- **Purpose**: Provides multi-tenant isolation capabilities
+- **Inheritance**: Inherits from `Entity` and implements `ITenantEntity`
+- **Properties**:
+  - `int TenantId` - Tenant identifier (default: 0)
+  - `Tenant? Tenant` - Navigation property to tenant (nullable)
+
+**Pattern:**
+```csharp
+public abstract class MultiTenantEntity : Entity, ITenantEntity
+{
+    public int TenantId { get; set; } = 0;
+    public Tenant? Tenant { get; set; } = null;
+}
+```
+
+## Entity Inheritance Rules
+
+### When to Use Entity Base Class
+- Use `Entity` for entities that do NOT require tenant isolation
+- Use `Entity` for child entities that inherit tenant context through relationships
+- Example: `Tenant` entity (manages tenants, not tenant-specific)
+
+### When to Use MultiTenantEntity Base Class
+- Use `MultiTenantEntity` for top-level entities that directly belong to a tenant
+- Use `MultiTenantEntity` for entities that are entry points for tenant context
+- Examples: `Venue`, `Act`, `Customer`
+
+### When NOT to Use MultiTenantEntity
+- Child entities that inherit tenant context through navigation properties
+- Entities that are shared across tenants
+- Entities that manage tenant configuration itself
+
+## Documentation Requirements
+
+All entity classes must include XML documentation:
+
+```csharp
+/// <summary>
+/// Represents a [description] in the [system context].
+/// [Additional context about multi-tenancy if applicable]
+/// </summary>
+public class EntityName : BaseClass
+{
+    /// <summary>
+    /// Gets or sets [description of property].
+    /// [Additional context, constraints, or multi-tenant implications]
+    /// </summary>
+    public PropertyType PropertyName { get; set; }
+}
+```
+
+## Examples
+
+### Top-Level Multi-Tenant Entity
+```csharp
+namespace GloboTicket.Domain.Entities;
+
+/// <summary>
+/// Represents a performing act (artist, band, performer) in the ticketing system.
+/// </summary>
+public class Act : MultiTenantEntity
+{
+    /// <summary>
+    /// Gets or sets the unique identifier (GUID) for this act.
+    /// </summary>
+    public Guid ActGuid { get; set; }
+
+    /// <summary>
+    /// Gets or sets the name of the act.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+}
+```
+
+### Non-Tenant Entity
+```csharp
+namespace GloboTicket.Domain.Entities;
+
+/// <summary>
+/// Represents a tenant in the multi-tenant system.
+/// Each tenant has isolated data through the TenantId discriminator.
+/// </summary>
+public class Tenant : Entity
+{
+    /// <summary>
+    /// Gets or sets the natural key identifier for the tenant.
+    /// </summary>
+    public string TenantIdentifier { get; set; } = string.Empty;
+}
+```

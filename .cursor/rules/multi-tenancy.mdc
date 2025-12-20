@@ -1,0 +1,218 @@
+---
+description: Multi-tenancy patterns for Entity Framework including query filters and tenant relationships
+globs:
+  - "**/Entities/*.cs"
+  - "**/Data/Configurations/*.cs"
+  - "**/Data/*DbContext.cs"
+alwaysApply: false
+---
+
+# Multi-Tenancy Patterns
+
+## Multi-Tenancy Architecture
+
+This project uses a **relationship-based multi-tenancy model** where:
+- **Top-level entities** (Venue, Act, Customer) store `TenantId` directly
+- **Child entities** (Show, TicketSale) inherit tenant context through relationships
+- **Query filters** automatically enforce tenant isolation at the database level
+
+## Entity Classification
+
+### Top-Level Multi-Tenant Entities
+Entities that directly belong to a tenant and store `TenantId`:
+- Inherit from `MultiTenantEntity`
+- Examples: `Venue`, `Act`, `Customer`
+- These are entry points for tenant context in their hierarchies
+
+**Pattern:**
+```csharp
+public class Venue : MultiTenantEntity
+{
+    public Guid VenueGuid { get; set; }
+    public string Name { get; set; } = string.Empty;
+    // TenantId and Tenant are inherited from MultiTenantEntity
+}
+```
+
+### Child Entities (Relationship-Based)
+Entities that inherit tenant context through navigation properties:
+- Inherit from `Entity` (NOT `MultiTenantEntity`)
+- Examples: `Show` (via Venue), `TicketSale` (via Show → Venue)
+- Tenant context is enforced through query filters on relationships
+
+**Pattern:**
+```csharp
+public class Show : Entity
+{
+    public Guid ShowGuid { get; set; }
+    public Venue Venue { get; set; }  // Tenant context inherited via Venue
+    public Act Act { get; set; }      // Tenant context inherited via Act
+    // No TenantId property - inherited through relationships
+}
+```
+
+## Global Query Filters
+
+Query filters are configured in `DbContext.OnModelCreating()`:
+
+### Top-Level Entity Filters
+Filter directly on `TenantId`:
+
+```csharp
+modelBuilder.Entity<Venue>()
+    .HasQueryFilter(v => _tenantContext.CurrentTenantId == null ||
+                        v.TenantId == _tenantContext.CurrentTenantId);
+
+modelBuilder.Entity<Act>()
+    .HasQueryFilter(a => _tenantContext.CurrentTenantId == null ||
+                        a.TenantId == _tenantContext.CurrentTenantId);
+
+modelBuilder.Entity<Customer>()
+    .HasQueryFilter(c => _tenantContext.CurrentTenantId == null ||
+                        c.TenantId == _tenantContext.CurrentTenantId);
+```
+
+**Pattern:**
+- Always check for `null` tenant context (allows admin/system queries)
+- Filter on `TenantId` property directly
+- Applied to all `MultiTenantEntity` types
+
+### Child Entity Filters (Relationship-Based)
+Filter through navigation properties:
+
+```csharp
+modelBuilder.Entity<Show>()
+    .HasQueryFilter(s => _tenantContext.CurrentTenantId == null ||
+                        s.Venue.TenantId == _tenantContext.CurrentTenantId);
+
+modelBuilder.Entity<TicketSale>()
+    .HasQueryFilter(ts => _tenantContext.CurrentTenantId == null ||
+                         ts.Show.Venue.TenantId == _tenantContext.CurrentTenantId);
+```
+
+**Pattern:**
+- Filter through navigation property chain
+- `TicketSale` filters through two levels: `TicketSale → Show → Venue → TenantId`
+- Ensures child entities are automatically filtered by parent tenant context
+
+## Tenant Context
+
+The `ITenantContext` interface provides the current tenant:
+
+```csharp
+public interface ITenantContext
+{
+    int? CurrentTenantId { get; }
+}
+```
+
+- Injected into `DbContext` constructor
+- `null` indicates no tenant context (admin/system operations)
+- Non-null value filters queries to that tenant's data
+
+## Configuration Requirements
+
+### MultiTenantEntity Configuration
+All entities inheriting from `MultiTenantEntity` must have:
+
+1. **Composite Alternate Key**:
+   ```csharp
+   builder.HasAlternateKey(e => new { e.TenantId, e.EntityGuid });
+   ```
+
+2. **Tenant Foreign Key**:
+   ```csharp
+   builder.HasOne(e => e.Tenant)
+       .WithMany()
+       .HasForeignKey(e => e.TenantId)
+       .OnDelete(DeleteBehavior.Cascade)
+       .IsRequired();
+   ```
+
+3. **Query Filter** (in DbContext):
+   ```csharp
+   modelBuilder.Entity<EntityName>()
+       .HasQueryFilter(e => _tenantContext.CurrentTenantId == null ||
+                           e.TenantId == _tenantContext.CurrentTenantId);
+   ```
+
+### Child Entity Configuration
+Entities inheriting from `Entity` (not `MultiTenantEntity`):
+
+1. **No TenantId property** - inherited through relationships
+2. **Simple foreign keys** - no compound keys with TenantId
+3. **Query filter via navigation** - filters through parent entity
+
+## SaveChanges Behavior
+
+The `DbContext.SaveChangesAsync()` automatically:
+
+1. **Sets TenantId** for new `MultiTenantEntity` instances:
+   ```csharp
+   if (entry.Entity is MultiTenantEntity multiTenantEntity && entry.State == EntityState.Added)
+   {
+       if (_tenantContext.CurrentTenantId.HasValue)
+       {
+           multiTenantEntity.TenantId = _tenantContext.CurrentTenantId.Value;
+       }
+   }
+   ```
+
+2. **Sets timestamps** for all `Entity` instances:
+   ```csharp
+   if (entry.Entity is Entity entity)
+   {
+       if (entry.State == EntityState.Added)
+       {
+           entity.CreatedAt = DateTime.UtcNow;
+       }
+       else if (entry.State == EntityState.Modified)
+       {
+           entity.UpdatedAt = DateTime.UtcNow;
+       }
+   }
+   ```
+
+## Benefits of Relationship-Based Model
+
+1. **Normalized Data**: Tenant information stored only at top level
+2. **Reduced Storage**: No redundant `TenantId` columns
+3. **Simpler Foreign Keys**: Single-column foreign keys instead of compound
+4. **Automatic Inheritance**: Child entities automatically inherit tenant context
+5. **Cleaner Domain Model**: Entities don't track tenant info they don't own
+6. **Better Data Integrity**: Single source of truth for tenant association
+
+## Tenant Entity
+
+The `Tenant` entity itself:
+- Inherits from `Entity` (NOT `MultiTenantEntity`)
+- Manages tenant configuration
+- Not tenant-specific (exists outside tenant isolation)
+- Has unique constraints on `Slug` and `TenantIdentifier`
+
+```csharp
+public class Tenant : Entity
+{
+    public string TenantIdentifier { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
+}
+```
+
+## Best Practices
+
+1. **Always use query filters** - Never bypass tenant isolation
+2. **Check for null tenant context** - Allows admin operations
+3. **Use relationship-based filtering** - For child entities, not direct TenantId
+4. **Cascade delete** - Tenant deletion should cascade to tenant entities
+5. **Composite alternate keys** - Ensure GUID uniqueness within tenant scope
+6. **Document tenant implications** - In XML comments for entity classes
+
+## Anti-Patterns to Avoid
+
+❌ **Don't** add `TenantId` to child entities that inherit through relationships
+❌ **Don't** use compound foreign keys with `TenantId` for child entities
+❌ **Don't** bypass query filters with `IgnoreQueryFilters()`
+❌ **Don't** manually set `TenantId` in application code (let SaveChanges handle it)
+❌ **Don't** create entities without proper tenant context
