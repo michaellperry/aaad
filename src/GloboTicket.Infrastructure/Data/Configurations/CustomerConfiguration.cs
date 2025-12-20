@@ -53,6 +53,73 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         // UpdatedAt property (inherited from Entity)
         builder.Property(c => c.UpdatedAt)
             .IsRequired(false);
+
+        // Configure BillingAddress as a required complex type
+        builder.ComplexProperty(c => c.BillingAddress, address =>
+        {
+            address.Property(a => a.StreetLine1)
+                .IsRequired()
+                .HasMaxLength(200)
+                .HasColumnName("BillingStreetLine1");
+
+            address.Property(a => a.StreetLine2)
+                .HasMaxLength(200)
+                .HasColumnName("BillingStreetLine2");
+
+            address.Property(a => a.City)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("BillingCity");
+
+            address.Property(a => a.StateOrProvince)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("BillingStateOrProvince");
+
+            address.Property(a => a.PostalCode)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasColumnName("BillingPostalCode");
+
+            address.Property(a => a.Country)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("BillingCountry");
+        });
+
+        // Configure ShippingAddress as an optional complex type
+        // When present, all properties except StreetLine2 are required
+        builder.ComplexProperty(c => c.ShippingAddress, address =>
+        {
+            address.Property(a => a.StreetLine1)
+                .IsRequired()
+                .HasMaxLength(200)
+                .HasColumnName("ShippingStreetLine1");
+
+            address.Property(a => a.StreetLine2)
+                .HasMaxLength(200)
+                .HasColumnName("ShippingStreetLine2");
+
+            address.Property(a => a.City)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("ShippingCity");
+
+            address.Property(a => a.StateOrProvince)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("ShippingStateOrProvince");
+
+            address.Property(a => a.PostalCode)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasColumnName("ShippingPostalCode");
+
+            address.Property(a => a.Country)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("ShippingCountry");
+        });
     }
 }
 

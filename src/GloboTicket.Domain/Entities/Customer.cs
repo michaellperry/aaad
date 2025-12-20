@@ -14,4 +14,16 @@ public class Customer : MultiTenantEntity
     /// Gets or sets the customer name.
     /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the billing address for this customer.
+    /// This is a required complex type property.
+    /// </summary>
+    public required Address BillingAddress { get; set; }
+
+    /// <summary>
+    /// Gets or sets the shipping address for this customer.
+    /// This is an optional complex type property.
+    /// </summary>
+    public Address? ShippingAddress { get; set; }
 }
