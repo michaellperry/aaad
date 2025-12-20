@@ -1,0 +1,525 @@
+---
+description: Patterns for unit testing including naming conventions, test structure, and common test scenarios
+globs:
+  - "**/*Tests.cs"
+  - "**/UnitTests/**/*.cs"
+alwaysApply: false
+---
+
+# Unit Test Patterns
+
+## Testing Framework & Libraries
+
+The project uses the following testing stack:
+
+- **xUnit** - Test framework
+- **FluentAssertions** - Fluent assertion library for readable test assertions
+- **NSubstitute** - Mocking framework for dependencies
+- **coverlet.collector** - Code coverage collection
+
+**Project References:**
+- `tests/GloboTicket.UnitTests/GloboTicket.UnitTests.csproj`
+
+## Test Naming Convention
+
+### Primary Pattern: Given-When-Then
+
+All test methods use the **Given-When-Then** naming pattern:
+
+```csharp
+[Fact]
+public void GivenNewAct_WhenCreated_ThenCanSetAndRetrieveAllProperties()
+{
+    // Test implementation
+}
+
+[Fact]
+public void GivenActGuid_WhenSet_ThenCanBeRetrieved()
+{
+    // Test implementation
+}
+
+[Fact]
+public void GivenAct_WhenChecked_ThenInheritsFromMultiTenantEntity()
+{
+    // Test implementation
+}
+```
+
+**Pattern Structure:**
+- `Given{InitialState}_When{Action}_Then{ExpectedResult}`
+- Use descriptive names that clearly indicate the scenario
+- Capitalize each word in the method name
+
+### Alternative Pattern: Method_Scenario_Result
+
+For simpler scenarios or constructor tests, use the method-scenario-result pattern:
+
+```csharp
+[Fact]
+public void Constructor_WithValidParameters_SetsProperties()
+{
+    // Test implementation
+}
+
+[Fact]
+public void ToString_ReturnsName()
+{
+    // Test implementation
+}
+```
+
+## Test Structure: AAA Pattern
+
+All tests follow the **Arrange-Act-Assert** pattern with explicit section comments:
+
+```csharp
+[Fact]
+public void GivenActGuid_WhenSet_ThenCanBeRetrieved()
+{
+    // Arrange
+    var act = new Act();
+    var expectedGuid = Guid.NewGuid();
+
+    // Act
+    act.ActGuid = expectedGuid;
+
+    // Assert
+    act.ActGuid.Should().Be(expectedGuid);
+}
+```
+
+**Guidelines:**
+- Always include `// Arrange`, `// Act`, and `// Assert` comments
+- Combine `// Arrange & Act` when the action is object creation
+- Keep each section focused and clear
+- Use descriptive variable names (`expectedGuid`, `actualResult`, etc.)
+
+## Test Organization
+
+### One Test Class Per Entity
+
+Create a separate test class for each domain entity:
+
+```csharp
+namespace GloboTicket.UnitTests.Domain;
+
+public class ActTests
+{
+    // All Act-related tests
+}
+
+public class CustomerTests
+{
+    // All Customer-related tests
+}
+```
+
+**Naming Convention:**
+- Test class name: `{EntityName}Tests`
+- Namespace: `GloboTicket.UnitTests.{Category}` (e.g., `Domain`, `API`)
+
+### Test Classes Are Public
+
+Test classes should be `public` (not nested or internal) for proper test discovery.
+
+## Common Test Patterns
+
+### 1. Property Getter/Setter Tests
+
+Every property should have dedicated tests for setting and retrieving values:
+
+```csharp
+[Fact]
+public void GivenActGuid_WhenSet_ThenCanBeRetrieved()
+{
+    // Arrange
+    var act = new Act();
+    var expectedGuid = Guid.NewGuid();
+
+    // Act
+    act.ActGuid = expectedGuid;
+
+    // Assert
+    act.ActGuid.Should().Be(expectedGuid);
+}
+```
+
+### 2. Default Value Tests
+
+Test that new instances have correct default values:
+
+```csharp
+[Fact]
+public void GivenNewAct_WhenCreated_ThenNameDefaultsToEmptyString()
+{
+    // Arrange & Act
+    var act = new Act();
+
+    // Assert
+    act.Name.Should().Be(string.Empty);
+}
+```
+
+### 3. Inheritance Tests
+
+Verify that entities inherit from expected base classes:
+
+```csharp
+[Fact]
+public void GivenAct_WhenChecked_ThenInheritsFromEntity()
+{
+    // Arrange & Act
+    var act = new Act();
+
+    // Assert
+    act.Should().BeAssignableTo<Entity>();
+}
+
+[Fact]
+public void GivenAct_WhenChecked_ThenInheritsFromMultiTenantEntity()
+{
+    // Arrange & Act
+    var act = new Act();
+
+    // Assert
+    act.Should().BeAssignableTo<MultiTenantEntity>();
+}
+```
+
+### 4. Interface Implementation Tests
+
+Verify that entities implement required interfaces:
+
+```csharp
+[Fact]
+public void GivenAct_WhenChecked_ThenImplementsITenantEntity()
+{
+    // Arrange & Act
+    var act = new Act();
+
+    // Assert
+    act.Should().BeAssignableTo<ITenantEntity>();
+}
+
+[Fact]
+public void GivenAct_WhenCastToITenantEntity_ThenCanAccessTenantId()
+{
+    // Arrange
+    var act = new Act();
+    var expectedTenantId = 99;
+    act.TenantId = expectedTenantId;
+
+    // Act
+    ITenantEntity tenantEntity = act;
+
+    // Assert
+    tenantEntity.TenantId.Should().Be(expectedTenantId);
+}
+```
+
+### 5. Comprehensive Property Tests
+
+Test that multiple properties can be set and retain their values:
+
+```csharp
+[Fact]
+public void GivenActWithMultipleProperties_WhenAllPropertiesSet_ThenAllRetainValues()
+{
+    // Arrange
+    var act = new Act();
+    var guid = Guid.NewGuid();
+    var name = "The Beatles";
+    var tenantId = 5;
+    var id = 100;
+    var createdAt = DateTime.UtcNow;
+
+    // Act
+    act.ActGuid = guid;
+    act.Name = name;
+    act.TenantId = tenantId;
+    act.Id = id;
+    act.CreatedAt = createdAt;
+
+    // Assert
+    act.ActGuid.Should().Be(guid);
+    act.Name.Should().Be(name);
+    act.TenantId.Should().Be(tenantId);
+    act.Id.Should().Be(id);
+    act.CreatedAt.Should().Be(createdAt);
+}
+```
+
+### 6. Constructor Tests
+
+For entities with constructors, test various constructor scenarios:
+
+```csharp
+[Fact]
+public void Constructor_WithValidParameters_SetsProperties()
+{
+    // Arrange
+    var tenantIdentifier = "test-tenant";
+    var name = "Test Tenant";
+    var slug = "test-tenant";
+
+    // Act
+    var tenant = new Tenant(tenantIdentifier, name, slug);
+
+    // Assert
+    tenant.TenantIdentifier.Should().Be(tenantIdentifier);
+    tenant.Name.Should().Be(name);
+    tenant.Slug.Should().Be(slug);
+    tenant.IsActive.Should().BeTrue();
+}
+
+[Fact]
+public void Constructor_WithIsActiveFalse_SetsIsActiveToFalse()
+{
+    // Arrange
+    var tenantIdentifier = "inactive-tenant";
+    var name = "Inactive Tenant";
+    var slug = "inactive-tenant";
+
+    // Act
+    var tenant = new Tenant(tenantIdentifier, name, slug, isActive: false);
+
+    // Assert
+    tenant.IsActive.Should().BeFalse();
+}
+```
+
+### 7. Nullability Tests
+
+For nullable properties, test default null values and setting to null:
+
+```csharp
+[Fact]
+public void GivenNewVenue_WhenCreated_ThenAddressDefaultsToNull()
+{
+    // Arrange & Act
+    var venue = new Venue();
+
+    // Assert
+    venue.Address.Should().BeNull();
+}
+
+[Fact]
+public void GivenVenueAddress_WhenSetToNull_ThenRemainsNull()
+{
+    // Arrange
+    var venue = new Venue
+    {
+        Address = "123 Test Street"
+    };
+
+    // Act
+    venue.Address = null;
+
+    // Assert
+    venue.Address.Should().BeNull();
+}
+```
+
+### 8. Navigation Property Tests
+
+Test that navigation properties can be set and accessed:
+
+```csharp
+[Fact]
+public void GivenAct_WhenTenantSet_ThenCanBeRetrieved()
+{
+    // Arrange
+    var act = new Act();
+    var expectedTenant = new Tenant("entertainment-co", "Entertainment Company", "entertainment-co");
+
+    // Act
+    act.Tenant = expectedTenant;
+
+    // Assert
+    act.Tenant.Should().Be(expectedTenant);
+    act.Tenant.Name.Should().Be("Entertainment Company");
+}
+```
+
+### 9. Complex Type Tests
+
+For complex types (e.g., `Point` from NetTopologySuite), test property access:
+
+```csharp
+[Fact]
+public void GivenVenueLocation_WhenSet_ThenCanBeRetrieved()
+{
+    // Arrange
+    var venue = new Venue();
+    var expectedLocation = new Point(-73.9857, 40.7580) { SRID = 4326 };
+
+    // Act
+    venue.Location = expectedLocation;
+
+    // Assert
+    venue.Location.Should().Be(expectedLocation);
+    venue.Location.X.Should().Be(-73.9857);
+    venue.Location.Y.Should().Be(40.7580);
+    venue.Location.SRID.Should().Be(4326);
+}
+```
+
+## Assertion Style: FluentAssertions
+
+Always use **FluentAssertions** for assertions:
+
+```csharp
+// Equality assertions
+act.Name.Should().Be(expectedName);
+act.Id.Should().Be(123);
+
+// Null assertions
+venue.Address.Should().BeNull();
+venue.Address.Should().NotBeNull();
+
+// Type/Inheritance assertions
+act.Should().BeAssignableTo<Entity>();
+act.Should().BeAssignableTo<MultiTenantEntity>();
+
+// Collection assertions
+collection.Should().HaveCount(3);
+collection.Should().Contain(item);
+```
+
+**Benefits:**
+- More readable than traditional assertions
+- Better error messages
+- Fluent, chainable API
+
+## Special Patterns
+
+### Test Entity Pattern for Abstract Classes
+
+For testing abstract base classes, create a concrete test implementation:
+
+```csharp
+public class EntityTests
+{
+    // Concrete test implementation of Entity for testing
+    private class TestEntity : Entity
+    {
+    }
+
+    [Fact]
+    public void Id_DefaultsToZero()
+    {
+        // Arrange & Act
+        var entity = new TestEntity();
+
+        // Assert
+        entity.Id.Should().Be(0);
+    }
+}
+```
+
+**Guidelines:**
+- Use `private class` for test implementations
+- Name them `Test{BaseClassName}` (e.g., `TestEntity`, `TestMultiTenantEntity`)
+- Keep them minimal - only what's needed for testing
+
+### Mocking Pattern with NSubstitute
+
+For API/service tests that require dependencies, use NSubstitute:
+
+```csharp
+using NSubstitute;
+
+[Fact]
+public void CurrentTenantId_WhenHttpContextIsNull_ReturnsNull()
+{
+    // Arrange
+    var httpContextAccessor = Substitute.For<IHttpContextAccessor>();
+    httpContextAccessor.HttpContext.Returns((HttpContext?)null);
+    var tenantContext = new TenantContext(httpContextAccessor);
+
+    // Act
+    var result = tenantContext.CurrentTenantId;
+
+    // Assert
+    result.Should().BeNull();
+}
+```
+
+**Guidelines:**
+- Use `Substitute.For<T>()` to create mocks
+- Configure mock behavior with `.Returns()`
+- Keep mock setup in the Arrange section
+
+## Test Coverage Scope
+
+Domain entity tests should cover:
+
+1. ✅ **All properties** - getters and setters
+2. ✅ **Default values** - for new instances
+3. ✅ **Inheritance relationships** - base class inheritance
+4. ✅ **Interface implementations** - interface contracts
+5. ✅ **Navigation properties** - when applicable
+6. ✅ **Complex types** - property access and validation
+7. ✅ **Nullable properties** - null handling
+8. ✅ **Entity base class properties** - `Id`, `CreatedAt`, `UpdatedAt`
+9. ✅ **Multi-tenant properties** - `TenantId`, `Tenant` navigation
+
+## Example: Complete Test Class
+
+**Reference:** `tests/GloboTicket.UnitTests/Domain/ActTests.cs`
+
+```csharp
+using FluentAssertions;
+using GloboTicket.Domain.Entities;
+using GloboTicket.Domain.Interfaces;
+
+namespace GloboTicket.UnitTests.Domain;
+
+public class ActTests
+{
+    [Fact]
+    public void GivenNewAct_WhenCreated_ThenCanSetAndRetrieveAllProperties()
+    {
+        // Arrange
+        var actGuid = Guid.NewGuid();
+        var name = "The Rolling Stones";
+        var tenantId = 1;
+
+        // Act
+        var act = new Act
+        {
+            ActGuid = actGuid,
+            Name = name,
+            TenantId = tenantId
+        };
+
+        // Assert
+        act.ActGuid.Should().Be(actGuid);
+        act.Name.Should().Be(name);
+        act.TenantId.Should().Be(tenantId);
+    }
+
+    [Fact]
+    public void GivenAct_WhenChecked_ThenInheritsFromMultiTenantEntity()
+    {
+        // Arrange & Act
+        var act = new Act();
+
+        // Assert
+        act.Should().BeAssignableTo<MultiTenantEntity>();
+    }
+
+    // Additional tests following the same patterns...
+}
+```
+
+## Best Practices
+
+1. **One assertion per test** - When possible, focus each test on a single behavior
+2. **Descriptive test names** - Test names should clearly describe what is being tested
+3. **Use meaningful test data** - Use realistic values (e.g., "The Rolling Stones" not "Test Act")
+4. **Test both positive and negative cases** - Include tests for null, empty, and edge cases
+5. **Keep tests independent** - Each test should be able to run in isolation
+6. **Avoid test interdependencies** - Don't rely on test execution order
+7. **Use `[Fact]` attribute** - xUnit's standard test attribute (no `[Theory]` unless parameterized)
