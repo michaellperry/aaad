@@ -75,6 +75,11 @@ public class EntityName : [Entity | MultiTenantEntity]
 public ICollection<RelatedEntity> RelatedEntities { get; set; } = new List<RelatedEntity>();
 ```
 
+**IMPORTANT: When creating a new relationship, ALWAYS add the collection navigation property to the parent (one) side:**
+- If you're creating a child entity (many side), you MUST also add the collection property to the parent entity
+- Example: When creating `Show` with a relationship to `Venue`, add `public ICollection<Show> Shows { get; set; } = new List<Show>();` to the `Venue` entity
+- Use the `WithMany(parent => parent.Collection)` pattern in the configuration on the many side
+
 **Navigation Properties (Single - Optional):**
 ```csharp
 /// <summary>
@@ -286,7 +291,7 @@ Follow this EXACT order:
 6. **Foreign Key Relationships**
    ```csharp
    builder.HasOne(s => s.Venue)
-       .WithMany()
+       .WithMany(v => v.Shows)  // Always specify the collection on the parent
        .HasForeignKey(s => s.VenueId)
        .OnDelete(DeleteBehavior.Cascade)
        .IsRequired();
@@ -319,13 +324,13 @@ public class ShowConfiguration : IEntityTypeConfiguration<Show>
 
         // 4. Foreign key relationships
         builder.HasOne(s => s.Venue)
-            .WithMany()
+            .WithMany(v => v.Shows)  // Collection on Venue
             .HasForeignKey(s => s.VenueId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
         builder.HasOne(s => s.Act)
-            .WithMany()
+            .WithMany(a => a.Shows)  // Collection on Act
             .HasForeignKey(s => s.ActId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
@@ -377,6 +382,33 @@ public class ActConfiguration : IEntityTypeConfiguration<Act>
 }
 ```
 
+### Relationship Configuration Pattern
+
+**CRITICAL: When creating a child entity with a relationship to a parent entity, you MUST:**
+
+1. **Add the collection navigation property to the parent entity**
+   - Example: When creating `Show` that belongs to `Venue`, add `public ICollection<Show> Shows { get; set; } = new List<Show>();` to `Venue`
+   - Use XML documentation: `/// <summary>The collection of Shows held at this venue.</summary>`
+
+2. **Configure the relationship on the many (child) side using HasOne().WithMany(parent => parent.Collection).HasForeignKey()**
+   - Example in `ShowConfiguration`:
+   ```csharp
+   builder.HasOne(s => s.Venue)
+       .WithMany(v => v.Shows)  // Reference the collection property you added
+       .HasForeignKey(s => s.VenueId)
+       .OnDelete(DeleteBehavior.Cascade)
+       .IsRequired();
+   ```
+
+3. **Never use empty `WithMany()`** - This creates a "shadow" relationship without proper navigation, making the model harder to use and query.
+
+**Workflow:**
+1. Read the parent entity file (e.g., `Venue.cs`)
+2. Add the collection navigation property with proper XML documentation
+3. Write the parent entity file back
+4. Create the child entity with its navigation property to the parent
+5. Create the child entity configuration using `WithMany(parent => parent.Collection)`
+
 ### Key Configuration Rules
 
 - **Always** configure inherited properties (CreatedAt, UpdatedAt)
@@ -384,8 +416,11 @@ public class ActConfiguration : IEntityTypeConfiguration<Act>
 - **Always** use `DeleteBehavior.Cascade` for parent-child relationships
 - **Always** use descriptive comments for each section
 - **Always** follow the exact order specified above
+- **Always** add collection navigation properties to parent entities when creating new child entities
+- **Always** use `WithMany(parent => parent.Collection)` pattern in relationship configuration on the many side
 - **Never** skip property configuration - be explicit about all constraints
 - **Never** use data annotations - only Fluent API
+- **Never** use empty `WithMany()` - always reference the collection property on the parent
 
 ## What You Will NOT Do
 
@@ -429,6 +464,7 @@ File: `src/GloboTicket.Infrastructure/Data/Configurations/{EntityName}Configurat
 
 After producing all entity and configuration files, provide:
 - List of entities created with their classifications (Multi-tenant top-level, Child, or Non-tenant)
+- List of parent entities modified to add collection navigation properties
 - Key relationships between entities
 - Notable design decisions
 - Any additional steps needed (e.g., adding query filters to DbContext, running migrations)
