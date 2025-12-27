@@ -28,6 +28,7 @@ builder.Services.AddScoped<ITenantContext, TenantContext>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IVenueService, VenueService>();
 builder.Services.AddScoped<IActService, ActService>();
+builder.Services.AddScoped<IShowService, ShowService>();
 
 // Register rate limiting service
 builder.Services.AddSingleton<GloboTicket.API.Services.IRateLimitService, GloboTicket.API.Services.RateLimitService>();
@@ -111,6 +112,9 @@ app.MapVenueEndpoints();
 
 // Map act endpoints
 app.MapActEndpoints();
+
+// Map show endpoints
+app.MapShowEndpoints();
 
 // Map geocoding endpoints
 app.MapGeocodingEndpoints();

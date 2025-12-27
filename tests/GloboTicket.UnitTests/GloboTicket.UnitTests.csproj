@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="FluentAssertions" Version="[7.0.0,8.0.0)" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
@@ -23,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\GloboTicket.Domain\GloboTicket.Domain.csproj" />
     <ProjectReference Include="..\..\src\GloboTicket.Application\GloboTicket.Application.csproj" />
+    <ProjectReference Include="..\..\src\GloboTicket.Infrastructure\GloboTicket.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\GloboTicket.API\GloboTicket.API.csproj" />
   </ItemGroup>
 
