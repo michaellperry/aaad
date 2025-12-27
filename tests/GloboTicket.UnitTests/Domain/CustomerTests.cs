@@ -6,6 +6,15 @@ namespace GloboTicket.UnitTests.Domain;
 
 public class CustomerTests
 {
+    private static Address CreateTestAddress() => new Address
+    {
+        StreetLine1 = "123 Test St",
+        City = "Test City",
+        StateOrProvince = "TS",
+        PostalCode = "12345",
+        Country = "Test Country"
+    };
+
     [Fact]
     public void GivenNewCustomer_WhenCreated_ThenCanSetAndRetrieveAllProperties()
     {
@@ -19,7 +28,8 @@ public class CustomerTests
         {
             CustomerGuid = customerGuid,
             Name = name,
-            TenantId = tenantId
+            TenantId = tenantId,
+            BillingAddress = CreateTestAddress()
         };
 
         // Assert
@@ -32,7 +42,7 @@ public class CustomerTests
     public void GivenCustomerGuid_WhenSet_ThenCanBeRetrieved()
     {
         // Arrange
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
         var expectedGuid = Guid.NewGuid();
 
         // Act
@@ -46,7 +56,7 @@ public class CustomerTests
     public void GivenNewCustomer_WhenCreated_ThenNameDefaultsToEmptyString()
     {
         // Arrange & Act
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
 
         // Assert
         customer.Name.Should().Be(string.Empty);
@@ -56,7 +66,7 @@ public class CustomerTests
     public void GivenCustomerName_WhenSet_ThenCanBeRetrieved()
     {
         // Arrange
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
         var expectedName = "Globomantics";
 
         // Act
@@ -70,7 +80,7 @@ public class CustomerTests
     public void GivenCustomer_WhenChecked_ThenInheritsFromMultiTenantEntity()
     {
         // Arrange & Act
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
 
         // Assert
         customer.Should().BeAssignableTo<MultiTenantEntity>();
@@ -80,7 +90,7 @@ public class CustomerTests
     public void GivenCustomer_WhenChecked_ThenImplementsITenantEntity()
     {
         // Arrange & Act
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
 
         // Assert
         customer.Should().BeAssignableTo<ITenantEntity>();
@@ -90,7 +100,7 @@ public class CustomerTests
     public void GivenCustomer_WhenTenantIdSet_ThenCanBeRetrieved()
     {
         // Arrange
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
         var expectedTenantId = 42;
 
         // Act
@@ -104,7 +114,7 @@ public class CustomerTests
     public void GivenCustomer_WhenTenantSet_ThenCanBeRetrieved()
     {
         // Arrange
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
         var expectedTenant = new Tenant("customer-mgmt", "Customer Management Co", "customer-mgmt");
 
         // Act
@@ -119,7 +129,7 @@ public class CustomerTests
     public void GivenCustomer_WhenChecked_ThenInheritsFromEntity()
     {
         // Arrange & Act
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
 
         // Assert
         customer.Should().BeAssignableTo<Entity>();
@@ -129,7 +139,7 @@ public class CustomerTests
     public void GivenCustomer_WhenEntityPropertiesSet_ThenCanBeRetrieved()
     {
         // Arrange
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
         var expectedId = 123;
         var expectedCreatedAt = new DateTime(2025, 11, 28, 12, 0, 0, DateTimeKind.Utc);
         var expectedUpdatedAt = new DateTime(2025, 11, 28, 14, 30, 0, DateTimeKind.Utc);
@@ -149,7 +159,7 @@ public class CustomerTests
     public void GivenCustomer_WhenCastToITenantEntity_ThenCanAccessTenantId()
     {
         // Arrange
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
         var expectedTenantId = 99;
         customer.TenantId = expectedTenantId;
 
@@ -164,7 +174,7 @@ public class CustomerTests
     public void GivenCustomerWithMultipleProperties_WhenAllPropertiesSet_ThenAllRetainValues()
     {
         // Arrange
-        var customer = new Customer();
+        var customer = new Customer { BillingAddress = CreateTestAddress() };
         var guid = Guid.NewGuid();
         var name = "Test Customer";
         var tenantId = 5;
