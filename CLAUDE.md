@@ -376,14 +376,18 @@ public void GivenNewAct_WhenCreated_ThenNameDefaultsToEmptyString()
 - Use `// Arrange & Act` when action is object creation
 - Use FluentAssertions for all assertions (`.Should()`)
 
-**Required Tests for Domain Entities:**
-1. Property getters/setters
-2. Default values
-3. Inheritance relationships (`Should().BeAssignableTo<BaseClass>()`)
-4. Interface implementations
-5. Navigation properties
-6. Multi-tenant properties (`TenantId`, `Tenant`)
-7. Nullable property handling
+**What to Test for Domain Entities:**
+1. **Business Rules & Invariants**: Constructor validation, domain constraints, business logic
+2. **Domain Behavior**: Methods that implement business logic, calculations, state transitions
+3. **Business-Driven Defaults**: Only test defaults that represent business decisions, not language defaults
+
+**What NOT to Test (Low Quality - Tests Language/Framework):**
+- ❌ Property getters/setters (tests the compiler)
+- ❌ Inheritance relationships (tests the type system)
+- ❌ Interface implementations (tests the type system)
+- ❌ Navigation properties (tests EF Core framework)
+- ❌ Language-level nullable handling (tests the compiler)
+- ❌ Simple property assignment (if `x.Name = "test"` doesn't work, .NET doesn't work)
 
 **Test Organization:**
 - One test class per entity: `{EntityName}Tests`
