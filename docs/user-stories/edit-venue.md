@@ -85,7 +85,7 @@ The edit functionality provides a pre-populated form with the venue's current va
 
 ### Editable Fields
 
-- [ ] User can modify the venue name (required, max 200 characters)
+- [ ] User can modify the venue name (required, max 100 characters)
 - [ ] User can modify the address (optional, max 500 characters)
 - [ ] User can modify the seating capacity (required, non-negative integer)
 - [ ] User can modify the description (required, max 2000 characters)
@@ -96,7 +96,7 @@ The edit functionality provides a pre-populated form with the venue's current va
 ### Validation
 
 - [ ] Name is required and cannot be empty whitespace
-- [ ] Name must not exceed 200 characters
+- [ ] Name must not exceed 100 characters
 - [ ] Description is required and cannot be empty whitespace
 - [ ] Description must not exceed 2000 characters
 - [ ] Seating capacity is required and must be zero or positive
