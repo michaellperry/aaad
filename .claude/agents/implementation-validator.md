@@ -52,6 +52,30 @@ You will systematically validate implementation completeness by:
    - Actionable gap descriptions with exact remediation steps
    - Prioritized list of critical missing items
 
+## Testing Strategy Awareness
+
+**This project follows a TDD-first approach with a comprehensive testing pyramid:**
+
+1. **Unit Tests** (Required - TDD Red-Green phase):
+   - ALL service methods MUST have unit test coverage
+   - Service tests use EF Core In-Memory Provider (NOT Testcontainers)
+   - Tests are in `tests/GloboTicket.UnitTests/Infrastructure/{ServiceName}Tests.cs`
+   - In-memory provider tests DateTimeOffset, related entities, query filters
+   - Fast execution, no external dependencies
+
+2. **Integration Tests** (Optional - Post-TDD validation):
+   - Written AFTER unit tests pass
+   - Validate SQL Server-specific behavior and edge cases
+   - Use Testcontainers with real SQL Server
+   - Tests are in `tests/GloboTicket.IntegrationTests/`
+
+**When Validating Test Coverage:**
+- ✅ Mark as COMPLETE if unit tests exist using in-memory provider
+- ⚠️ Note as "Integration tests pending" if only unit tests exist (this is acceptable - integration tests come later)
+- ❌ Mark as INCOMPLETE if service methods have NO unit test coverage
+
+**Example**: If `ShowService.GetNearbyShowsAsync()` has unit tests with in-memory provider but no integration tests, report this as ✅ COMPLETE with a note that integration tests can be added later for additional coverage.
+
 ## Project Context Awareness
 
 This is a Clean Architecture .NET project with specific patterns you must validate:

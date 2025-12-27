@@ -176,13 +176,24 @@ public class ServiceTests
 }
 ```
 
-### Why In-Memory Provider?
+### Why In-Memory Provider for ALL EF Core Service Tests?
 
-- **Real EF Core behavior**: Tests run against actual DbContext logic
-- **Query filter validation**: Multi-tenant filtering is tested with real queries
-- **No mock setup complexity**: No need to mock DbSet, IQueryable, or async operations
-- **Fast execution**: In-memory provider is optimized for testing
-- **Relationship testing**: Navigate properties work as they would in production
+**CRITICAL: The in-memory provider is suitable for testing ALL Entity Framework Core LINQ queries, including:**
+- ✅ **DateTimeOffset queries**: `.UtcDateTime` comparisons, timezone offsets, date arithmetic
+- ✅ **Related entity navigation**: `.Include()`, `.ThenInclude()`, navigation properties
+- ✅ **Complex LINQ**: `Where`, `OrderBy`, `GroupBy`, `Select`, aggregate functions
+- ✅ **Query filters**: Multi-tenant isolation through navigation property chains
+- ✅ **Entity state management**: Add, Update, Delete operations with timestamps
+
+**Benefits:**
+- **Real EF Core behavior**: Tests run against actual DbContext and LINQ query translation
+- **Query filter validation**: Multi-tenant filtering is tested with real query execution
+- **No mock complexity**: No need to mock DbSet, IQueryable, or async operations
+- **Fast execution**: Runs in milliseconds - no database startup overhead
+- **Deterministic**: Each test gets a fresh in-memory database instance
+- **Complete coverage**: Tests the entire data access layer without external dependencies
+
+**The TDD Philosophy**: Write unit tests with in-memory provider FIRST to drive implementation, then add integration tests AFTER to validate SQL Server-specific edge cases.
 
 ### Test Tenant Context
 

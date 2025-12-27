@@ -352,6 +352,26 @@ Cookie-based authentication using `CookieAuthenticationDefaults.AuthenticationSc
 
 ## Testing Patterns
 
+### Test-Driven Development (TDD) Workflow
+
+This project follows a **TDD-first approach** with a comprehensive testing pyramid:
+
+1. **Unit Tests** (Red-Green phase) - Written FIRST during TDD
+   - Fast, isolated tests using EF Core In-Memory Provider
+   - Cover all service logic, DTOs, domain entities
+   - Run in milliseconds, no external dependencies
+
+2. **Integration Tests** - Written AFTER TDD cycle completes
+   - Validate against real SQL Server using Testcontainers
+   - Catch edge cases and database-specific behavior
+   - Test migrations and schema correctness
+
+3. **End-to-End Tests** - Written AFTER integration tests pass
+   - Full system validation
+   - User workflow testing
+
+**TDD Mantra**: Write unit tests first, make them pass, then add integration tests for additional coverage.
+
 ### Unit Test Structure
 
 **Naming Convention:** `Given{State}_When{Action}_Then{Result}`
@@ -376,10 +396,14 @@ public void GivenNewAct_WhenCreated_ThenNameDefaultsToEmptyString()
 - Use `// Arrange & Act` when action is object creation
 - Use FluentAssertions for all assertions (`.Should()`)
 
-**What to Test for Domain Entities:**
-1. **Business Rules & Invariants**: Constructor validation, domain constraints, business logic
-2. **Domain Behavior**: Methods that implement business logic, calculations, state transitions
-3. **Business-Driven Defaults**: Only test defaults that represent business decisions, not language defaults
+**What to Test:**
+1. **Domain Entities**: Business rules, invariants, domain behavior, business-driven defaults
+2. **DTOs**: Validation attributes and rules
+3. **Service Methods**: ALL service logic must have unit test coverage
+   - Use EF Core In-Memory Provider for database operations
+   - Test LINQ queries including those with DateTimeOffset and related entities
+   - Test multi-tenant filtering through query filters
+   - Test business logic and validation
 
 **What NOT to Test (Low Quality - Tests Language/Framework):**
 - ❌ Property getters/setters (tests the compiler)
@@ -390,11 +414,86 @@ public void GivenNewAct_WhenCreated_ThenNameDefaultsToEmptyString()
 - ❌ Simple property assignment (if `x.Name = "test"` doesn't work, .NET doesn't work)
 
 **Test Organization:**
-- One test class per entity: `{EntityName}Tests`
+- One test class per component: `{ComponentName}Tests`
 - All test classes are `public`
-- Namespace: `GloboTicket.UnitTests.{Category}` (e.g., `Domain`, `API`)
+- Namespace: `GloboTicket.UnitTests.{Category}` (e.g., `Domain`, `Application`, `Infrastructure`)
+
+### Service Testing with EF Core In-Memory Provider
+
+**CRITICAL: All service methods that use Entity Framework Core MUST be unit tested using the In-Memory Provider.**
+
+**Why In-Memory Provider for Unit Tests?**
+- ✅ Tests actual EF Core query translation and behavior
+- ✅ Validates LINQ queries including DateTimeOffset, complex types, and relationships
+- ✅ Tests multi-tenant query filters with real DbContext logic
+- ✅ Fast execution (milliseconds) - no database startup overhead
+- ✅ Deterministic and isolated - each test gets a fresh database
+- ✅ No mock setup complexity - tests use real DbContext and DbSet
+
+**Setup Pattern:**
+```csharp
+public class ShowServiceTests
+{
+    private GloboTicketDbContext CreateInMemoryDbContext(int? tenantId = 1)
+    {
+        var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        var tenantContext = new TestTenantContext { CurrentTenantId = tenantId };
+        return new GloboTicketDbContext(options, tenantContext);
+    }
+
+    [Fact]
+    public async Task GivenValidShow_WhenGetNearbyShows_ThenReturnsShowsWithin48Hours()
+    {
+        // Arrange
+        using var dbContext = CreateInMemoryDbContext();
+        var service = new ShowService(dbContext);
+
+        // Seed test data
+        var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
+        dbContext.Venues.Add(venue);
+        await dbContext.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetNearbyShowsAsync(venue.VenueGuid, DateTimeOffset.UtcNow);
+
+        // Assert
+        result.Should().NotBeNull();
+    }
+}
+```
+
+**Test Tenant Context:**
+```csharp
+public class TestTenantContext : ITenantContext
+{
+    public int? CurrentTenantId { get; set; }
+}
+```
+
+**Package Requirement:**
+Ensure `tests/GloboTicket.UnitTests/GloboTicket.UnitTests.csproj` includes:
+```xml
+<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
+```
+
+**What Can Be Tested with In-Memory Provider:**
+- ✅ LINQ queries with `DateTimeOffset` and UTC conversions
+- ✅ Related entity navigation (`Include`, `ThenInclude`)
+- ✅ Query filters for multi-tenancy
+- ✅ Complex queries with `Where`, `OrderBy`, `GroupBy`
+- ✅ Entity creation with timestamps (`CreatedAt`, `UpdatedAt`)
+- ✅ Business logic and validation in service methods
 
 ### Integration Test Structure
+
+**Purpose**: Integration tests are written AFTER the TDD cycle to validate:
+- Real SQL Server behavior and edge cases
+- Database migrations and schema correctness
+- SQL Server-specific features (geography types, advanced indexing)
+- Performance with realistic data volumes
 
 **Key Characteristics:**
 - Uses Testcontainers for real SQL Server
@@ -422,6 +521,12 @@ public class ServiceIntegrationTests : IAsyncLifetime
     }
 }
 ```
+
+**When to Write Integration Tests:**
+- After unit tests are passing
+- To validate database-specific behavior
+- To test migrations
+- To catch edge cases not covered by in-memory provider
 
 **Tenant Isolation:** Each test uses a unique tenant to prevent cross-test data pollution and validate filtering logic.
 
