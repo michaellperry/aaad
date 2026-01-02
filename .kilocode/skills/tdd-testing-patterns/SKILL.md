@@ -19,7 +19,7 @@ This skill provides TDD patterns and testing strategies for .NET applications, s
 **Structure every test using the AAA pattern for clarity and maintainability.**
 
 ```csharp
-[Test]
+[Fact]
 public void Venue_Constructor_SetsPropertiesCorrectly()
 {
     // Arrange - Setup test data and dependencies
@@ -31,15 +31,12 @@ public void Venue_Constructor_SetsPropertiesCorrectly()
     var venue = new Venue(name, address, tenantId);
     
     // Assert - Verify expected outcomes
-    Assert.Multiple(() =>
-    {
-        Assert.That(venue.Id, Is.Not.EqualTo(Guid.Empty));
-        Assert.That(venue.Name, Is.EqualTo(name));
-        Assert.That(venue.Address, Is.EqualTo(address));
-        Assert.That(venue.TenantId, Is.EqualTo(tenantId));
-        Assert.That(venue.IsActive, Is.True);
-        Assert.That(venue.CreatedAt, Is.EqualTo(DateTime.UtcNow).Within(1).Seconds);
-    });
+    venue.Id.Should().NotBe(Guid.Empty);
+    venue.Name.Should().Be(name);
+    venue.Address.Should().Be(address);
+    venue.TenantId.Should().Be(tenantId);
+    venue.IsActive.Should().BeTrue();
+    venue.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
 }
 ```
 
@@ -48,38 +45,38 @@ public void Venue_Constructor_SetsPropertiesCorrectly()
 
 ```csharp
 // ✅ Good - Descriptive test names
-[Test]
+[Fact]
 public void AddAct_ValidAct_AddsActToVenue()
 {
     // Test implementation
 }
 
-[Test]
+[Fact]
 public void AddAct_InactiveVenue_ThrowsInvalidOperationException()
 {
     // Test implementation
 }
 
-[Test]
+[Fact]
 public void VenueRepository_GetActiveVenues_ReturnsOnlyActiveVenues()
 {
     // Test implementation
 }
 
 // ❌ Bad - Unclear test names
-[Test]
+[Fact]
 public void Test1() { }
-[Test]
+[Fact]
 public void TestVenue() { }
-[Test]
+[Fact]
 public void AddTest() { }
 ```
 
 ### Given-When-Then Format
-**Use Given-When-Then comments to make test intent crystal clear.**
+**Use Given-When-Then comments to make test intent crystal clear. This is different from the `Given` prefix used in test data helper methods (e.g., `GivenVenue()`). See [Test Data Helpers](patterns/test-data-helpers.md) for details on helper methods.**
 
 ```csharp
-[Test]
+[Fact]
 public async Task VenueService_CreateVenue_ValidData_ReturnsCreatedVenue()
 {
     // Given we have valid venue data
@@ -91,22 +88,24 @@ public async Task VenueService_CreateVenue_ValidData_ReturnsCreatedVenue()
     };
     
     // And our in-memory database is empty (no existing venues)
-    // (Setup occurs in [SetUp] method with UseInMemoryDatabase)
+    // (Setup occurs in constructor with UseInMemoryDatabase)
     
     // When we create the venue
     var result = await _venueService.CreateVenueAsync(createVenueDto);
     
     // Then we should receive a valid venue DTO
-    Assert.That(result, Is.Not.Null);
-    Assert.That(result.Name, Is.EqualTo(createVenueDto.Name));
-    Assert.That(result.Id, Is.Not.EqualTo(Guid.Empty));
+    result.Should().NotBeNull();
+    result.Name.Should().Be(createVenueDto.Name);
+    result.Id.Should().NotBe(Guid.Empty);
     
     // And the venue should be persisted in the database
     var savedVenue = await _context.Venues.SingleOrDefaultAsync(v => v.Id == result.Id);
-    Assert.That(savedVenue, Is.Not.Null);
-    Assert.That(savedVenue!.Name, Is.EqualTo(createVenueDto.Name));
+    savedVenue.Should().NotBeNull();
+    savedVenue!.Name.Should().Be(createVenueDto.Name);
 }
 ```
+
+**Note**: "Given-When-Then" comments describe test flow and intent. The `Given` prefix in helper methods (e.g., `GivenVenue()`) is a separate pattern for creating test data with default parameters. Both patterns can be used together in the same test.
 
 ## Detailed Patterns
 

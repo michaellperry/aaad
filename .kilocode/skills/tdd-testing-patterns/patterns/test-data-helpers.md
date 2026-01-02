@@ -21,8 +21,7 @@ public class VenueServiceTests
     private VenueService _venueService;
     private Guid _tenantId;
     
-    [SetUp]
-    public void SetUp()
+    public VenueServiceTests()
     {
         _context = new GloboTicketDbContext(/* in-memory options */);
         _venueService = new VenueService(_context);
@@ -46,7 +45,7 @@ public class VenueServiceTests
     }
     
     // Test overriding only important properties - visually distinct
-    [Test]
+    [Fact]
     public void VenueService_CreateVenue_ValidData_ReturnsCreatedVenue()
     {
         // Arrange
@@ -57,8 +56,8 @@ public class VenueServiceTests
     }
     
     // Test using default values - clearly shows generic test data
-    [Test]
-    public void VenueService_GetVenue_ExistingVenue_ReturnsVenue()
+    [Fact]
+    public async Task VenueService_GetVenue_ExistingVenue_ReturnsVenue()
     {
         // Arrange
         var venue = GivenVenue();
@@ -70,7 +69,7 @@ public class VenueServiceTests
     }
     
     // Test overriding multiple properties when needed
-    [Test]
+    [Fact]
     public void VenueService_CreateVenue_InactiveVenue_ThrowsException()
     {
         // Arrange
@@ -101,7 +100,7 @@ public class VenueBuilder
     // ... builder implementation
 }
 
-[Test]
+[Fact]
 public void VenueService_CreateVenue_ValidData_ReturnsCreatedVenue()
 {
     // Arrange

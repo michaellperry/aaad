@@ -13,9 +13,9 @@ public class VenueServiceTests
     private VenueService _service;
     private Guid _tenantId;
     
-    [SetUp]
-    public void Setup()
+    public VenueServiceTests()
     {
+        _tenantId = Guid.NewGuid();
         var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
@@ -23,10 +23,9 @@ public class VenueServiceTests
         _context = new GloboTicketDbContext(options, MockTenantContext(_tenantId));
         _repository = new VenueRepository(_context);
         _service = new VenueService(_repository);
-        _tenantId = Guid.NewGuid();
     }
     
-    [Test]
+    [Fact]
     public async Task CreateVenue_ValidData_CreatesVenueSuccessfully()
     {
         // Arrange
@@ -41,15 +40,15 @@ public class VenueServiceTests
         var result = await _service.CreateVenueAsync(createDto);
         
         // Assert
-        Assert.That(result, Is.Not.Null);
-        Assert.That(result.Name, Is.EqualTo("Test Venue"));
+        result.Should().NotBeNull();
+        result.Name.Should().Be("Test Venue");
         
         var savedVenue = await _context.Venues.SingleOrDefaultAsync(v => v.Id == result.Id);
-        Assert.That(savedVenue, Is.Not.Null);
-        Assert.That(savedVenue!.Name, Is.EqualTo("Test Venue"));
+        savedVenue.Should().NotBeNull();
+        savedVenue!.Name.Should().Be("Test Venue");
     }
     
-    [Test]
+    [Fact]
     public async Task CreateVenue_DuplicateName_ThrowsException()
     {
         // Arrange
@@ -65,8 +64,9 @@ public class VenueServiceTests
         };
         
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await _service.CreateVenueAsync(createDto));
+        var act = async () => await _service.CreateVenueAsync(createDto);
+        
+        await act.Should().ThrowAsync<InvalidOperationException>();
     }
 }
 ```
@@ -94,43 +94,43 @@ public class VenueService
     }
 }
 
-[Test]
+[Fact]
 public async Task CreateVenue_ValidData_SendsConfirmationEmail()
 {
     // Arrange
+    var tenantId = Guid.NewGuid();
     var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
         .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
         .Options;
-    var context = new GloboTicketDbContext(options, MockTenantContext(_tenantId));
+    var context = new GloboTicketDbContext(options, MockTenantContext(tenantId));
     var repository = new VenueRepository(context);
     
-    var mockEmailService = new Mock<IEmailService>();
-    var service = new VenueService(repository, mockEmailService.Object);
+    var mockEmailService = Substitute.For<IEmailService>();
+    var service = new VenueService(repository, mockEmailService);
     
     var createDto = new CreateVenueDto
     {
         Name = "Test Venue",
         Address = "Test Address",
-        TenantId = _tenantId
+        TenantId = tenantId
     };
     
     // Act
     await service.CreateVenueAsync(createDto);
     
     // Assert
-    mockEmailService.Verify(
-        e => e.SendConfirmationEmailAsync(It.IsAny<string>(), It.IsAny<string>()), 
-        Times.Once);
+    await mockEmailService.Received(1)
+        .SendConfirmationEmailAsync(Arg.Any<string>(), Arg.Any<string>());
 }
 ```
 
 ```csharp
 // ❌ Bad - Mocking repository when in-memory database is available
-[Test]
+[Fact]
 public async Task CreateVenue_ValidData_CreatesVenue()
 {
-    var mockRepository = new Mock<IVenueRepository>();
-    var service = new VenueService(mockRepository.Object);
+    var mockRepository = Substitute.For<IVenueRepository>();
+    var service = new VenueService(mockRepository);
     // ... test implementation
 }
 ```

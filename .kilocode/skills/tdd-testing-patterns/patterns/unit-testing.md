@@ -5,59 +5,75 @@
 **Focus on testing business rules and invariants in domain objects.**
 
 ```csharp
-[Test]
-public void Venue_Deactivate_DeactivatesVenueAndAddsDomainEvent()
+public class VenueTests
 {
-    // Arrange
-    var venue = CreateValidVenue();
-    var originalEvents = DomainEvents.GetDomainEvents().ToList();
+    private Guid _tenantId;
     
-    // Act
-    venue.Deactivate();
-    
-    // Assert - State changes
-    Assert.That(venue.IsActive, Is.False);
-    
-    // Assert - Domain events
-    var domainEvents = DomainEvents.GetDomainEvents();
-    Assert.That(domainEvents, Has.Some.TypeOf<VenueDeactivatedEvent>());
-    Assert.That(domainEvents.Count, Is.EqualTo(originalEvents.Count + 1));
-}
-
-[Test]
-public void Venue_AddAct_ValidAct_AddsActSuccessfully()
-{
-    // Arrange
-    var venue = CreateValidVenue();
-    var actTitle = "Concert A";
-    var eventDate = DateTime.UtcNow.AddDays(30);
-    var ticketPrice = 50.00m;
-    
-    // Act
-    venue.AddAct(actTitle, eventDate, ticketPrice);
-    
-    // Assert
-    Assert.That(venue.Acts.Count, Is.EqualTo(1));
-    var act = venue.Acts.First();
-    Assert.That(act.Title, Is.EqualTo(actTitle));
-    Assert.That(act.EventDate, Is.EqualTo(eventDate));
-    Assert.That(act.TicketPrice, Is.EqualTo(ticketPrice));
-}
-
-[Test]
-public void Venue_AddAct_InactiveVenue_ThrowsInvalidOperationException()
-{
-    // Arrange
-    var venue = CreateValidVenue();
-    venue.Deactivate(); // Make venue inactive
-    
-    // Act & Assert
-    var exception = Assert.ThrowsAsync<InvalidOperationException>(async () =>
+    public VenueTests()
     {
-        await venue.AddAct("Concert A", DateTime.UtcNow.AddDays(30), 50.00m);
-    });
+        _tenantId = Guid.NewGuid();
+    }
     
-    Assert.That(exception.Message, Does.Contain("inactive venue"));
+    [Fact]
+    public void Venue_Deactivate_DeactivatesVenueAndAddsDomainEvent()
+    {
+        // Arrange
+        var venue = GivenVenue();
+        var originalEvents = DomainEvents.GetDomainEvents().ToList();
+        
+        // Act
+        venue.Deactivate();
+        
+        // Assert - State changes
+        venue.IsActive.Should().BeFalse();
+        
+        // Assert - Domain events
+        var domainEvents = DomainEvents.GetDomainEvents();
+        domainEvents.Should().Contain(e => e is VenueDeactivatedEvent);
+        domainEvents.Count.Should().Be(originalEvents.Count + 1);
+    }
+    
+    [Fact]
+    public void Venue_AddAct_ValidAct_AddsActSuccessfully()
+    {
+        // Arrange
+        var venue = GivenVenue();
+        var actTitle = "Concert A";
+        var eventDate = DateTime.UtcNow.AddDays(30);
+        var ticketPrice = 50.00m;
+        
+        // Act
+        venue.AddAct(actTitle, eventDate, ticketPrice);
+        
+        // Assert
+        venue.Acts.Count.Should().Be(1);
+        var act = venue.Acts.First();
+        act.Title.Should().Be(actTitle);
+        act.EventDate.Should().Be(eventDate);
+        act.TicketPrice.Should().Be(ticketPrice);
+    }
+    
+    [Fact]
+    public void Venue_AddAct_InactiveVenue_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var venue = GivenVenue();
+        venue.Deactivate(); // Make venue inactive
+        
+        // Act & Assert
+        var act = async () => await venue.AddAct("Concert A", DateTime.UtcNow.AddDays(30), 50.00m);
+        
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("*inactive venue*");
+    }
+    
+    private Venue GivenVenue(string name = "Test Venue", bool isActive = true, Guid? tenantId = null)
+    {
+        return new Venue(name, CreateTestAddress(), tenantId ?? _tenantId)
+        {
+            IsActive = isActive
+        };
+    }
 }
 ```
 
@@ -66,7 +82,7 @@ public void Venue_AddAct_InactiveVenue_ThrowsInvalidOperationException()
 **Value objects should be tested for equality and immutability.**
 
 ```csharp
-[Test]
+[Fact]
 public void Address_Equals_SameValues_ReturnsTrue()
 {
     // Arrange
@@ -74,11 +90,11 @@ public void Address_Equals_SameValues_ReturnsTrue()
     var address2 = new Address("123 Main St", "City", "State", "12345", "USA");
     
     // Act & Assert
-    Assert.That(address1, Is.EqualTo(address2));
-    Assert.That(address1 == address2, Is.True);
+    address1.Should().Be(address2);
+    (address1 == address2).Should().BeTrue();
 }
 
-[Test]
+[Fact]
 public void Address_Equals_DifferentValues_ReturnsFalse()
 {
     // Arrange
@@ -86,123 +102,165 @@ public void Address_Equals_DifferentValues_ReturnsFalse()
     var address2 = new Address("456 Oak Ave", "City", "State", "12345", "USA");
     
     // Act & Assert
-    Assert.That(address1, Is.Not.EqualTo(address2));
-    Assert.That(address1 == address2, Is.False);
+    address1.Should().NotBe(address2);
+    (address1 == address2).Should().BeFalse();
 }
 
-[Test]
+[Fact]
 public void Address_IsImmutable_ThrowsExceptionOnModification()
 {
     // Arrange
     var address = new Address("123 Main St", "City", "State", "12345", "USA");
     
     // Act & Assert - Value objects should be immutable
-    var exception = Assert.Throws<InvalidOperationException>(() =>
+    var act = () =>
     {
         var street = address.Street;
         // Attempting to modify would require reflection or specific API
-    });
+    };
+    
+    act.Should().Throw<InvalidOperationException>();
 }
 ```
 
 ## Testing Application Services
 
+**Use in-memory database with actual repositories for all application service tests. This provides better coverage of database behavior and catches real EF Core query issues. See the [Mocking](mocking.md) pattern for details on when to use in-memory database vs. mocking.**
+
 ### Command Handler Tests
-**Test application services that handle commands and queries.**
+**Test application services that handle commands using in-memory database.**
 
 ```csharp
-[Test]
-public async Task CreateVenueCommandHandler_Handle_ValidCommand_ReturnsSuccess()
+public class CreateVenueCommandHandlerTests
 {
-    // Arrange
-    var mockRepository = new Mock<IVenueRepository>();
-    var mockMapper = new Mock<IMapper>();
-    var handler = new CreateVenueCommandHandler(mockRepository.Object, mockMapper.Object);
+    private GloboTicketDbContext _context;
+    private VenueRepository _repository;
+    private CreateVenueCommandHandler _handler;
+    private Guid _tenantId;
     
-    var command = new CreateVenueCommand
+    public CreateVenueCommandHandlerTests()
     {
-        Name = "Madison Square Garden",
-        Address = "123 Broadway, New York, NY 10001",
-        TenantId = _tenantId
-    };
+        _tenantId = Guid.NewGuid();
+        var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+            
+        _context = new GloboTicketDbContext(options, MockTenantContext(_tenantId));
+        _repository = new VenueRepository(_context);
+        _handler = new CreateVenueCommandHandler(_repository, MockMapper.Object);
+    }
     
-    mockRepository.Setup(r => r.ExistsByNameAsync(command.Name, command.TenantId))
-        .ReturnsAsync(false);
-    
-    var expectedVenue = new Venue(command.Name, ParseAddress(command.Address), command.TenantId);
-    var expectedDto = new VenueDto { Id = expectedVenue.Id, Name = expectedVenue.Name };
-    
-    mockMapper.Setup(m => m.Map<VenueDto>(It.IsAny<Venue>()))
-        .Returns(expectedDto);
-    
-    // Act
-    var result = await handler.Handle(command, CancellationToken.None);
-    
-    // Assert
-    Assert.That(result, Is.Not.Null);
-    Assert.That(result.Id, Is.Not.EqualTo(Guid.Empty));
-    Assert.That(result.Name, Is.EqualTo(command.Name));
-    
-    mockRepository.Verify(r => r.AddAsync(It.IsAny<Venue>()), Times.Once);
-    mockRepository.Verify(r => r.SaveChangesAsync(), Times.Once);
-}
-
-[Test]
-public async Task CreateVenueCommandHandler_DuplicateName_ThrowsValidationException()
-{
-    // Arrange
-    var mockRepository = new Mock<IVenueRepository>();
-    var handler = new CreateVenueCommandHandler(mockRepository.Object, MockMapper.Object);
-    
-    var command = new CreateVenueCommand
+    [Fact]
+    public async Task CreateVenueCommandHandler_Handle_ValidCommand_ReturnsSuccess()
     {
-        Name = "Existing Venue",
-        Address = "123 Broadway, New York, NY 10001",
-        TenantId = _tenantId
-    };
+        // Arrange
+        var command = new CreateVenueCommand
+        {
+            Name = "Madison Square Garden",
+            Address = "123 Broadway, New York, NY 10001",
+            TenantId = _tenantId
+        };
+        
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().NotBe(Guid.Empty);
+        result.Name.Should().Be(command.Name);
+        
+        // Verify persistence
+        var savedVenue = await _context.Venues.SingleOrDefaultAsync(v => v.Id == result.Id);
+        savedVenue.Should().NotBeNull();
+        savedVenue!.Name.Should().Be(command.Name);
+    }
     
-    mockRepository.Setup(r => r.ExistsByNameAsync(command.Name, command.TenantId))
-        .ReturnsAsync(true);
-    
-    // Act & Assert
-    var exception = Assert.ThrowsAsync<ValidationException>(async () =>
+    [Fact]
+    public async Task CreateVenueCommandHandler_DuplicateName_ThrowsValidationException()
     {
-        await handler.Handle(command, CancellationToken.None);
-    });
+        // Arrange
+        var existingVenue = GivenVenue(name: "Existing Venue");
+        await _repository.AddAsync(existingVenue);
+        await _context.SaveChangesAsync();
+        
+        var command = new CreateVenueCommand
+        {
+            Name = "Existing Venue",
+            Address = "123 Broadway, New York, NY 10001",
+            TenantId = _tenantId
+        };
+        
+        // Act & Assert
+        var act = async () => await _handler.Handle(command, CancellationToken.None);
+        
+        await act.Should().ThrowAsync<ValidationException>()
+            .WithMessage("*already exists*");
+    }
     
-    Assert.That(exception.Message, Does.Contain("already exists"));
+    private Venue GivenVenue(string name = "Test Venue", Guid? tenantId = null)
+    {
+        return new Venue(name, CreateTestAddress(), tenantId ?? _tenantId);
+    }
 }
 ```
 
 ### Query Handler Tests
-**Test read-only queries and data retrieval logic.**
+**Test read-only queries and data retrieval logic using in-memory database.**
 
 ```csharp
-[Test]
-public async Task GetVenuesQueryHandler_Handle_ReturnsActiveVenues()
+public class GetVenuesQueryHandlerTests
 {
-    // Arrange
-    var mockRepository = new Mock<IVenueRepository>();
-    var handler = new GetVenuesQueryHandler(mockRepository.Object);
+    private GloboTicketDbContext _context;
+    private VenueRepository _repository;
+    private GetVenuesQueryHandler _handler;
+    private Guid _tenantId;
     
-    var venues = new List<Venue>
+    public GetVenuesQueryHandlerTests()
     {
-        new Venue("Venue 1", CreateTestAddress(), _tenantId),
-        new Venue("Venue 2", CreateTestAddress(), _tenantId)
-    };
+        _tenantId = Guid.NewGuid();
+        var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+            
+        _context = new GloboTicketDbContext(options, MockTenantContext(_tenantId));
+        _repository = new VenueRepository(_context);
+        _handler = new GetVenuesQueryHandler(_repository);
+    }
     
-    mockRepository.Setup(r => r.GetActiveVenuesAsync(_tenantId))
-        .ReturnsAsync(venues);
+    [Fact]
+    public async Task GetVenuesQueryHandler_Handle_ReturnsActiveVenues()
+    {
+        // Arrange
+        var venue1 = GivenVenue(name: "Venue 1", isActive: true);
+        var venue2 = GivenVenue(name: "Venue 2", isActive: true);
+        var inactiveVenue = GivenVenue(name: "Inactive Venue", isActive: false);
+        
+        await _repository.AddAsync(venue1);
+        await _repository.AddAsync(venue2);
+        await _repository.AddAsync(inactiveVenue);
+        await _context.SaveChangesAsync();
+        
+        var query = new GetVenuesQuery { TenantId = _tenantId };
+        
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+        
+        // Assert
+        result.Should().NotBeNull();
+        result.Count.Should().Be(2);
+        result.Should().Contain(v => v.Name == "Venue 1");
+        result.Should().NotContain(v => v.Name == "Inactive Venue");
+    }
     
-    var query = new GetVenuesQuery { TenantId = _tenantId };
-    
-    // Act
-    var result = await handler.Handle(query, CancellationToken.None);
-    
-    // Assert
-    Assert.That(result, Is.Not.Null);
-    Assert.That(result.Count, Is.EqualTo(2));
-    Assert.That(result.First().Name, Is.EqualTo("Venue 1"));
+    private Venue GivenVenue(string name = "Test Venue", bool isActive = true, Guid? tenantId = null)
+    {
+        return new Venue(name, CreateTestAddress(), tenantId ?? _tenantId)
+        {
+            IsActive = isActive
+        };
+    }
 }
 ```
+
+**Note**: The `Given` prefix in helper methods (e.g., `GivenVenue`) is a test data helper pattern. This is different from "Given-When-Then" comments used in test structure. See [Test Data Helpers](test-data-helpers.md) for details on the `Given` helper method pattern.
 
