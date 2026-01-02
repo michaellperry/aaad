@@ -5,16 +5,7 @@ description: Provides TDD patterns, AAA structure, and testing strategies for .N
 
 # Test-Driven Development Patterns
 
-This skill provides comprehensive TDD patterns and testing strategies for .NET applications, supporting the Red-Green-Refactor cycle.
-
-## Quick Reference
-
-- **Test Structure**: Use AAA pattern (Arrange-Act-Assert) - see [Test Structure](#test-structure-and-organization)
-- **Unit Testing**: Domain logic, entities, value objects - see [patterns/unit-testing.md](patterns/unit-testing.md)
-- **Mocking**: Dependency management and mocking strategies - see [patterns/mocking.md](patterns/mocking.md)
-- **Integration Testing**: API endpoints and database tests - see [patterns/integration-testing.md](patterns/integration-testing.md)
-- **Test Builders**: Object Mother pattern and test data builders - see [patterns/test-builders.md](patterns/test-builders.md)
-- **Performance**: Test parallelization, cleanup, and CI/CD - see [patterns/performance.md](patterns/performance.md)
+This skill provides TDD patterns and testing strategies for .NET applications, supporting the Red-Green-Refactor cycle.
 
 ## Test Structure and Organization
 
@@ -93,9 +84,8 @@ public async Task VenueService_CreateVenue_ValidData_ReturnsCreatedVenue()
         TenantId = _tenantId
     };
     
-    // And our repository is empty (no existing venues)
-    _venueRepository.Setup(r => r.ExistsByNameAsync(It.IsAny<string>(), It.IsAny<Guid>()))
-        .ReturnsAsync(false);
+    // And our in-memory database is empty (no existing venues)
+    // (Setup occurs in [SetUp] method with UseInMemoryDatabase)
     
     // When we create the venue
     var result = await _venueService.CreateVenueAsync(createVenueDto);
@@ -105,19 +95,19 @@ public async Task VenueService_CreateVenue_ValidData_ReturnsCreatedVenue()
     Assert.That(result.Name, Is.EqualTo(createVenueDto.Name));
     Assert.That(result.Id, Is.Not.EqualTo(Guid.Empty));
     
-    // And the repository should have been called to save the venue
-    _venueRepository.Verify(r => r.AddAsync(It.IsAny<Venue>()), Times.Once);
+    // And the venue should be persisted in the database
+    var savedVenue = await _context.Venues.SingleOrDefaultAsync(v => v.Id == result.Id);
+    Assert.That(savedVenue, Is.Not.Null);
+    Assert.That(savedVenue!.Name, Is.EqualTo(createVenueDto.Name));
 }
 ```
 
 ## Detailed Patterns
 
-For comprehensive examples and detailed guidance, see the pattern files:
+For comprehensive examples and detailed guidance, see:
 
 - **[Unit Testing](patterns/unit-testing.md)**: Testing entities, value objects, and domain logic
-- **[Mocking](patterns/mocking.md)**: Dependency management, interface-based design, and mocking strategies
+- **[Mocking](patterns/mocking.md)**: Prefer in-memory database for repositories; mock only external dependencies
 - **[Integration Testing](patterns/integration-testing.md)**: API endpoint tests and database integration tests
 - **[Test Builders](patterns/test-builders.md)**: Object Mother pattern and reusable test data builders
 - **[Performance](patterns/performance.md)**: Test parallelization, cleanup strategies, and CI/CD patterns
-
-Following these TDD patterns ensures comprehensive test coverage, maintainable test suites, and reliable feedback during development.
