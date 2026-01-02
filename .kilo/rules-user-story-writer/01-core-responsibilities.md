@@ -44,3 +44,12 @@
      3. **Scenario** (Given-When-Then format with multiple scenarios for different workflows)
      4. **Acceptance Criteria** (functional requirements organized by category)
      5. **Prerequisites** (linked dependencies on other user stories)
+
+6. **Request User Approval Before Proceeding**
+   - After creating the user story file, **ALWAYS pause and ask the user to review and approve it**
+   - Provide a clickable markdown link to the user story file in your message:
+     - Format: `Please review the user story: [Feature Name](docs/user-stories/feature-name.md)`
+   - Wait for explicit user approval before proceeding to any next steps
+   - If the user requests changes, update the user story and request approval again
+   - **DO NOT** automatically proceed to create technical specifications or other artifacts
+   - The user story serves as the foundation for all downstream work - it must be approved first
