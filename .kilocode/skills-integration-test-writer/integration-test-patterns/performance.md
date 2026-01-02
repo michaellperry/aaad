@@ -2,7 +2,7 @@
 
 ## Test Parallelization
 
-**Run tests in parallel for faster feedback.**
+**Run tests in parallel for faster feedback. Integration tests can safely run in parallel when using isolated tenant IDs and fresh database contexts.**
 
 ```csharp
 // In test project file (.csproj)
@@ -12,22 +12,24 @@
 
 // In test class
 [Parallelizable(ParallelScope.All)]
-public class VenueServiceTests
+public class VenueServiceIntegrationTests
 {
     // Tests will run in parallel
+    // Each test uses unique tenant ID via _fixture.GenerateRandomTenantId()
 }
 ```
 
 ## Test Cleanup
 
-**Ensure proper cleanup between tests.**
+**Ensure proper cleanup between tests to prevent data pollution in the shared database container.**
 
 ```csharp
 [Test]
 public async Task TestCleanupExample()
 {
     // Arrange
-    var testVenue = await CreateTestDataAsync();
+    var tenantId = _fixture.GenerateRandomTenantId();
+    var testVenue = await CreateTestDataAsync(tenantId);
     
     try
     {
@@ -39,15 +41,15 @@ public async Task TestCleanupExample()
     }
     finally
     {
-        // Cleanup - ensure test data is removed
-        await CleanupTestDataAsync(testVenue.Id);
+        // Cleanup - ensure test data is removed from shared container
+        await CleanupTestDataAsync(testVenue.Id, tenantId);
     }
 }
 ```
 
 ## Test Categorization for CI/CD
 
-**Structure tests for CI/CD pipelines using traits. Note: This is about organizing existing tests, not TDD patterns.**
+**Structure tests for CI/CD pipelines using traits to control which tests run in different environments.**
 
 ```csharp
 // Different test categories for CI/CD filtering
@@ -55,7 +57,7 @@ public async Task TestCleanupExample()
 public class VenueDomainTests { /* Fast unit tests using in-memory database */ }
 
 [Trait("Category", "Integration")]
-public class VenueDatabaseTests { /* Integration tests using Testcontainers - created separately from TDD */ }
+public class VenueDatabaseTests { /* Integration tests using Testcontainers */ }
 
 [Trait("Category", "Slow")]
 public class VenuePerformanceTests { /* Performance tests */ }
@@ -63,5 +65,6 @@ public class VenuePerformanceTests { /* Performance tests */ }
 // Run appropriate test categories in CI
 dotnet test --filter "Category!=Slow"  // Fast CI builds
 dotnet test --filter "Category=Slow"   // Nightly performance tests
+dotnet test --filter "Category=Integration"  // Integration tests only
 ```
 

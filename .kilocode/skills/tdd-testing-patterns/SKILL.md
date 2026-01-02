@@ -115,6 +115,5 @@ For comprehensive examples and detailed guidance, see:
 - **[Unit Testing](patterns/unit-testing.md)**: Testing entities, value objects, and domain logic
 - **[Mocking](patterns/mocking.md)**: Prefer in-memory database for repositories; mock only external dependencies
 - **[Test Data Helpers](patterns/test-data-helpers.md)**: Given helper methods with default parameters for creating test data
-- **[Performance](patterns/performance.md)**: Test parallelization, cleanup strategies, and CI/CD patterns
 
 **Note**: Integration testing patterns are separate from TDD. Integration tests follow implementation and use Testcontainers with real SQL Server. See the `integration-test-writer` mode and `integration-test-patterns` skill for integration testing guidance.

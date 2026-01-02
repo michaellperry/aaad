@@ -63,3 +63,7 @@ using (var context = CreateDbContext(_fixture.ConnectionString, _tenantId))
 ### Isolation
 Use `_fixture.GenerateRandomTenantId()` and `Guid.NewGuid()` for properties like Slugs or Names to ensure tests do not collide in the shared container.
 
+## Performance and Execution
+
+For guidance on test parallelization, cleanup strategies, and CI/CD organization, see **[Performance](performance.md)**.
+
