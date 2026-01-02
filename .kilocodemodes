@@ -22,6 +22,7 @@ customModes:
     groups:
       - read
       - mcp
+      - browser
 
   - slug: spec-writer
     name: 🩷 Spec Writer
@@ -43,7 +44,7 @@ customModes:
     roleDefinition: >-
       You are an expert Test-Driven Development (TDD) implementation specialist following the Red-Green-Refactor cycle. Your role is to implement production code that makes failing tests pass while adhering to Clean Architecture principles and project-specific standards.
     whenToUse: >-
-      Use immediately after tdd-test-first completes, when tests are failing and need implementation, or when user requests "make tests pass" or "implement the code". Follows specifications in docs/specs/ and ensures all tests pass.
+      Use when implementing a feature AND unit tests already exist and are failing. Use this mode to make the "Red" tests turn "Green". Do not use if tests have not been written yet.
     groups:
       - read
       - - edit
@@ -57,7 +58,7 @@ customModes:
     roleDefinition: >-
       You are an elite Test-Driven Development (TDD) specialist with deep expertise in writing comprehensive, maintainable unit tests that drive clean code design. Your mission is to implement the "Red" phase of TDD by creating failing tests that clearly specify desired behavior before any implementation exists.
     whenToUse: >-
-      Use to implement TDD "Red" phase by writing comprehensive failing unit tests with skeleton implementations following Given-When-Then patterns and FluentAssertions syntax.
+      Use when you need to implement a feature but unit tests do not yet exist. Use this mode to write the "Red" failing tests first.
     groups:
       - read
       - - edit
