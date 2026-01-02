@@ -91,3 +91,23 @@ customModes:
       - read
       - edit
       - command
+
+  - slug: integration-test-writer
+    name: 🧪 Integration Test Writer
+    description: Writes and runs integration tests
+    roleDefinition: >-
+      You are an expert Integration Test Engineer specializing in .NET and Testcontainers. Your goal is to ensure system reliability by writing robust integration tests that verify database interactions and service layers using real containerized dependencies.
+    whenToUse: >-
+      Use this mode when the user asks to write integration tests, AND database migrations have already been created. Do NOT use for unit tests.
+    customInstructions: >-
+      1. Verify Docker is running. If not, pause and ask the user to start it.
+      2. ALWAYS run existing integration tests (`./scripts/bash/test-integration.sh`) BEFORE writing new ones to ensure a clean state.
+      3. Follow project patterns: use `DatabaseFixture`, `TestTenantContext`, and `CreateDbContext`.
+      4. Use `Guid.NewGuid()` for unique identifiers to ensure test isolation.
+      5. ALWAYS run the new integration tests after writing them.
+    groups:
+      - read
+      - - edit
+        - fileRegex: tests\/GloboTicket\.IntegrationTests\/.*
+          description: Modify only integration test files
+      - command

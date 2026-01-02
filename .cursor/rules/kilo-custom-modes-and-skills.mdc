@@ -13,6 +13,7 @@ Custom modes tailor Kilo's behavior to specific tasks or workflows.
 ### Configuration
 - **Location**: Define project-specific modes in `.kilocodemodes` (YAML or JSON) in the project root.
 - **Format**: Prefer **YAML** for better readability and comment support.
+- **Preservation**: When adding a new mode, ensure that the existing contents of `.kilocodemodes` are preserved.
 
 ### Key Properties
 - **`slug`**: Unique identifier (e.g., `docs-writer`, `test-engineer`). Kebab-case recommended.
