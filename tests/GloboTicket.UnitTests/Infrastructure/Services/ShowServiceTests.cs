@@ -6,7 +6,7 @@ using GloboTicket.Infrastructure.Services;
 using GloboTicket.UnitTests.Helpers;
 using Microsoft.EntityFrameworkCore;
 
-namespace GloboTicket.UnitTests.Infrastructure;
+namespace GloboTicket.UnitTests.Infrastructure.Services;
 
 /// <summary>
 /// Unit tests for ShowService using EF Core In-Memory Provider.
