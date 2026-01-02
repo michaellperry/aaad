@@ -70,13 +70,15 @@ Skills provide Kilo with specific knowledge or capabilities, often documenting b
 
 ### SKILL.md Format
 - **Frontmatter**: Must include `name` and `description` in YAML format.
+  - **`name`**: Maximum 64 characters. Must contain only lowercase letters, numbers, and hyphens. Cannot contain XML tags or reserved words.
+  - **`description`**: Maximum 1024 characters, non-empty. Cannot contain XML tags. Must be written in **third person** (e.g., "Processes Excel files" not "I can help you process Excel files").
 - **Content**: Standard Markdown. Use clear headings and code blocks.
 
 ### Example SKILL.md
 ```markdown
 ---
 name: ef-core-patterns
-description: Best practices for Entity Framework Core. Use when configuring entities, relationships, or database contexts.
+description: Configures Entity Framework Core entities using Fluent API patterns. Use when configuring entities, relationships, or database contexts.
 ---
 
 # EF Core Patterns
@@ -97,18 +99,44 @@ public void Configure(EntityTypeBuilder<Venue> builder)
 
 1.  **Description Engineering**:
     *   The `description` is the primary way the model decides to use the skill (semantic trigger).
+    *   **Write in third person**: "Processes Excel files" not "I can help you" or "You can use this".
     *   Include **trigger terms** and specific verbs (e.g., "Use when reviewing PRs for security" vs just "Security").
-    *   Format: "Use this skill when [user action] or [specific keywords]."
+    *   Format: Describe both **what the skill does** and **when to use it** (e.g., "Extract text and tables from PDF files. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.").
+    *   Be specific: Avoid vague descriptions like "Helps with documents" or "Processes data".
 
-2.  **Progressive Disclosure**:
-    *   Keep `SKILL.md` as a lightweight entry point.
-    *   Move detailed documentation, large examples, or reference data into separate files (e.g., `PATTERNS.md`, `examples/`) within the skill directory.
+2.  **Naming Conventions**:
+    *   Use **kebab-case** for skill directory names (e.g., `processing-pdfs`, `analyzing-spreadsheets`).
+    *   **Prefer gerund form** (verb + -ing) for clarity: `processing-pdfs` over `pdf-processing`, `testing-code` over `code-testing`.
+    *   Avoid vague names: `helper`, `utils`, `tools`, `documents`, `data`.
+    *   Use consistent naming patterns across your skill collection.
+
+3.  **Concise is Key**:
+    *   Assume the model is already smart—only add context it doesn't have.
+    *   Challenge each piece of information: "Does the model really need this explanation?"
+    *   Keep instructions focused and avoid over-explaining basic concepts.
+
+4.  **Progressive Disclosure**:
+    *   Keep `SKILL.md` as a lightweight entry point (under 500 lines for optimal performance).
+    *   Move detailed documentation, large examples, or reference data into separate files (e.g., `PATTERNS.md`, `examples/`, `reference/`) within the skill directory.
     *   Reference these files in `SKILL.md` so the model can read them on demand.
+    *   Split content when approaching the 500-line limit.
 
-3.  **Focus**: Keep skills focused on a single topic (e.g., "testing-patterns", "api-conventions").
+5.  **Set Appropriate Degrees of Freedom**:
+    *   **High freedom** (text-based instructions): Use when multiple approaches are valid, decisions depend on context, or heuristics guide the approach (e.g., code reviews).
+    *   **Medium freedom** (pseudocode or scripts with parameters): Use when a preferred pattern exists but some variation is acceptable (e.g., report generation templates).
+    *   **Low freedom** (specific scripts, few/no parameters): Use when operations are fragile, consistency is critical, or a specific sequence must be followed (e.g., database migrations).
 
-4.  **Examples**: Provide clear "Good" and "Bad" code examples to demonstrate the desired pattern.
+6.  **Focus**: Keep skills focused on a single topic (e.g., "testing-patterns", "api-conventions").
 
-5.  **Mode-Specific**: Place technical coding patterns in `skills-code/` to avoid cluttering other modes (like `architect` or `ask`).
+7.  **Examples**: Provide clear "Good" and "Bad" code examples to demonstrate the desired pattern.
 
-6.  **Naming**: Use kebab-case for skill directory names.
+8.  **Mode-Specific**: Place technical coding patterns in `skills-code/` to avoid cluttering other modes (like `architect` or `ask`).
+
+9.  **Code and Scripts**:
+    *   Use forward slashes (`reference/guide.md`) for file paths, not backslashes.
+    *   Name files descriptively: `form_validation_rules.md` not `doc2.md`.
+    *   Don't assume packages are installed—explicitly list required packages and installation steps.
+    *   Prefer scripts for deterministic operations rather than asking the model to generate validation code.
+    *   Make execution intent clear: "Run `analyze_form.py`" (execute) vs "See `analyze_form.py`" (reference).
+
+10. **Testing**: Test skills with all models you plan to use (Haiku, Sonnet, Opus) to ensure effectiveness across different model capabilities.

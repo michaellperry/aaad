@@ -1,6 +1,6 @@
 ---
 name: spec-writing-ui
-description: Use this skill when specifying user interface designs, components, and interaction flows.
+description: Specifies user interface designs, React components, and interaction flows following component-based architecture. Use when designing UI specifications, defining component props and state, or documenting user interaction flows for GloboTicket features.
 ---
 
 # User Interface Specification

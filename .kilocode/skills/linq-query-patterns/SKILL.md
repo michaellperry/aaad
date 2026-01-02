@@ -1,6 +1,6 @@
 ---
 name: linq-query-patterns
-description: Use this skill when writing LINQ queries for data access or implementing service methods that interact with the database.
+description: Enforces LINQ query syntax patterns, separation of concerns, and async execution for data access. Use when writing repository methods, implementing LINQ queries, or refactoring data access code to follow project conventions.
 ---
 
 # LINQ Query Patterns

@@ -1,6 +1,6 @@
 ---
 name: spec-writing-openapi
-description: Use this skill when writing technical specifications for API endpoints and OpenAPI/Swagger definitions.
+description: Writes complete OpenAPI 3.0 specifications for API endpoints following RESTful conventions. Use when creating new API endpoints, documenting API contracts, or defining request/response schemas for GloboTicket APIs.
 ---
 
 # OpenAPI Specification

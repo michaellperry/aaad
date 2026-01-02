@@ -1,6 +1,6 @@
 ---
 name: user-story-acceptance-criteria
-description: Use this skill when writing or reviewing user stories and acceptance criteria.
+description: Writes and reviews user stories with acceptance criteria following standard categories. Use when creating user stories, defining acceptance criteria, or reviewing story completeness for GloboTicket features.
 ---
 
 # Acceptance Criteria Categories

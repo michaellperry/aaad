@@ -1,6 +1,6 @@
 ---
 name: spec-writing-database
-description: Use this skill when writing technical specifications for database schemas and ER diagrams.
+description: Writes database schema specifications using Mermaid ER diagrams and defines table structures for multi-tenant entities. Use when designing database schemas, creating entity-relationship diagrams, or specifying database constraints for GloboTicket features.
 ---
 
 # Database Schema

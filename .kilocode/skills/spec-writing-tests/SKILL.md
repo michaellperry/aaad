@@ -1,6 +1,6 @@
 ---
 name: spec-writing-tests
-description: Use this skill when defining test scenarios and mapping acceptance criteria to tests.
+description: Defines test scenarios using Given-When-Then format and maps tests to acceptance criteria. Use when writing technical specifications, defining unit and integration test requirements, or ensuring test coverage for acceptance criteria.
 ---
 
 # Test Scenarios

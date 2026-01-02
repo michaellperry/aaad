@@ -1,6 +1,6 @@
 ---
 name: testing-ef-core-in-memory
-description: Use this skill when writing unit tests that require an in-memory database context.
+description: Sets up Entity Framework Core in-memory database contexts for unit testing. Use when writing repository tests, testing multi-tenant queries, or validating EF Core query filters without mocking DbContext.
 ---
 
 # Database Testing with EF Core In-Memory Provider
