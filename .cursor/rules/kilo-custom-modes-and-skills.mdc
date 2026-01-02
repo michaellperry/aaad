@@ -1,0 +1,113 @@
+---
+description: Best practices for creating Kilo custom modes and skills
+alwaysApply: false
+---
+# Kilo Custom Modes and Skills
+
+This rule captures best practices for creating and maintaining Kilo custom modes and skills.
+
+## Custom Modes
+
+Custom modes tailor Kilo's behavior to specific tasks or workflows.
+
+### Configuration
+- **Location**: Define project-specific modes in `.kilocodemodes` (YAML or JSON) in the project root.
+- **Format**: Prefer **YAML** for better readability and comment support.
+
+### Key Properties
+- **`slug`**: Unique identifier (e.g., `docs-writer`, `test-engineer`). Kebab-case recommended.
+- **`name`**: Human-readable display name (e.g., "📝 Documentation Writer").
+- **`roleDefinition`**: Defines Kilo's identity/persona (e.g., "You are a technical writer specializing in..."). Critical for setting the tone.
+- **`groups`**: Defines tool/file access.
+  - Common groups: `read`, `edit`, `browser`, `command`.
+  - **File Restrictions**: Use `fileRegex` within the `edit` group to limit write access (e.g., only `.md` files).
+- **`customInstructions`**: Specific behavioral rules.
+- **`whenToUse`**: Guidance for Kilo's Orchestrator mode to know when to select this mode.
+  - **Best Practice**: Be specific about the *task type* to distinguish it from default modes.
+  - **Example**: "Use this mode when the user specifically asks to write or refactor documentation, but NOT for general coding questions."
+
+### Example (YAML)
+```yaml
+customModes:
+  - slug: docs-writer
+    name: 📝 Documentation Writer
+    description: Specialized for writing and editing documentation.
+    roleDefinition: You are a technical writer ensuring clarity and accuracy.
+    whenToUse: Use this mode when the user asks to write or update documentation.
+    groups:
+      - read
+      - - edit
+        - fileRegex: \.md$
+          description: Markdown files only
+      - browser
+```
+
+### Workflow & Sequencing (Advanced)
+The Orchestrator selects modes based on the current context. To enforce a specific workflow (e.g., Story -> Tests -> Code), use `whenToUse` to check for prerequisites.
+
+*   **Pattern**: "Use this mode when [Goal], AND [Prerequisites are missing]."
+*   **Example (TDD Writer)**:
+    *   `whenToUse`: "Use this mode when the user wants to implement a feature, but **unit tests do not yet exist**. Do not use if tests are already written."
+*   **Example (Code Implementation)**:
+    *   `whenToUse`: "Use this mode when implementing a feature **and unit tests already exist**."
+
+This forces the Orchestrator to "fail over" to the upstream mode (Test Writer) first, ensuring constraints are generated before implementation begins.
+
+### Mode-Specific Rules
+- Place mode-specific instructions in `.kilo/rules-{slug}/`.
+- Files in this directory are read recursively and appended to the prompt when the mode is active.
+
+## Skills
+
+Skills provide Kilo with specific knowledge or capabilities, often documenting best practices or patterns.
+
+### Directory Structure
+- **Global Skills**: `.kilocode/skills/<skill-name>/SKILL.md`
+  - Available to all modes (unless restricted).
+- **Mode-Specific Skills**: `.kilocode/skills-<mode-slug>/<skill-name>/SKILL.md`
+  - Only available when the specific mode is active (e.g., `.kilocode/skills-code/` for the `code` mode).
+
+### SKILL.md Format
+- **Frontmatter**: Must include `name` and `description` in YAML format.
+- **Content**: Standard Markdown. Use clear headings and code blocks.
+
+### Example SKILL.md
+```markdown
+---
+name: ef-core-patterns
+description: Best practices for Entity Framework Core. Use when configuring entities, relationships, or database contexts.
+---
+
+# EF Core Patterns
+
+## Entity Configuration
+Always use Fluent API in `IEntityTypeConfiguration<T>` classes, not data annotations.
+
+```csharp
+public void Configure(EntityTypeBuilder<Venue> builder)
+{
+    builder.HasKey(v => v.Id);
+    // ...
+}
+```
+```
+
+### Best Practices for Skills
+
+1.  **Description Engineering**:
+    *   The `description` is the primary way the model decides to use the skill (semantic trigger).
+    *   Include **trigger terms** and specific verbs (e.g., "Use when reviewing PRs for security" vs just "Security").
+    *   Format: "Use this skill when [user action] or [specific keywords]."
+
+2.  **Progressive Disclosure**:
+    *   Keep `SKILL.md` as a lightweight entry point.
+    *   Move detailed documentation, large examples, or reference data into separate files (e.g., `PATTERNS.md`, `examples/`) within the skill directory.
+    *   Reference these files in `SKILL.md` so the model can read them on demand.
+
+3.  **Focus**: Keep skills focused on a single topic (e.g., "testing-patterns", "api-conventions").
+
+4.  **Examples**: Provide clear "Good" and "Bad" code examples to demonstrate the desired pattern.
+
+5.  **Mode-Specific**: Place technical coding patterns in `skills-code/` to avoid cluttering other modes (like `architect` or `ask`).
+
+6.  **Naming**: Use kebab-case for skill directory names.
