@@ -15,6 +15,9 @@ This skill provides TDD patterns and testing strategies for .NET applications, s
 
 ## Test Structure and Organization
 
+### Unit Test Project
+**Place all unit tests in the `GloboTicket.UnitTests` project.**
+
 ### AAA Pattern (Arrange-Act-Assert)
 **Structure every test using the AAA pattern for clarity and maintainability.**
 
