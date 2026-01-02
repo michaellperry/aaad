@@ -1,11 +1,17 @@
 ---
 name: tdd-testing-patterns
-description: Provides TDD patterns, AAA structure, and testing strategies for .NET applications. Use when writing unit tests, integration tests, or implementing test-driven development workflows in GloboTicket.
+description: Provides TDD patterns, AAA structure, and testing strategies for .NET applications. Use when writing unit tests or implementing test-driven development workflows in GloboTicket. Note: TDD is about unit tests only; integration tests follow implementation and are handled separately.
 ---
 
 # Test-Driven Development Patterns
 
 This skill provides TDD patterns and testing strategies for .NET applications, supporting the Red-Green-Refactor cycle.
+
+## TDD Philosophy
+
+**TDD is about unit tests only.** Unit tests drive implementation through the red-green-refactor cycle. They use real repositories with EF Core In-Memory Provider for fast, isolated testing of business logic.
+
+**Integration tests follow implementation.** They use real repositories with SQL Server (via Testcontainers) and migrated databases to verify migrations, complex queries, and system integration. Integration tests are valuable but separate from the TDD workflow.
 
 ## Test Structure and Organization
 
@@ -108,6 +114,7 @@ For comprehensive examples and detailed guidance, see:
 
 - **[Unit Testing](patterns/unit-testing.md)**: Testing entities, value objects, and domain logic
 - **[Mocking](patterns/mocking.md)**: Prefer in-memory database for repositories; mock only external dependencies
-- **[Integration Testing](patterns/integration-testing.md)**: API endpoint tests and database integration tests
 - **[Test Builders](patterns/test-builders.md)**: Object Mother pattern and reusable test data builders
 - **[Performance](patterns/performance.md)**: Test parallelization, cleanup strategies, and CI/CD patterns
+
+**Note**: Integration testing patterns are separate from TDD. Integration tests follow implementation and use Testcontainers with real SQL Server. See the `integration-test-writer` mode and `integration-test-patterns` skill for integration testing guidance.

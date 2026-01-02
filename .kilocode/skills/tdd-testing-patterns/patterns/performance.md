@@ -45,17 +45,17 @@ public async Task TestCleanupExample()
 }
 ```
 
-## Continuous Integration Testing
+## Test Categorization for CI/CD
 
-**Structure tests for CI/CD pipelines.**
+**Structure tests for CI/CD pipelines using traits. Note: This is about organizing existing tests, not TDD patterns.**
 
 ```csharp
-// Different test categories
+// Different test categories for CI/CD filtering
 [Trait("Category", "Unit")]
-public class VenueDomainTests { /* Fast unit tests */ }
+public class VenueDomainTests { /* Fast unit tests using in-memory database */ }
 
 [Trait("Category", "Integration")]
-public class VenueRepositoryTests { /* Database integration tests */ }
+public class VenueDatabaseTests { /* Integration tests using Testcontainers - created separately from TDD */ }
 
 [Trait("Category", "Slow")]
 public class VenuePerformanceTests { /* Performance tests */ }

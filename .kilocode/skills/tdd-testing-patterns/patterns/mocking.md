@@ -2,7 +2,7 @@
 
 ## Prefer In-Memory Database for Repository Tests
 
-**Use actual repositories backed by in-memory database providers for all unit tests. This provides better integration coverage and catches real database behavior issues.**
+**Use actual repositories backed by in-memory database providers for all unit tests. This provides better coverage of database behavior and catches real EF Core query issues while maintaining fast unit test execution.**
 
 ```csharp
 // ✅ Good - In-memory database with actual repository
