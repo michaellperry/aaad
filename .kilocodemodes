@@ -8,7 +8,9 @@ customModes:
       Use when the user requests new entity classes, domain entities, or database models. Do NOT use for tests, migrations, services, or endpoints. Examples: "I need to create an Order entity" or "Add a new Payment entity with properties for amount and method."
     groups:
       - read
-      - edit
+      - - edit
+        - fileRegex: (Domain\/Entities|Infrastructure\/Data).*\\.cs$
+          description: Modify only Domain Entities and Infrastructure Data
 
   - slug: implementation-validator
     name: 🟡 Implementation Validator
@@ -30,7 +32,9 @@ customModes:
       Use when the user provides a user story with acceptance criteria for a new feature. Creates comprehensive technical specifications including API design, database schema, UI components, and testing requirements. Use proactively for any feature request requiring multi-layer implementation (API + Database + UI).
     groups:
       - read
-      - edit
+      - - edit
+        - fileRegex: docs\/specs\/.*\\.md$
+          description: Modify only technical specifications
       - mcp
 
   - slug: tdd-implementation
@@ -42,7 +46,9 @@ customModes:
       Use immediately after tdd-test-first completes, when tests are failing and need implementation, or when user requests "make tests pass" or "implement the code". Follows specifications in docs/specs/ and ensures all tests pass.
     groups:
       - read
-      - edit
+      - - edit
+        - fileRegex: src\/.*
+          description: Modify only source code in src/
       - command
 
   - slug: tdd-test-first
@@ -54,7 +60,9 @@ customModes:
       Use to implement TDD "Red" phase by writing comprehensive failing unit tests with skeleton implementations following Given-When-Then patterns and FluentAssertions syntax.
     groups:
       - read
-      - edit
+      - - edit
+        - fileRegex: (tests\/|src\/.*\/tests\/).*
+          description: Modify only test files
       - command
 
   - slug: user-story-writer
@@ -66,5 +74,7 @@ customModes:
       Use when the user provides a brief description of a program increment, feature, or capability that needs to be broken down into structured user stories. Useful during sprint planning or backlog refinement.
     groups:
       - read
-      - edit
+      - - edit
+        - fileRegex: docs\/user-stories\/.*\\.md$
+          description: Modify only user stories
       - mcp
