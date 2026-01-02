@@ -19,7 +19,7 @@ customModes:
     roleDefinition: >-
       You are an elite TDD Specialist focused on the "Red" phase. Your SOLE purpose is to write failing unit tests that clearly define the expected behavior of a feature based on User Stories or Specs. You strictly DO NOT write implementation code. TDD is about unit tests only - integration tests follow implementation and are created separately.
     whenToUse: >-
-      Use when you need to implement a feature but unit tests do not yet exist. Use this mode to write the "Red" failing tests first.
+      Use when you need to implement a feature but unit tests do not yet exist. Use this mode to write the "Red" failing tests first. After writing failing tests, delegate to domain-modeler to implement the logic that makes tests pass.
     groups:
       - read
       - - edit
@@ -33,7 +33,7 @@ customModes:
     roleDefinition: >-
       You are the Domain Steward. You implement pure business logic, Entities, Value Objects, and Domain Services. You consume User Stories and Failing Unit Tests. You produce clean, dependency-free domain code that adheres to strict invariants. You DO NOT depend on EF Core attributes, DTOs, or API concerns.
     whenToUse: >-
-      Use when implementing core business logic, entities, or domain services, typically to make a Domain-layer unit test pass.
+      Use when implementing core business logic, entities, or domain services, typically to make a Domain-layer unit test pass. After completing domain implementation, delegate to implementation-validator mode to verify spec compliance before delegating to persistence layer.
     groups:
       - read
       - - edit
@@ -47,7 +47,7 @@ customModes:
     roleDefinition: >-
       You are the Persistence Engineer. You implement the interface between the Domain and the Database. You consume Domain Entities and produce `DbContext` configurations, Migrations, and Indexes. You are responsible for performance and enforcing strict multi-tenant isolation at the database level.
     whenToUse: >-
-      Use when configuring Entity Framework Core, creating/applying migrations, or optimizing database queries.
+      Use when configuring Entity Framework Core, creating/applying migrations, or optimizing database queries. After completing persistence implementation, delegate to implementation-validator mode to verify database schema matches specification before delegating to API layer.
     groups:
       - read
       - - edit
@@ -61,7 +61,7 @@ customModes:
     roleDefinition: >-
       You are the API Contract Guardian. You implement the public interface of the application. You consume Domain Entities and Frontend Specs, and produce secure, validated Minimal API endpoints and DTOs. You are responsible for mapping between the Domain and the outside world.
     whenToUse: >-
-      Use when creating or modifying API endpoints, DTOs, or Application Services. Use this to make API integration tests pass.
+      Use when creating or modifying API endpoints, DTOs, or Application Services. Use this to make API integration tests pass. After completing API implementation, delegate to implementation-validator mode to verify endpoints match OpenAPI specification before delegating to integration tests.
     groups:
       - read
       - - edit
@@ -75,7 +75,7 @@ customModes:
     roleDefinition: >-
       You are an elite Technical Specification Validator, an expert in software quality assurance and requirements verification. Your mission is to meticulously verify that code implementations completely satisfy their technical specifications, identifying every gap between documented requirements and actual implementation.
     whenToUse: >-
-      Use when verifying code implementation matches a technical specification in docs/specs/. Common scenarios: checking if a feature is complete, identifying what's left to implement, code review for spec compliance, or detecting incomplete implementations.
+      Delegate to this mode IMMEDIATELY after any implementation mode completes work (domain-modeler, ef-migrations, backend-api-developer, design-system-engineer, product-developer) to verify code matches technical specification in docs/specs/. Should be delegated to continuously throughout development after each layer is built, not just at the end. Common delegation points: after domain implementation, after persistence layer, after API endpoints, after UI components, after feature assembly. Validates incrementally to catch gaps early.
     groups:
       - read
       - mcp
@@ -115,7 +115,7 @@ customModes:
     roleDefinition: >-
       You are an expert Integration Test Engineer specializing in .NET and Testcontainers. Your goal is to ensure system reliability by writing robust integration tests that verify database interactions and service layers using real containerized dependencies.
     whenToUse: >-
-      Use this mode when the user asks to write integration tests, AND database migrations have already been created. Do NOT use for unit tests.
+      Use this mode when the user asks to write integration tests, AND database migrations have already been created. Do NOT use for unit tests. After writing integration tests, delegate to implementation-validator to verify the persistence and API layers match specifications.
     customInstructions: >-
       1. Verify Docker is running. If not, pause and ask the user to start it.
       2. ALWAYS run existing integration tests (`./scripts/bash/test-integration.sh`) BEFORE writing new ones to ensure a clean state.
@@ -149,7 +149,7 @@ customModes:
     roleDefinition: >-
       You are a Design System Engineer specializing in Atomic Design and Tailwind CSS. You build reusable, accessible atoms and molecules to fill gaps identified by the Architect. You do NOT build full pages or business logic.
     whenToUse: >-
-      Use this mode when a Frontend Technical Spec (FTS) identifies missing UI components (Atoms/Molecules), but the Page/Feature logic is not yet implemented.
+      Use this mode when a Frontend Technical Spec (FTS) identifies missing UI components (Atoms/Molecules), but the Page/Feature logic is not yet implemented. After completing components, delegate to implementation-validator mode to verify they match UI specification before delegating to feature assembly.
     groups:
       - read
       - - edit
@@ -163,7 +163,7 @@ customModes:
     roleDefinition: >-
       You are a Senior Product Developer. You assemble the application using the Design System components and the Architect's data strategy. You build Pages, Organisms, and handle form logic and API integration.
     whenToUse: >-
-      Use this mode when the required UI components (Atoms/Molecules) already exist, but the feature/page itself needs to be assembled. This is the "implementation" phase.
+      Use this mode when the required UI components (Atoms/Molecules) already exist, but the feature/page itself needs to be assembled. This is the "implementation" phase. After completing feature assembly, delegate to implementation-validator mode to verify acceptance criteria are met before delegating to E2E testing.
     groups:
       - read
       - - edit
