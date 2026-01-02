@@ -26,41 +26,76 @@ public class TenantService : ITenantService
     /// <inheritdoc />
     public async Task<TenantDto?> GetTenantByIdAsync(int tenantId, CancellationToken cancellationToken = default)
     {
-        var tenant = await _dbContext.Tenants
-            .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken);
+        var tenantSpec =
+            from t in _dbContext.Tenants.AsNoTracking()
+            where t.Id == tenantId
+            select new TenantDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Slug = t.Slug,
+                TenantIdentifier = t.TenantIdentifier,
+                IsActive = t.IsActive,
+                CreatedAt = t.CreatedAt
+            };
 
-        return tenant == null ? null : MapToDto(tenant);
+        return await tenantSpec.FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<TenantDto?> GetTenantBySlugAsync(string slug, CancellationToken cancellationToken = default)
     {
-        var tenant = await _dbContext.Tenants
-            .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Slug == slug, cancellationToken);
+        var tenantSpec =
+            from t in _dbContext.Tenants.AsNoTracking()
+            where t.Slug == slug
+            select new TenantDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Slug = t.Slug,
+                TenantIdentifier = t.TenantIdentifier,
+                IsActive = t.IsActive,
+                CreatedAt = t.CreatedAt
+            };
 
-        return tenant == null ? null : MapToDto(tenant);
+        return await tenantSpec.FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<TenantDto?> GetTenantByIdentifierAsync(string tenantIdentifier, CancellationToken cancellationToken = default)
     {
-        var tenant = await _dbContext.Tenants
-            .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.TenantIdentifier == tenantIdentifier, cancellationToken);
+        var tenantSpec =
+            from t in _dbContext.Tenants.AsNoTracking()
+            where t.TenantIdentifier == tenantIdentifier
+            select new TenantDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Slug = t.Slug,
+                TenantIdentifier = t.TenantIdentifier,
+                IsActive = t.IsActive,
+                CreatedAt = t.CreatedAt
+            };
 
-        return tenant == null ? null : MapToDto(tenant);
+        return await tenantSpec.FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<TenantDto>> GetAllTenantsAsync(CancellationToken cancellationToken = default)
     {
-        var tenants = await _dbContext.Tenants
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var tenantsSpec =
+            from t in _dbContext.Tenants.AsNoTracking()
+            select new TenantDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Slug = t.Slug,
+                TenantIdentifier = t.TenantIdentifier,
+                IsActive = t.IsActive,
+                CreatedAt = t.CreatedAt
+            };
 
-        return tenants.Select(MapToDto);
+        return await tenantsSpec.ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -77,16 +112,6 @@ public class TenantService : ITenantService
         _dbContext.Tenants.Add(tenant);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(tenant);
-    }
-
-    /// <summary>
-    /// Maps a Tenant entity to a TenantDto.
-    /// </summary>
-    /// <param name="tenant">The tenant entity to map.</param>
-    /// <returns>The mapped tenant DTO.</returns>
-    private static TenantDto MapToDto(Tenant tenant)
-    {
         return new TenantDto
         {
             Id = tenant.Id,
