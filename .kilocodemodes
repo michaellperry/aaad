@@ -9,7 +9,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: (docker\/|scripts\/|src\/GloboTicket\.API\/Middleware\/).*
+        - fileRegex: (docker/|scripts/|src/GloboTicket\.API/Middleware/).*
           description: Modify infrastructure, scripts, and middleware
       - command
 
@@ -30,7 +30,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: (tests\/|src\/.*\/tests\/).*
+        - fileRegex: (tests/|src/.*/tests/).*
           description: Modify only test files
       - command
 
@@ -55,7 +55,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: (src\/GloboTicket\.Domain\/|tests\/).*
+        - fileRegex: (src/GloboTicket\.Domain/|tests/).*
           description: Modify Domain layer and test files
       - command
 
@@ -69,7 +69,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: src\/GloboTicket\.Domain\/.*
+        - fileRegex: src/GloboTicket\.Domain/.*
           description: Modify only Domain layer
       - command
 
@@ -83,7 +83,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: src\/GloboTicket\.Infrastructure\/Data\/.*
+        - fileRegex: src/GloboTicket\.Infrastructure/Data/.*
           description: Modify Data Access layer
       - command
 
@@ -97,7 +97,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: (src\/GloboTicket\.API\/|src\/GloboTicket\.Application\/).*
+        - fileRegex: (src/GloboTicket\.API/|src/GloboTicket\.Application/).*
           description: Modify API and Application layers
       - command
 
@@ -123,7 +123,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: docs\/specs\/.*\\.md$
+        - fileRegex: docs/specs/.*\.md$
           description: Modify only technical specifications
       - mcp
 
@@ -137,7 +137,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: docs\/user-stories\/.*\\.md$
+        - fileRegex: docs/user-stories/.*\.md$
           description: Modify only user stories
       - mcp
 
@@ -157,7 +157,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: tests\/GloboTicket\.IntegrationTests\/.*
+        - fileRegex: tests/GloboTicket\.IntegrationTests/.*
           description: Modify only integration test files
       - command
 
@@ -171,7 +171,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: docs\/specs\/.*\\.md$
+        - fileRegex: docs/specs/.*\.md$
           description: Create or update technical specifications
       - mcp
 
@@ -185,7 +185,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: (src\/components\/atoms\/|src\/components\/molecules\/|src\/theme\/).*
+        - fileRegex: (src/components/atoms/|src/components/molecules/|src/theme/).*
           description: Modify only design system components and theme
       - browser
 
@@ -199,7 +199,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: (src\/pages\/|src\/components\/organisms\/|src\/api\/).*
+        - fileRegex: (src/pages/|src/components/organisms/|src/api/).*
           description: Modify pages, organisms, and API client
       - browser
 
@@ -213,7 +213,7 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: (tests\/|playwright\.config\.ts).*
+        - fileRegex: (tests/|playwright\.config\.ts).*
           description: Modify E2E tests and config
       - browser
       - command
