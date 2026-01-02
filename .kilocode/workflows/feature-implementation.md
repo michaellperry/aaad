@@ -7,20 +7,22 @@ This workflow defines the standard order of operations for implementing a new fe
 1. **Delegate to user-story-writer** → Create structured user stories
 2. **Delegate to spec-writer** → Create technical specifications
 3. **Delegate to frontend-architect** → Define frontend architecture (parallel)
-4. **Delegate to tdd-test-first** → Write failing unit tests
-5. **Delegate to domain-modeler** → Implement domain logic
-6. **Delegate to implementation-validator** ← VALIDATE DOMAIN
-7. **Delegate to ef-migrations** → Create persistence layer
-8. **Delegate to implementation-validator** ← VALIDATE PERSISTENCE
-9. **Delegate to backend-api-developer** → Implement API endpoints
-10. **Delegate to implementation-validator** ← VALIDATE API
-11. **Delegate to integration-test-writer** → Write integration tests
-12. **Delegate to design-system-engineer** → Build UI components (if needed)
-13. **Delegate to implementation-validator** ← VALIDATE COMPONENTS
-14. **Delegate to product-developer** → Assemble feature
-15. **Delegate to implementation-validator** ← VALIDATE FEATURE
-16. **Delegate to test-automation-engineer** → Write E2E tests
-17. **Delegate to implementation-validator** ← FINAL VALIDATION
+4. **Begin TDD Red-Green-Refactor Cycle** (repeat for each test scenario):
+   - **Delegate to tdd-test-first** → Write ONE failing unit test
+   - **Delegate to domain-modeler** → Implement logic to make that test pass
+   - **Delegate to code-refactorer** (optional) → Improve code/test quality while keeping tests green
+5. **After all domain tests pass, delegate to implementation-validator** ← VALIDATE DOMAIN
+6. **Delegate to ef-migrations** → Create persistence layer
+7. **Delegate to implementation-validator** ← VALIDATE PERSISTENCE
+8. **Delegate to backend-api-developer** → Implement API endpoints
+9. **Delegate to implementation-validator** ← VALIDATE API
+10. **Delegate to integration-test-writer** → Write integration tests
+11. **Delegate to design-system-engineer** → Build UI components (if needed)
+12. **Delegate to implementation-validator** ← VALIDATE COMPONENTS
+13. **Delegate to product-developer** → Assemble feature
+14. **Delegate to implementation-validator** ← VALIDATE FEATURE
+15. **Delegate to test-automation-engineer** → Write E2E tests
+16. **Delegate to implementation-validator** ← FINAL VALIDATION
 
 ## Validation Principle
 
@@ -29,12 +31,42 @@ This workflow defines the standard order of operations for implementing a new fe
 ## Key Principles
 
 1. **Documentation First**: User stories → Technical specs before any code
-2. **TDD Workflow**: Tests before implementation (Red → Green)
-3. **Continuous Validation**: Validate after each major implementation phase
+2. **Incremental TDD**: Write ONE test → Implement → Refactor → Repeat (tight Red-Green-Refactor cycles)
+3. **Continuous Validation**: Validate after each implementation step, not just at the end
 4. **Layer Separation**: Domain → Persistence → API (respecting Clean Architecture)
 5. **Frontend Parallel Track**: Architecture → Components → Assembly
 6. **Testing Pyramid**: Unit tests → Integration tests → E2E tests
 7. **Early Detection**: Catch specification gaps as soon as minimal implementation exists
+
+## TDD Red-Green-Refactor Cycle
+
+The orchestrator coordinates multiple Red-Green-Refactor cycles during domain implementation:
+
+1. **Red**: tdd-test-first writes ONE failing test for a specific behavior
+2. **Green**: domain-modeler implements minimal code to make that test pass
+3. **Refactor** (optional): code-refactorer improves code and test quality while keeping all tests green
+   - ONLY refactors when ALL tests are passing
+   - Runs tests after refactoring to ensure no regressions
+   - Refactors BOTH production code AND test code
+4. **Repeat**: Return to step 1 for the next test scenario
+
+This continues until all domain behaviors have tests and implementations. After all domain tests pass, the orchestrator delegates to implementation-validator to verify the complete domain implementation matches the specification before proceeding to the persistence layer.
+
+### Refactoring Guidelines
+
+The code-refactorer mode should be invoked when:
+- Code duplication is detected
+- Methods are too long or complex
+- Naming can be improved
+- Test code is unclear or repetitive
+- Design patterns could simplify the code
+
+Refactoring is MANDATORY when:
+- All tests are passing (green state) **AND** code quality issues are identified
+
+Refactoring is FORBIDDEN when:
+- Any tests are failing (red state)
+- Tests would need to change behavior (not just structure)
 
 ## Validation Checkpoints
 
