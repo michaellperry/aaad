@@ -1,3 +1,8 @@
+---
+name: testing-ef-core-in-memory
+description: Patterns for testing Entity Framework Core using the In-Memory provider
+---
+
 # Database Testing with EF Core In-Memory Provider
 
 **CRITICAL: For all unit tests that require database operations, use the Entity Framework Core In-Memory Provider. Do NOT use mocks.**
@@ -56,3 +61,4 @@ Ensure test projects reference:
 ```xml
 <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
 ```
+

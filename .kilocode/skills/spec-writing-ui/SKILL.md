@@ -1,3 +1,8 @@
+---
+name: spec-writing-ui
+description: Guidelines for specifying user interface designs, components, and interaction flows
+---
+
 # User Interface Specification
 
 ```markdown
@@ -96,3 +101,4 @@ Define validation once here, then reference in API section:
 - Follow existing UI patterns in codebase
 - Mobile-first responsive design
 - Ensure accessibility compliance (WCAG 2.1 AA)
+

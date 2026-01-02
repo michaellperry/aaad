@@ -1,3 +1,8 @@
+---
+name: ef-core-configuration
+description: Fluent API configuration patterns for Entity Framework Core entities in the Infrastructure layer
+---
+
 # EF Core Configuration Class Patterns
 
 For each entity, create a corresponding configuration class following these exact patterns.
@@ -192,3 +197,4 @@ public class ActConfiguration : IEntityTypeConfiguration<Act>
 - **Never** skip property configuration - be explicit about all constraints
 - **Never** use data annotations - only Fluent API
 - **Never** use empty `WithMany()` - always reference the collection property on the parent
+

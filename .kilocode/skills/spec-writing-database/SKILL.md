@@ -1,3 +1,8 @@
+---
+name: spec-writing-database
+description: Guidelines for specifying database schemas and Entity-Relationship diagrams
+---
+
 # Database Schema
 
 **IMPORTANT**: This section specifies the database schema design only. Do NOT include Entity Framework entity classes or fluent configuration code. The specification should describe WHAT needs to be built, not HOW to build it.
@@ -39,3 +44,4 @@ List indexes for new or modified tables.
 - Add indexes for frequently queried columns
 - Use meaningful table names (plural, PascalCase)
 - Show modifications to existing entities if needed
+

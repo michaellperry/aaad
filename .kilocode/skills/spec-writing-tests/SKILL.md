@@ -1,3 +1,8 @@
+---
+name: spec-writing-tests
+description: Guidelines for defining test scenarios and mapping tests to acceptance criteria
+---
+
 # Test Scenarios
 
 Define test scenarios that validate the technical implementation. Use Given-When-Then format and map tests to acceptance criteria:
@@ -75,3 +80,4 @@ Your specification should be:
 - Structured exactly as outlined above
 - Complete enough for immediate implementation
 - Reviewable by both technical and non-technical stakeholders
+

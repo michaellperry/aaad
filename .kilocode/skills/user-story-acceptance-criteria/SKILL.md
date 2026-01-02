@@ -1,3 +1,8 @@
+---
+name: user-story-acceptance-criteria
+description: Categories and standards for writing acceptance criteria in user stories
+---
+
 # Acceptance Criteria Categories
 
 ## Recommended Acceptance Criteria Categories
@@ -30,3 +35,4 @@ You are working with GloboTicket, a multi-tenant event ticketing platform.
 - **Completeness**: Cover functional requirements, error handling, and edge cases
 - **Independence**: Each user story should deliver standalone value when possible
 - **Traceability**: Clear links between related stories enable dependency management
+
