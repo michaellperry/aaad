@@ -140,5 +140,13 @@ public async Task CreateVenue_ValidData_CreatesVenue()
 - **✅ In-Memory Database**: Use for all repository and service tests that interact with data persistence. Provides real database behavior validation.
 - **✅ Mocking**: Use only for external dependencies (email services, payment gateways, third-party APIs) or when testing error scenarios that are difficult to reproduce with in-memory database.
 
-**Note**: For more details on in-memory database testing, see the `testing-ef-core-in-memory` skill.
+## Related Skill
+
+**For EF Core in-memory database setup**: See the `testing-ef-core-in-memory` skill for:
+- Technical setup patterns (`CreateInMemoryDbContext()`)
+- `TestTenantContext` implementation
+- Multi-tenant testing strategies
+- Package requirements
+
+This skill (`tdd-testing-patterns`) focuses on test structure, naming, and patterns. The `testing-ef-core-in-memory` skill provides the infrastructure setup. **Use both skills together when writing service and repository tests.**
 

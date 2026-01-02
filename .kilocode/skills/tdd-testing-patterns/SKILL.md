@@ -13,6 +13,8 @@ This skill provides TDD patterns and testing strategies for .NET applications, s
 
 **Integration tests follow implementation.** They use real repositories with SQL Server (via Testcontainers) and migrated databases to verify migrations, complex queries, and system integration. Integration tests are valuable but separate from the TDD workflow.
 
+> **Related Skill**: For EF Core service and repository tests, use the `testing-ef-core-in-memory` skill to set up the in-memory database context and `TestTenantContext`. This skill focuses on test structure and patterns; `testing-ef-core-in-memory` provides the technical infrastructure.
+
 ## Test Structure and Organization
 
 ### Unit Test Project

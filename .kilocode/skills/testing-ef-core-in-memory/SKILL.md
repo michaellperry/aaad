@@ -7,6 +7,8 @@ description: Sets up Entity Framework Core in-memory database contexts for unit 
 
 **CRITICAL: For all unit tests that require database operations, use the Entity Framework Core In-Memory Provider. Do NOT use mocks.**
 
+> **Related Skill**: This skill provides the technical setup for EF Core in-memory testing. For test structure, naming conventions, and testing patterns (AAA, Given-When-Then, test data helpers), see the `tdd-testing-patterns` skill. These skills are designed to work together when writing service and repository tests.
+
 ## Setup Pattern
 
 ```csharp
@@ -61,4 +63,12 @@ Ensure test projects reference:
 ```xml
 <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
 ```
+
+## Related Patterns
+
+When using this setup pattern, also follow the patterns from the `tdd-testing-patterns` skill:
+- **Test Structure**: Use AAA (Arrange-Act-Assert) pattern with Given-When-Then comments
+- **Test Naming**: Follow `MethodName_Scenario_ExpectedBehavior` convention
+- **Test Data Helpers**: Use `Given` helper methods (e.g., `GivenVenue()`, `GivenAct()`) with default parameters
+- **Service Testing**: See the `tdd-testing-patterns` skill's "Testing Application Services" section for complete examples
 

@@ -127,6 +127,8 @@ public void Address_IsImmutable_ThrowsExceptionOnModification()
 
 **Use in-memory database with actual repositories for all application service tests. This provides better coverage of database behavior and catches real EF Core query issues. See the [Mocking](mocking.md) pattern for details on when to use in-memory database vs. mocking.**
 
+> **Setup Required**: For the technical setup of in-memory database contexts, `TestTenantContext`, and multi-tenant testing, see the `testing-ef-core-in-memory` skill. This section focuses on test structure and patterns; that skill provides the infrastructure setup.
+
 ### Command Handler Tests
 **Test application services that handle commands using in-memory database.**
 
