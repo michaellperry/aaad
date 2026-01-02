@@ -1,6 +1,6 @@
 ---
 name: spec-writing-ui
-description: Guidelines for specifying user interface designs, components, and interaction flows
+description: Use this skill when specifying user interface designs, components, and interaction flows.
 ---
 
 # User Interface Specification

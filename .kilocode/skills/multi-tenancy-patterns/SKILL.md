@@ -1,6 +1,6 @@
 ---
 name: multi-tenancy-patterns
-description: Multi-tenancy implementation patterns and tenant isolation strategies
+description: Use this skill when implementing or modifying multi-tenant data isolation and security.
 ---
 
 # Multi-Tenancy Implementation Patterns

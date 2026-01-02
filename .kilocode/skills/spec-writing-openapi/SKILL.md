@@ -1,6 +1,6 @@
 ---
 name: spec-writing-openapi
-description: Guidelines for writing OpenAPI 3.0 specifications for API endpoints
+description: Use this skill when writing technical specifications for API endpoints and OpenAPI/Swagger definitions.
 ---
 
 # OpenAPI Specification

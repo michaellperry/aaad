@@ -1,6 +1,6 @@
 ---
 name: clean-architecture
-description: Clean Architecture principles and implementation patterns for .NET applications
+description: Use this skill when designing application structure or clarifying layer responsibilities in .NET applications.
 ---
 
 # Clean Architecture Implementation Guide

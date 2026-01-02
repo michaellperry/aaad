@@ -1,6 +1,6 @@
 ---
 name: testing-ef-core-in-memory
-description: Patterns for testing Entity Framework Core using the In-Memory provider
+description: Use this skill when writing unit tests that require an in-memory database context.
 ---
 
 # Database Testing with EF Core In-Memory Provider

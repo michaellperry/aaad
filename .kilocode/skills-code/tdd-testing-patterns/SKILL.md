@@ -1,6 +1,6 @@
 ---
 name: tdd-testing-patterns
-description: Test-Driven Development patterns and testing strategies for .NET applications
+description: Use this skill when writing unit or integration tests following TDD and AAA patterns.
 ---
 
 # Test-Driven Development Patterns

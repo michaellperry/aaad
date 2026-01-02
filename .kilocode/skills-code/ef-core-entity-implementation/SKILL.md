@@ -1,6 +1,6 @@
 ---
 name: ef-core-entity-implementation
-description: Patterns and rules for implementing Entity Framework Core entity classes in the Domain layer
+description: Use this skill when implementing domain entities and their properties in .NET.
 ---
 
 # Entity Class Construction Rules

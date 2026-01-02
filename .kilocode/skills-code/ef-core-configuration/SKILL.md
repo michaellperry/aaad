@@ -1,6 +1,6 @@
 ---
 name: ef-core-configuration
-description: Fluent API configuration patterns for Entity Framework Core entities in the Infrastructure layer
+description: Use this skill when configuring Entity Framework Core entities using the Fluent API.
 ---
 
 # EF Core Configuration Class Patterns

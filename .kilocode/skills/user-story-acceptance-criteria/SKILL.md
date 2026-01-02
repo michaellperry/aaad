@@ -1,6 +1,6 @@
 ---
 name: user-story-acceptance-criteria
-description: Categories and standards for writing acceptance criteria in user stories
+description: Use this skill when writing or reviewing user stories and acceptance criteria.
 ---
 
 # Acceptance Criteria Categories

@@ -1,6 +1,6 @@
 ---
 name: spec-writing-database
-description: Guidelines for specifying database schemas and Entity-Relationship diagrams
+description: Use this skill when writing technical specifications for database schemas and ER diagrams.
 ---
 
 # Database Schema

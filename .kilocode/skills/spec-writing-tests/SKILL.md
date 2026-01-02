@@ -1,6 +1,6 @@
 ---
 name: spec-writing-tests
-description: Guidelines for defining test scenarios and mapping tests to acceptance criteria
+description: Use this skill when defining test scenarios and mapping acceptance criteria to tests.
 ---
 
 # Test Scenarios

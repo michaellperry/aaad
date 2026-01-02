@@ -1,6 +1,6 @@
 ---
 name: ef-core-patterns
-description: Entity Framework Core best practices and patterns for .NET applications
+description: Use this skill when implementing data access, repositories, or query logic with Entity Framework Core.
 ---
 
 # Entity Framework Core Best Practices
