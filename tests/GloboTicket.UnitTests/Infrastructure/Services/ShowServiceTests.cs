@@ -9,216 +9,220 @@ using Microsoft.EntityFrameworkCore;
 namespace GloboTicket.UnitTests.Infrastructure.Services;
 
 /// <summary>
-/// Unit tests for ShowService using EF Core In-Memory Provider.
-/// Tests all service methods including multi-tenant filtering, validation, and business logic.
+/// Unit tests for the ShowService class.
+/// Tests show operations including creation, retrieval, deletion, and nearby shows query.
+/// Uses EF Core In-Memory provider for database operations.
 /// </summary>
 public class ShowServiceTests
 {
+    private const int DefaultTenantId = 1;
+    private const int OtherTenantId = 2;
+
+    #region Helper Methods
+
     /// <summary>
-    /// Creates an in-memory database context for testing with a pre-seeded tenant.
-    /// Each test gets a unique database instance using Guid.NewGuid().
+    /// Creates an in-memory database context for testing.
+    /// Each test gets a unique database instance.
     /// </summary>
-    /// <param name="tenantId">The tenant ID to set in the context. Defaults to 1.</param>
-    /// <returns>A configured GloboTicketDbContext using in-memory provider.</returns>
-    private GloboTicketDbContext CreateInMemoryDbContext(int? tenantId = 1)
+    private GloboTicketDbContext CreateInMemoryDbContext(int? tenantId = DefaultTenantId)
     {
         var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
         var tenantContext = new TestTenantContext { CurrentTenantId = tenantId };
-        var dbContext = new GloboTicketDbContext(options, tenantContext);
-
-        // Seed a tenant if tenantId is provided
-        if (tenantId.HasValue)
-        {
-            var tenant = new Tenant
-            {
-                Id = tenantId.Value,
-                TenantIdentifier = $"test-tenant-{tenantId}",
-                Name = $"Test Tenant {tenantId}",
-                Slug = $"test-{tenantId}"
-            };
-            dbContext.Tenants.Add(tenant);
-            dbContext.SaveChanges();
-        }
-
-        return dbContext;
+        return new GloboTicketDbContext(options, tenantContext);
     }
 
-    #region CreateShowAsync Tests
+    /// <summary>
+    /// Creates a test venue with default values.
+    /// </summary>
+    private Venue GivenVenue(
+        Guid? venueGuid = null,
+        string name = "Test Venue",
+        int seatingCapacity = 1000,
+        int tenantId = DefaultTenantId)
+    {
+        return new Venue
+        {
+            VenueGuid = venueGuid ?? Guid.NewGuid(),
+            Name = name,
+            SeatingCapacity = seatingCapacity,
+            TenantId = tenantId,
+            Description = "Test venue description"
+        };
+    }
+
+    /// <summary>
+    /// Creates a test act with default values.
+    /// </summary>
+    private Act GivenAct(
+        Guid? actGuid = null,
+        string name = "Test Act",
+        int tenantId = DefaultTenantId)
+    {
+        return new Act
+        {
+            ActGuid = actGuid ?? Guid.NewGuid(),
+            Name = name,
+            TenantId = tenantId
+        };
+    }
+
+    /// <summary>
+    /// Creates a test show with required parent navigation properties.
+    /// Parent entities (Act, Venue) are required parameters with no defaults.
+    /// Scalar values have sensible defaults.
+    /// </summary>
+    private Show GivenShow(
+        Act act,                              // Required - no default
+        Venue venue,                          // Required - no default
+        Guid? showGuid = null,                // Optional - has default
+        int ticketCount = 500,                // Optional - has default
+        DateTimeOffset? startTime = null)     // Optional - has default
+    {
+        return new Show
+        {
+            ShowGuid = showGuid ?? Guid.NewGuid(),
+            Act = act,
+            Venue = venue,
+            TicketCount = ticketCount,
+            StartTime = startTime ?? DateTimeOffset.UtcNow.AddDays(7)
+        };
+    }
+
+    #endregion
+
+    #region GetByGuidAsync Tests
 
     [Fact]
-    public async Task GivenValidData_WhenCreateShowAsync_ThenCreatesShowInDatabase()
+    public async Task GetByGuidAsync_WhenShowExists_ReturnsShowDto()
     {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Test Venue",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
+        // Given: A show exists in the database
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue();
+        var act = GivenAct();
+        var showGuid = Guid.NewGuid();
+        var show = GivenShow(showGuid: showGuid, act: act, venue: venue);
 
         dbContext.Venues.Add(venue);
         dbContext.Acts.Add(act);
+        dbContext.Shows.Add(show);
         await dbContext.SaveChangesAsync();
 
-        var createDto = new CreateShowDto
-        {
-            ShowGuid = Guid.NewGuid(),
-            VenueGuid = venue.VenueGuid,
-            TicketCount = 500,
-            StartTime = DateTimeOffset.UtcNow.AddDays(7)
-        };
+        var service = new ShowService(dbContext);
 
-        // Act
-        var result = await service.CreateAsync(act.ActGuid, createDto);
+        // When: Getting the show by GUID
+        var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert
+        // Then: The show DTO is returned with correct data
         result.Should().NotBeNull();
-        result.ShowGuid.Should().Be(createDto.ShowGuid);
-        result.TicketCount.Should().Be(createDto.TicketCount);
-        result.StartTime.Should().Be(createDto.StartTime);
-
-        var showInDb = await dbContext.Shows.FirstOrDefaultAsync(s => s.ShowGuid == createDto.ShowGuid);
-        showInDb.Should().NotBeNull();
-    }
-
-    [Fact]
-    public async Task GivenValidData_WhenCreateShowAsync_ThenSetsCreatedAtTimestamp()
-    {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Test Venue",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
-
-        dbContext.Venues.Add(venue);
-        dbContext.Acts.Add(act);
-        await dbContext.SaveChangesAsync();
-
-        var createDto = new CreateShowDto
-        {
-            ShowGuid = Guid.NewGuid(),
-            VenueGuid = venue.VenueGuid,
-            TicketCount = 500,
-            StartTime = DateTimeOffset.UtcNow.AddDays(7)
-        };
-
-        var beforeCreate = DateTime.UtcNow;
-
-        // Act
-        var result = await service.CreateAsync(act.ActGuid, createDto);
-
-        // Assert
-        var afterCreate = DateTime.UtcNow;
-        result.CreatedAt.Should().BeOnOrAfter(beforeCreate);
-        result.CreatedAt.Should().BeOnOrBefore(afterCreate);
-    }
-
-    [Fact]
-    public async Task GivenValidData_WhenCreateShowAsync_ThenAssociatesWithCorrectActAndVenue()
-    {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Madison Square Garden",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "The Rolling Stones" };
-
-        dbContext.Venues.Add(venue);
-        dbContext.Acts.Add(act);
-        await dbContext.SaveChangesAsync();
-
-        var createDto = new CreateShowDto
-        {
-            ShowGuid = Guid.NewGuid(),
-            VenueGuid = venue.VenueGuid,
-            TicketCount = 500,
-            StartTime = DateTimeOffset.UtcNow.AddDays(7)
-        };
-
-        // Act
-        var result = await service.CreateAsync(act.ActGuid, createDto);
-
-        // Assert
+        result!.ShowGuid.Should().Be(showGuid);
         result.ActGuid.Should().Be(act.ActGuid);
         result.ActName.Should().Be(act.Name);
         result.VenueGuid.Should().Be(venue.VenueGuid);
         result.VenueName.Should().Be(venue.Name);
         result.VenueCapacity.Should().Be(venue.SeatingCapacity);
+        result.TicketCount.Should().Be(show.TicketCount);
+        result.StartTime.Should().Be(show.StartTime);
     }
 
     [Fact]
-    public async Task GivenTicketCountExceedingCapacity_WhenCreateShowAsync_ThenThrowsArgumentException()
+    public async Task GetByGuidAsync_WhenShowDoesNotExist_ReturnsNull()
     {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
+        // Given: An empty database
+        await using var dbContext = CreateInMemoryDbContext();
         var service = new ShowService(dbContext);
+        var nonExistentGuid = Guid.NewGuid();
 
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Small Venue",
-            SeatingCapacity = 100,
-            Description = "Test Description"
-        };
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
+        // When: Getting a show that doesn't exist
+        var result = await service.GetByGuidAsync(nonExistentGuid);
+
+        // Then: Null is returned
+        result.Should().BeNull();
+    }
+
+
+    #endregion
+
+    #region GetShowsByActGuidAsync Tests
+
+    [Fact]
+    public async Task GetShowsByActGuidAsync_WhenActHasShows_ReturnsAllShows()
+    {
+        // Given: An act with multiple shows
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue();
+        var act = GivenAct();
+        var show1 = GivenShow(act: act, venue: venue);
+        var show2 = GivenShow(act: act, venue: venue);
 
         dbContext.Venues.Add(venue);
         dbContext.Acts.Add(act);
+        dbContext.Shows.AddRange(show1, show2);
         await dbContext.SaveChangesAsync();
 
-        var createDto = new CreateShowDto
+        var service = new ShowService(dbContext);
+
+        // When: Getting shows by act GUID
+        var result = await service.GetShowsByActGuidAsync(act.ActGuid);
+
+        // Then: All shows for the act are returned
+        var shows = result.ToList();
+        shows.Should().HaveCount(2);
+        shows.Should().AllSatisfy(s =>
         {
-            ShowGuid = Guid.NewGuid(),
-            VenueGuid = venue.VenueGuid,
-            TicketCount = 500, // Exceeds capacity of 100
-            StartTime = DateTimeOffset.UtcNow.AddDays(7)
-        };
-
-        // Act
-        var act_lambda = async () => await service.CreateAsync(act.ActGuid, createDto);
-
-        // Assert
-        await act_lambda.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*cannot exceed venue capacity of 100*");
+            s.ActGuid.Should().Be(act.ActGuid);
+            s.ActName.Should().Be(act.Name);
+        });
     }
 
     [Fact]
-    public async Task GivenPastStartTime_WhenCreateShowAsync_ThenThrowsArgumentException()
+    public async Task GetShowsByActGuidAsync_WhenActHasNoShows_ReturnsEmptyCollection()
     {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
+        // Given: An act with no shows
+        await using var dbContext = CreateInMemoryDbContext();
+        var act = GivenAct();
+        dbContext.Acts.Add(act);
+        await dbContext.SaveChangesAsync();
+
         var service = new ShowService(dbContext);
 
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Test Venue",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
+        // When: Getting shows by act GUID
+        var result = await service.GetShowsByActGuidAsync(act.ActGuid);
 
+        // Then: An empty collection is returned
+        result.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetShowsByActGuidAsync_WhenActDoesNotExist_ThrowsKeyNotFoundException()
+    {
+        // Given: An empty database
+        await using var dbContext = CreateInMemoryDbContext();
+        var service = new ShowService(dbContext);
+        var nonExistentActGuid = Guid.NewGuid();
+
+        // When: Getting shows for a non-existent act
+        var act = async () => await service.GetShowsByActGuidAsync(nonExistentActGuid);
+
+        // Then: KeyNotFoundException is thrown
+        await act.Should().ThrowAsync<KeyNotFoundException>()
+            .WithMessage($"Act with GUID {nonExistentActGuid} not found");
+    }
+
+
+    #endregion
+
+    #region CreateAsync Tests
+
+    [Fact]
+    public async Task CreateAsync_WithValidData_CreatesAndReturnsShow()
+    {
+        // Given: Valid act, venue, and show data
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue(seatingCapacity: 1000);
+        var act = GivenAct();
         dbContext.Venues.Add(venue);
         dbContext.Acts.Add(act);
         await dbContext.SaveChangesAsync();
@@ -228,25 +232,61 @@ public class ShowServiceTests
             ShowGuid = Guid.NewGuid(),
             VenueGuid = venue.VenueGuid,
             TicketCount = 500,
-            StartTime = DateTimeOffset.UtcNow.AddDays(-1) // Past date
+            StartTime = DateTimeOffset.UtcNow.AddDays(7)
         };
 
-        // Act
-        var act_lambda = async () => await service.CreateAsync(act.ActGuid, createDto);
+        var service = new ShowService(dbContext);
 
-        // Assert
-        await act_lambda.Should().ThrowAsync<ArgumentException>()
-            .WithMessage("*must be in the future*");
+        // When: Creating a show
+        var result = await service.CreateAsync(act.ActGuid, createDto);
+
+        // Then: The show is created and returned
+        result.Should().NotBeNull();
+        result.ShowGuid.Should().Be(createDto.ShowGuid);
+        result.ActGuid.Should().Be(act.ActGuid);
+        result.VenueGuid.Should().Be(venue.VenueGuid);
+        result.TicketCount.Should().Be(createDto.TicketCount);
+        result.StartTime.Should().Be(createDto.StartTime);
+
+        // And: The show is persisted in the database
+        var savedShow = await dbContext.Shows.FirstOrDefaultAsync(s => s.ShowGuid == createDto.ShowGuid);
+        savedShow.Should().NotBeNull();
     }
 
     [Fact]
-    public async Task GivenNonExistentVenue_WhenCreateShowAsync_ThenThrowsKeyNotFoundException()
+    public async Task CreateAsync_WhenActDoesNotExist_ThrowsKeyNotFoundException()
     {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
+        // Given: A venue exists but the act does not
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue();
+        dbContext.Venues.Add(venue);
+        await dbContext.SaveChangesAsync();
 
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
+        var createDto = new CreateShowDto
+        {
+            ShowGuid = Guid.NewGuid(),
+            VenueGuid = venue.VenueGuid,
+            TicketCount = 500,
+            StartTime = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var service = new ShowService(dbContext);
+        var nonExistentActGuid = Guid.NewGuid();
+
+        // When: Creating a show with a non-existent act
+        var create = async () => await service.CreateAsync(nonExistentActGuid, createDto);
+
+        // Then: KeyNotFoundException is thrown
+        await create.Should().ThrowAsync<KeyNotFoundException>()
+            .WithMessage($"Act with GUID {nonExistentActGuid} not found");
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenVenueDoesNotExist_ThrowsKeyNotFoundException()
+    {
+        // Given: An act exists but the venue does not
+        await using var dbContext = CreateInMemoryDbContext();
+        var act = GivenAct();
         dbContext.Acts.Add(act);
         await dbContext.SaveChangesAsync();
 
@@ -259,461 +299,320 @@ public class ShowServiceTests
             StartTime = DateTimeOffset.UtcNow.AddDays(7)
         };
 
-        // Act
-        var act_lambda = async () => await service.CreateAsync(act.ActGuid, createDto);
+        var service = new ShowService(dbContext);
 
-        // Assert
-        await act_lambda.Should().ThrowAsync<KeyNotFoundException>()
-            .WithMessage($"*{nonExistentVenueGuid}*");
+        // When: Creating a show with a non-existent venue
+        var create = async () => await service.CreateAsync(act.ActGuid, createDto);
+
+        // Then: KeyNotFoundException is thrown
+        await create.Should().ThrowAsync<KeyNotFoundException>()
+            .WithMessage($"Venue with GUID {nonExistentVenueGuid} not found");
     }
 
     [Fact]
-    public async Task GivenNonExistentAct_WhenCreateShowAsync_ThenThrowsKeyNotFoundException()
+    public async Task CreateAsync_WhenTicketCountExceedsVenueCapacity_ThrowsArgumentException()
     {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Test Venue",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
+        // Given: A venue with limited capacity
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue(seatingCapacity: 100);
+        var act = GivenAct();
         dbContext.Venues.Add(venue);
+        dbContext.Acts.Add(act);
         await dbContext.SaveChangesAsync();
 
-        var nonExistentActGuid = Guid.NewGuid();
+        var createDto = new CreateShowDto
+        {
+            ShowGuid = Guid.NewGuid(),
+            VenueGuid = venue.VenueGuid,
+            TicketCount = 500, // Exceeds capacity of 100
+            StartTime = DateTimeOffset.UtcNow.AddDays(7)
+        };
+
+        var service = new ShowService(dbContext);
+
+        // When: Creating a show with ticket count exceeding capacity
+        var create = async () => await service.CreateAsync(act.ActGuid, createDto);
+
+        // Then: ArgumentException is thrown
+        await create.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("Ticket count cannot exceed venue capacity of 100*")
+            .Where(ex => ex.ParamName == "TicketCount");
+    }
+
+    [Fact]
+    public async Task CreateAsync_WhenStartTimeIsInPast_ThrowsArgumentException()
+    {
+        // Given: Valid act and venue
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue();
+        var act = GivenAct();
+        dbContext.Venues.Add(venue);
+        dbContext.Acts.Add(act);
+        await dbContext.SaveChangesAsync();
+
         var createDto = new CreateShowDto
         {
             ShowGuid = Guid.NewGuid(),
             VenueGuid = venue.VenueGuid,
             TicketCount = 500,
-            StartTime = DateTimeOffset.UtcNow.AddDays(7)
+            StartTime = DateTimeOffset.UtcNow.AddDays(-1) // Past date
         };
 
-        // Act
-        var act_lambda = async () => await service.CreateAsync(nonExistentActGuid, createDto);
-
-        // Assert
-        await act_lambda.Should().ThrowAsync<KeyNotFoundException>()
-            .WithMessage($"*{nonExistentActGuid}*");
-    }
-
-    #endregion
-
-    #region GetShowsByActGuidAsync Tests
-
-    [Fact]
-    public async Task GivenActWithShows_WhenGetShowsByActGuidAsync_ThenReturnsShowsForAct()
-    {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
         var service = new ShowService(dbContext);
 
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Test Venue",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
+        // When: Creating a show with a past start time
+        var create = async () => await service.CreateAsync(act.ActGuid, createDto);
 
-        dbContext.Venues.Add(venue);
-        dbContext.Acts.Add(act);
-        await dbContext.SaveChangesAsync();
-
-        var show1 = new Show
-        {
-            ShowGuid = Guid.NewGuid(),
-            Act = act,
-            ActId = act.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 500,
-            StartTime = DateTimeOffset.UtcNow.AddDays(7)
-        };
-        var show2 = new Show
-        {
-            ShowGuid = Guid.NewGuid(),
-            Act = act,
-            ActId = act.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 300,
-            StartTime = DateTimeOffset.UtcNow.AddDays(14)
-        };
-
-        dbContext.Shows.AddRange(show1, show2);
-        await dbContext.SaveChangesAsync();
-
-        // Act
-        var result = await service.GetShowsByActGuidAsync(act.ActGuid);
-
-        // Assert
-        result.Should().HaveCount(2);
-        result.Should().Contain(s => s.ShowGuid == show1.ShowGuid);
-        result.Should().Contain(s => s.ShowGuid == show2.ShowGuid);
+        // Then: ArgumentException is thrown
+        await create.Should().ThrowAsync<ArgumentException>()
+            .WithMessage("Start time must be in the future*")
+            .Where(ex => ex.ParamName == "StartTime");
     }
 
-    [Fact]
-    public async Task GivenActWithoutShows_WhenGetShowsByActGuidAsync_ThenReturnsEmptyList()
-    {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
-        dbContext.Acts.Add(act);
-        await dbContext.SaveChangesAsync();
-
-        // Act
-        var result = await service.GetShowsByActGuidAsync(act.ActGuid);
-
-        // Assert
-        result.Should().BeEmpty();
-    }
-
-    #endregion
-
-    #region GetByGuidAsync Tests
-
-    [Fact]
-    public async Task GivenExistingShow_WhenGetByGuidAsync_ThenReturnsShow()
-    {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Test Venue",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
-
-        dbContext.Venues.Add(venue);
-        dbContext.Acts.Add(act);
-        await dbContext.SaveChangesAsync();
-
-        var showGuid = Guid.NewGuid();
-        var show = new Show
-        {
-            ShowGuid = showGuid,
-            Act = act,
-            ActId = act.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 500,
-            StartTime = DateTimeOffset.UtcNow.AddDays(7)
-        };
-
-        dbContext.Shows.Add(show);
-        await dbContext.SaveChangesAsync();
-
-        // Act
-        var result = await service.GetByGuidAsync(showGuid);
-
-        // Assert
-        result.Should().NotBeNull();
-        result!.ShowGuid.Should().Be(showGuid);
-        result.ActGuid.Should().Be(act.ActGuid);
-        result.VenueGuid.Should().Be(venue.VenueGuid);
-    }
-
-    [Fact]
-    public async Task GivenNonExistentShow_WhenGetByGuidAsync_ThenReturnsNull()
-    {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var nonExistentGuid = Guid.NewGuid();
-
-        // Act
-        var result = await service.GetByGuidAsync(nonExistentGuid);
-
-        // Assert
-        result.Should().BeNull();
-    }
-
-    #endregion
-
-    #region GetNearbyShowsAsync Tests
-
-    [Fact]
-    public async Task GivenShowsWithin48Hours_WhenGetNearbyShowsAsync_ThenReturnsShowsWithin48Hours()
-    {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Test Venue",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
-        var act1 = new Act { ActGuid = Guid.NewGuid(), Name = "Act 1" };
-        var act2 = new Act { ActGuid = Guid.NewGuid(), Name = "Act 2" };
-
-        dbContext.Venues.Add(venue);
-        dbContext.Acts.AddRange(act1, act2);
-        await dbContext.SaveChangesAsync();
-
-        var referenceTime = new DateTimeOffset(2025, 7, 15, 20, 0, 0, TimeSpan.FromHours(-4));
-
-        // Show 24 hours before (within 48 hours)
-        var show1 = new Show
-        {
-            ShowGuid = Guid.NewGuid(),
-            Act = act1,
-            ActId = act1.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 500,
-            StartTime = referenceTime.AddHours(-24)
-        };
-
-        // Show 30 hours after (within 48 hours)
-        var show2 = new Show
-        {
-            ShowGuid = Guid.NewGuid(),
-            Act = act2,
-            ActId = act2.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 300,
-            StartTime = referenceTime.AddHours(30)
-        };
-
-        dbContext.Shows.AddRange(show1, show2);
-        await dbContext.SaveChangesAsync();
-
-        // Act
-        var result = await service.GetNearbyShowsAsync(venue.VenueGuid, referenceTime);
-
-        // Assert
-        result.Should().NotBeNull();
-        result.VenueGuid.Should().Be(venue.VenueGuid);
-        result.Shows.Should().HaveCount(2);
-        result.Shows.Should().Contain(s => s.ShowGuid == show1.ShowGuid);
-        result.Shows.Should().Contain(s => s.ShowGuid == show2.ShowGuid);
-    }
-
-    [Fact]
-    public async Task GivenShowsOutside48Hours_WhenGetNearbyShowsAsync_ThenExcludesShowsOutside48Hours()
-    {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Test Venue",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
-        var act1 = new Act { ActGuid = Guid.NewGuid(), Name = "Act 1" };
-        var act2 = new Act { ActGuid = Guid.NewGuid(), Name = "Act 2" };
-        var act3 = new Act { ActGuid = Guid.NewGuid(), Name = "Act 3" };
-
-        dbContext.Venues.Add(venue);
-        dbContext.Acts.AddRange(act1, act2, act3);
-        await dbContext.SaveChangesAsync();
-
-        var referenceTime = new DateTimeOffset(2025, 7, 15, 20, 0, 0, TimeSpan.FromHours(-4));
-
-        // Show 49 hours before (outside window)
-        var showTooEarly = new Show
-        {
-            ShowGuid = Guid.NewGuid(),
-            Act = act1,
-            ActId = act1.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 500,
-            StartTime = referenceTime.AddHours(-49)
-        };
-
-        // Show 24 hours after (within window)
-        var showInWindow = new Show
-        {
-            ShowGuid = Guid.NewGuid(),
-            Act = act2,
-            ActId = act2.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 300,
-            StartTime = referenceTime.AddHours(24)
-        };
-
-        // Show 50 hours after (outside window)
-        var showTooLate = new Show
-        {
-            ShowGuid = Guid.NewGuid(),
-            Act = act3,
-            ActId = act3.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 200,
-            StartTime = referenceTime.AddHours(50)
-        };
-
-        dbContext.Shows.AddRange(showTooEarly, showInWindow, showTooLate);
-        await dbContext.SaveChangesAsync();
-
-        // Act
-        var result = await service.GetNearbyShowsAsync(venue.VenueGuid, referenceTime);
-
-        // Assert
-        result.Shows.Should().HaveCount(1);
-        result.Shows.Should().Contain(s => s.ShowGuid == showInWindow.ShowGuid);
-        result.Shows.Should().NotContain(s => s.ShowGuid == showTooEarly.ShowGuid);
-        result.Shows.Should().NotContain(s => s.ShowGuid == showTooLate.ShowGuid);
-    }
-
-    [Fact]
-    public async Task GivenMultipleShows_WhenGetNearbyShowsAsync_ThenSortsChronologically()
-    {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Test Venue",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
-        var act1 = new Act { ActGuid = Guid.NewGuid(), Name = "Act 1" };
-        var act2 = new Act { ActGuid = Guid.NewGuid(), Name = "Act 2" };
-        var act3 = new Act { ActGuid = Guid.NewGuid(), Name = "Act 3" };
-
-        dbContext.Venues.Add(venue);
-        dbContext.Acts.AddRange(act1, act2, act3);
-        await dbContext.SaveChangesAsync();
-
-        var referenceTime = new DateTimeOffset(2025, 7, 15, 20, 0, 0, TimeSpan.FromHours(-4));
-
-        // Add shows out of chronological order
-        var show2 = new Show
-        {
-            ShowGuid = Guid.NewGuid(),
-            Act = act2,
-            ActId = act2.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 300,
-            StartTime = referenceTime.AddHours(10)
-        };
-
-        var show1 = new Show
-        {
-            ShowGuid = Guid.NewGuid(),
-            Act = act1,
-            ActId = act1.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 500,
-            StartTime = referenceTime.AddHours(-10)
-        };
-
-        var show3 = new Show
-        {
-            ShowGuid = Guid.NewGuid(),
-            Act = act3,
-            ActId = act3.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 200,
-            StartTime = referenceTime.AddHours(20)
-        };
-
-        dbContext.Shows.AddRange(show2, show1, show3);
-        await dbContext.SaveChangesAsync();
-
-        // Act
-        var result = await service.GetNearbyShowsAsync(venue.VenueGuid, referenceTime);
-
-        // Assert
-        result.Shows.Should().HaveCount(3);
-        result.Shows.Should().BeInAscendingOrder(s => s.StartTime);
-        result.Shows.ElementAt(0).ShowGuid.Should().Be(show1.ShowGuid);
-        result.Shows.ElementAt(1).ShowGuid.Should().Be(show2.ShowGuid);
-        result.Shows.ElementAt(2).ShowGuid.Should().Be(show3.ShowGuid);
-    }
 
     #endregion
 
     #region DeleteAsync Tests
 
     [Fact]
-    public async Task GivenExistingShow_WhenDeleteAsync_ThenDeletesShowAndReturnsTrue()
+    public async Task DeleteAsync_WhenShowExists_DeletesShowAndReturnsTrue()
     {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
-        var service = new ShowService(dbContext);
-
-        var venue = new Venue
-        {
-            VenueGuid = Guid.NewGuid(),
-            Name = "Test Venue",
-            SeatingCapacity = 1000,
-            Description = "Test Description"
-        };
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
+        // Given: A show exists in the database
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue();
+        var act = GivenAct();
+        var showGuid = Guid.NewGuid();
+        var show = GivenShow(showGuid: showGuid, act: act, venue: venue);
 
         dbContext.Venues.Add(venue);
         dbContext.Acts.Add(act);
-        await dbContext.SaveChangesAsync();
-
-        var showGuid = Guid.NewGuid();
-        var show = new Show
-        {
-            ShowGuid = showGuid,
-            Act = act,
-            ActId = act.Id,
-            Venue = venue,
-            VenueId = venue.Id,
-            TicketCount = 500,
-            StartTime = DateTimeOffset.UtcNow.AddDays(7)
-        };
-
         dbContext.Shows.Add(show);
         await dbContext.SaveChangesAsync();
 
-        // Act
+        var service = new ShowService(dbContext);
+
+        // When: Deleting the show
         var result = await service.DeleteAsync(showGuid);
 
-        // Assert
+        // Then: True is returned
         result.Should().BeTrue();
 
+        // And: The show is removed from the database
         var deletedShow = await dbContext.Shows.FirstOrDefaultAsync(s => s.ShowGuid == showGuid);
         deletedShow.Should().BeNull();
     }
 
     [Fact]
-    public async Task GivenNonExistentShow_WhenDeleteAsync_ThenReturnsFalse()
+    public async Task DeleteAsync_WhenShowDoesNotExist_ReturnsFalse()
     {
-        // Arrange
-        using var dbContext = CreateInMemoryDbContext();
+        // Given: An empty database
+        await using var dbContext = CreateInMemoryDbContext();
         var service = new ShowService(dbContext);
-
         var nonExistentGuid = Guid.NewGuid();
 
-        // Act
+        // When: Deleting a show that doesn't exist
         var result = await service.DeleteAsync(nonExistentGuid);
 
-        // Assert
+        // Then: False is returned
         result.Should().BeFalse();
+    }
+
+
+    #endregion
+
+    #region GetNearbyShowsAsync Tests
+
+    [Fact]
+    public async Task GetNearbyShowsAsync_WhenShowsExistWithin48Hours_ReturnsNearbyShows()
+    {
+        // Given: A venue with shows within 48 hours
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue();
+        var act1 = GivenAct(name: "Act 1");
+        var act2 = GivenAct(name: "Act 2");
+
+        var referenceTime = new DateTimeOffset(2026, 6, 15, 20, 0, 0, TimeSpan.Zero);
+        var show1 = GivenShow(act: act1, venue: venue, startTime: referenceTime.AddHours(-24)); // 24 hours before
+        var show2 = GivenShow(act: act2, venue: venue, startTime: referenceTime.AddHours(24));  // 24 hours after
+
+        dbContext.Venues.Add(venue);
+        dbContext.Acts.AddRange(act1, act2);
+        dbContext.Shows.AddRange(show1, show2);
+        await dbContext.SaveChangesAsync();
+
+        var service = new ShowService(dbContext);
+
+        // When: Getting nearby shows
+        var result = await service.GetNearbyShowsAsync(venue.VenueGuid, referenceTime);
+
+        // Then: Both shows are returned
+        result.Should().NotBeNull();
+        result.VenueGuid.Should().Be(venue.VenueGuid);
+        result.VenueName.Should().Be(venue.Name);
+        result.ReferenceTime.Should().Be(referenceTime);
+        result.Shows.Should().HaveCount(2);
+        result.Message.Should().Be("2 show(s) found within 48 hours");
+
+        // And: Shows are ordered by start time
+        result.Shows[0].StartTime.Should().Be(show1.StartTime);
+        result.Shows[1].StartTime.Should().Be(show2.StartTime);
+    }
+
+    [Fact]
+    public async Task GetNearbyShowsAsync_WhenNoShowsWithin48Hours_ReturnsEmptyList()
+    {
+        // Given: A venue with no shows within 48 hours
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue();
+        var act = GivenAct();
+
+        var referenceTime = new DateTimeOffset(2026, 6, 15, 20, 0, 0, TimeSpan.Zero);
+        var show = GivenShow(act: act, venue: venue, startTime: referenceTime.AddHours(72)); // 72 hours after
+
+        dbContext.Venues.Add(venue);
+        dbContext.Acts.Add(act);
+        dbContext.Shows.Add(show);
+        await dbContext.SaveChangesAsync();
+
+        var service = new ShowService(dbContext);
+
+        // When: Getting nearby shows
+        var result = await service.GetNearbyShowsAsync(venue.VenueGuid, referenceTime);
+
+        // Then: Empty list is returned with appropriate message
+        result.Should().NotBeNull();
+        result.Shows.Should().BeEmpty();
+        result.Message.Should().Be("No other shows scheduled at this venue within 48 hours");
+    }
+
+    [Fact]
+    public async Task GetNearbyShowsAsync_WhenShowsAtExactBoundary_IncludesShows()
+    {
+        // Given: Shows at exactly 48 hours before and after
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue();
+        var act1 = GivenAct(name: "Act 1");
+        var act2 = GivenAct(name: "Act 2");
+
+        var referenceTime = new DateTimeOffset(2026, 6, 15, 20, 0, 0, TimeSpan.Zero);
+        var show1 = GivenShow(act: act1, venue: venue, startTime: referenceTime.AddHours(-48)); // Exactly 48 hours before
+        var show2 = GivenShow(act: act2, venue: venue, startTime: referenceTime.AddHours(48));  // Exactly 48 hours after
+
+        dbContext.Venues.Add(venue);
+        dbContext.Acts.AddRange(act1, act2);
+        dbContext.Shows.AddRange(show1, show2);
+        await dbContext.SaveChangesAsync();
+
+        var service = new ShowService(dbContext);
+
+        // When: Getting nearby shows
+        var result = await service.GetNearbyShowsAsync(venue.VenueGuid, referenceTime);
+
+        // Then: Both boundary shows are included
+        result.Shows.Should().HaveCount(2);
+    }
+
+    [Fact]
+    public async Task GetNearbyShowsAsync_WhenShowsBeyondBoundary_ExcludesShows()
+    {
+        // Given: Shows just beyond the 48-hour boundary
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue();
+        var act1 = GivenAct(name: "Act 1");
+        var act2 = GivenAct(name: "Act 2");
+
+        var referenceTime = new DateTimeOffset(2026, 6, 15, 20, 0, 0, TimeSpan.Zero);
+        var show1 = GivenShow(act: act1, venue: venue, startTime: referenceTime.AddHours(-49)); // 49 hours before
+        var show2 = GivenShow(act: act2, venue: venue, startTime: referenceTime.AddHours(49));  // 49 hours after
+
+        dbContext.Venues.Add(venue);
+        dbContext.Acts.AddRange(act1, act2);
+        dbContext.Shows.AddRange(show1, show2);
+        await dbContext.SaveChangesAsync();
+
+        var service = new ShowService(dbContext);
+
+        // When: Getting nearby shows
+        var result = await service.GetNearbyShowsAsync(venue.VenueGuid, referenceTime);
+
+        // Then: No shows are returned
+        result.Shows.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetNearbyShowsAsync_WhenVenueDoesNotExist_ThrowsKeyNotFoundException()
+    {
+        // Given: An empty database
+        await using var dbContext = CreateInMemoryDbContext();
+        var service = new ShowService(dbContext);
+        var nonExistentVenueGuid = Guid.NewGuid();
+        var referenceTime = DateTimeOffset.UtcNow;
+
+        // When: Getting nearby shows for a non-existent venue
+        var getNearby = async () => await service.GetNearbyShowsAsync(nonExistentVenueGuid, referenceTime);
+
+        // Then: KeyNotFoundException is thrown
+        await getNearby.Should().ThrowAsync<KeyNotFoundException>()
+            .WithMessage($"Venue with GUID {nonExistentVenueGuid} not found");
+    }
+
+
+    [Fact]
+    public async Task GetNearbyShowsAsync_OnlyReturnsShowsForSpecifiedVenue()
+    {
+        // Given: Multiple venues with shows
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue1 = GivenVenue(name: "Venue 1");
+        var venue2 = GivenVenue(name: "Venue 2");
+        var act = GivenAct();
+
+        var referenceTime = new DateTimeOffset(2026, 6, 15, 20, 0, 0, TimeSpan.Zero);
+        var show1 = GivenShow(act: act, venue: venue1, startTime: referenceTime.AddHours(12));
+        var show2 = GivenShow(act: act, venue: venue2, startTime: referenceTime.AddHours(12));
+
+        dbContext.Venues.AddRange(venue1, venue2);
+        dbContext.Acts.Add(act);
+        dbContext.Shows.AddRange(show1, show2);
+        await dbContext.SaveChangesAsync();
+
+        var service = new ShowService(dbContext);
+
+        // When: Getting nearby shows for venue1
+        var result = await service.GetNearbyShowsAsync(venue1.VenueGuid, referenceTime);
+
+        // Then: Only shows for venue1 are returned
+        result.Shows.Should().HaveCount(1);
+        result.Shows[0].ShowGuid.Should().Be(show1.ShowGuid);
+    }
+
+    [Fact]
+    public async Task GetNearbyShowsAsync_HandlesTimezonesCorrectly()
+    {
+        // Given: Shows with different timezone offsets
+        await using var dbContext = CreateInMemoryDbContext();
+        var venue = GivenVenue();
+        var act = GivenAct();
+
+        // Reference time in UTC
+        var referenceTimeUtc = new DateTimeOffset(2026, 6, 15, 20, 0, 0, TimeSpan.Zero);
+        
+        // Show time with different offset but same UTC time
+        var showTimeWithOffset = new DateTimeOffset(2026, 6, 15, 15, 0, 0, TimeSpan.FromHours(-5));
+        var show = GivenShow(act: act, venue: venue, startTime: showTimeWithOffset);
+
+        dbContext.Venues.Add(venue);
+        dbContext.Acts.Add(act);
+        dbContext.Shows.Add(show);
+        await dbContext.SaveChangesAsync();
+
+        var service = new ShowService(dbContext);
+
+        // When: Getting nearby shows with UTC reference time
+        var result = await service.GetNearbyShowsAsync(venue.VenueGuid, referenceTimeUtc);
+
+        // Then: Show is included because UTC times match
+        result.Shows.Should().HaveCount(1);
+        result.Shows[0].StartTime.UtcDateTime.Should().Be(showTimeWithOffset.UtcDateTime);
     }
 
     #endregion

@@ -22,20 +22,40 @@ These skills are available in all modes:
 
 These skills are only available when using Code mode:
 
-#### ef-core-patterns
-- **Purpose**: Entity Framework Core best practices and patterns for .NET applications
-- **Coverage**: Entity configuration, query performance, change tracking, multi-tenancy integration, testing
-- **Use When**: Working with EF Core, creating entities, optimizing queries, or implementing data access layers
+#### linq-query-patterns
+- **Purpose**: LINQ query syntax patterns, separation of concerns, and async execution for data access
+- **Coverage**: Query syntax conventions, repository patterns, async/await best practices
+- **Use When**: Writing repository methods, implementing LINQ queries, or refactoring data access code
 
-#### tdd-testing-patterns
-- **Purpose**: Test-Driven Development patterns and testing strategies for .NET applications
-- **Coverage**: Test structure, mocking strategies, integration testing, performance testing
-- **Use When**: Writing unit tests, implementing TDD workflows, or setting up testing infrastructure
+#### unit-testing
+- **Purpose**: Comprehensive unit testing patterns for .NET applications using EF Core In-Memory Provider
+- **Coverage**: AAA structure, TDD workflows, test data helpers, EF Core in-memory setup, multi-tenancy testing, mocking strategies
+- **Use When**: Writing unit tests for services, repositories, or domain logic; implementing TDD workflows
 
-#### api-rest-conventions
-- **Purpose**: RESTful API design conventions and OpenAPI specifications
-- **Coverage**: URL structure, HTTP methods, status codes, error handling, versioning, security
-- **Use When**: Creating API endpoints, designing REST interfaces, or implementing API documentation
+#### spec-writing-database
+- **Purpose**: Database schema specifications using Mermaid ER diagrams
+- **Coverage**: Entity-relationship diagrams, table structures, multi-tenant entities
+- **Use When**: Designing database schemas, creating ER diagrams, or specifying database constraints
+
+#### spec-writing-openapi
+- **Purpose**: Complete OpenAPI 3.0 specifications for API endpoints
+- **Coverage**: RESTful conventions, request/response schemas, API documentation
+- **Use When**: Creating new API endpoints, documenting API contracts, or defining API specifications
+
+#### spec-writing-tests
+- **Purpose**: Test scenarios using Given-When-Then format
+- **Coverage**: Test requirements, acceptance criteria mapping, unit and integration test scenarios
+- **Use When**: Writing technical specifications, defining test requirements, or ensuring test coverage
+
+#### spec-writing-ui
+- **Purpose**: User interface designs, React components, and interaction flows
+- **Coverage**: Component-based architecture, props and state, user interaction flows
+- **Use When**: Designing UI specifications, defining component structures, or documenting user interactions
+
+#### user-story-acceptance-criteria
+- **Purpose**: User stories with acceptance criteria following standard categories
+- **Coverage**: Story structure, acceptance criteria patterns, completeness review
+- **Use When**: Creating user stories, defining acceptance criteria, or reviewing story completeness
 
 ## How Skills Work
 
