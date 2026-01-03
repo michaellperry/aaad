@@ -6,7 +6,7 @@ import type {
 } from '../types/api';
 import type { Venue, CreateVenueDto, UpdateVenueDto } from '../types/venue';
 import type { Act, CreateActDto, UpdateActDto } from '../types/act';
-import type { Show } from '../types/show';
+import type { Show, CreateShowDto, NearbyShowsResponse } from '../types/show';
 
 const API_BASE_URL = '';
 
@@ -201,4 +201,27 @@ export async function getShowsByAct(actGuid: string): Promise<Show[]> {
     credentials: 'include',
   });
   return handleResponse<Show[]>(response);
+}
+
+export async function createShow(actGuid: string, dto: CreateShowDto): Promise<Show> {
+  const response = await fetch(`${API_BASE_URL}/api/acts/${actGuid}/shows`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(dto),
+  });
+  return handleResponse<Show>(response);
+}
+
+export async function getNearbyShows(venueGuid: string, startTime: string): Promise<NearbyShowsResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/venues/${venueGuid}/shows/nearby?startTime=${encodeURIComponent(startTime)}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    }
+  );
+  return handleResponse<NearbyShowsResponse>(response);
 }

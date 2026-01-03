@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Music, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit, Music, Trash2, Plus } from 'lucide-react';
 import { Heading, Text, Button, Spinner } from '../../components/atoms';
 import { Card, ShowCard } from '../../components/molecules';
 import { Stack, Row } from '../../components/layout';
@@ -164,7 +164,21 @@ export const ActDetailPage = () => {
       </Card>
 
       {/* Upcoming Shows */}
-      <Card header={<Heading level="h2">Upcoming Shows</Heading>}>
+      <Card
+        header={
+          <div className="flex justify-between items-center">
+            <Heading level="h2">Upcoming Shows</Heading>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate(`/acts/${act.actGuid}/shows/new`)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Show
+            </Button>
+          </div>
+        }
+      >
         {isLoadingShows ? (
           <div className="flex justify-center p-8">
             <Spinner size="md" />
