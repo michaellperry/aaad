@@ -61,11 +61,12 @@ public class ShowConfiguration : IEntityTypeConfiguration<Show>
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
-        // Foreign key relationship to Act with cascade delete
+        // Foreign key relationship to Act with restrict delete to avoid multiple cascade paths
+        // (Both Venue and Act cascade from Tenant, so we need to break the cycle)
         builder.HasOne(s => s.Act)
             .WithMany()
             .HasForeignKey(s => s.ActId)
-            .OnDelete(DeleteBehavior.Cascade)
+            .OnDelete(DeleteBehavior.Restrict)
             .IsRequired();
 
         // CreatedAt property (inherited from Entity)
