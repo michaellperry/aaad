@@ -1,6 +1,5 @@
 using FluentAssertions;
 using GloboTicket.Domain.Entities;
-using GloboTicket.Infrastructure.Data;
 using GloboTicket.Infrastructure.Services;
 using GloboTicket.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;

@@ -39,7 +39,7 @@ public static class VenueEndpoints
         venues.MapGet("/{guid:guid}", async (Guid guid, IVenueService venueService, CancellationToken cancellationToken) =>
         {
             var venue = await venueService.GetByGuidAsync(guid, cancellationToken);
-            
+
             if (venue == null)
             {
                 return Results.NotFound(new { message = $"Venue with GUID {guid} not found" });
@@ -62,14 +62,14 @@ public static class VenueEndpoints
         {
             // First, find the venue by GUID to get its ID
             var existingVenue = await venueService.GetByGuidAsync(guid, cancellationToken);
-            
+
             if (existingVenue == null)
             {
                 return Results.NotFound(new { message = $"Venue with GUID {guid} not found" });
             }
 
             var updatedVenue = await venueService.UpdateAsync(existingVenue.Id, dto, cancellationToken);
-            
+
             if (updatedVenue == null)
             {
                 return Results.NotFound(new { message = $"Venue with GUID {guid} not found" });
@@ -84,14 +84,14 @@ public static class VenueEndpoints
         {
             // First, find the venue by GUID to get its ID
             var existingVenue = await venueService.GetByGuidAsync(guid, cancellationToken);
-            
+
             if (existingVenue == null)
             {
                 return Results.NotFound(new { message = $"Venue with GUID {guid} not found" });
             }
 
             var deleted = await venueService.DeleteAsync(existingVenue.Id, cancellationToken);
-            
+
             if (!deleted)
             {
                 return Results.NotFound(new { message = $"Venue with GUID {guid} not found" });

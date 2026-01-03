@@ -22,13 +22,13 @@ public class TenantResolutionMiddleware
             var tenantIdClaim = context.User.FindFirst("TenantId");
             if (tenantIdClaim != null)
             {
-                _logger.LogInformation("Tenant resolved: {TenantId} for user {Username}", 
-                    tenantIdClaim.Value, 
+                _logger.LogInformation("Tenant resolved: {TenantId} for user {Username}",
+                    tenantIdClaim.Value,
                     context.User.Identity.Name);
             }
             else
             {
-                _logger.LogWarning("Authenticated user {Username} has no TenantId claim", 
+                _logger.LogWarning("Authenticated user {Username} has no TenantId claim",
                     context.User.Identity.Name);
             }
         }

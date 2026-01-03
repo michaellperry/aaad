@@ -46,7 +46,7 @@ public static class ShowEndpoints
             {
                 // Return validation error in problem details format
                 var errors = new Dictionary<string, string[]>();
-                
+
                 // Parse the parameter name from the exception to determine which field failed
                 if (ex.ParamName == nameof(dto.TicketCount))
                 {
@@ -60,7 +60,7 @@ public static class ShowEndpoints
                 {
                     errors["General"] = new[] { ex.Message };
                 }
-                
+
                 return Results.BadRequest(new
                 {
                     type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",

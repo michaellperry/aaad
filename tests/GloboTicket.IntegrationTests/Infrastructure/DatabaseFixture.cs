@@ -70,7 +70,7 @@ public class DatabaseFixture : IAsyncLifetime
     public async Task<Tenant> CreateTestTenantAsync(string connectionString, int tenantId)
     {
         using var context = CreateDbContext(connectionString, null);
-        
+
         var uniqueId = Guid.NewGuid().ToString()[..8];
         var tenant = new Tenant
         {
@@ -79,10 +79,10 @@ public class DatabaseFixture : IAsyncLifetime
             Slug = $"test-tenant-{tenantId}-{uniqueId}",
             IsActive = true
         };
-        
+
         context.Tenants.Add(tenant);
         await context.SaveChangesAsync();
-        
+
         return tenant;
     }
 
@@ -94,13 +94,13 @@ public class DatabaseFixture : IAsyncLifetime
     public async Task CleanupTestDataAsync(string connectionString, int tenantId)
     {
         using var context = CreateDbContext(connectionString, tenantId);
-        
+
         // Delete in reverse dependency order to avoid foreign key constraint issues
         context.Shows.RemoveRange(context.Shows);
         context.Acts.RemoveRange(context.Acts);
         context.Venues.RemoveRange(context.Venues);
         context.Tenants.RemoveRange(context.Tenants.Where(t => t.Id == tenantId));
-        
+
         await context.SaveChangesAsync();
     }
 
@@ -119,13 +119,13 @@ public class DatabaseFixture : IAsyncLifetime
 
         var tenantContext = new TestTenantContext(tenantId);
         var context = new GloboTicketDbContext(options, tenantContext);
-        
+
         // Apply migrations in a thread-safe manner to avoid race conditions
         lock (_migrationLock)
         {
             context.Database.EnsureCreated();
         }
-        
+
         return (context, tenantContext);
     }
 
@@ -157,13 +157,13 @@ public class DatabaseFixture : IAsyncLifetime
 
         var tenantContext = new TestTenantContext(tenantId);
         var context = new GloboTicketDbContext(options, tenantContext);
-        
+
         // Apply migrations in a thread-safe manner
         lock (_migrationLock)
         {
             context.Database.EnsureCreated();
         }
-        
+
         return context;
     }
 }

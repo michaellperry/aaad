@@ -34,7 +34,7 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
         // Note: Tenant entity is the master tenant table and is NOT multi-tenant isolated.
         // This test demonstrates that tenants are visible across all tenant contexts,
         // which is the expected behavior for the master tenant table.
-        
+
         // Arrange & Act - Create tenants in admin context (null tenant ID)
         using (var adminContext = CreateDbContext(_fixture.ConnectionString, null))
         {
@@ -60,7 +60,7 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
         {
             var service1 = new TenantService(context1);
             var tenantsFromContext1 = (await service1.GetAllTenantsAsync()).ToList();
-            
+
             tenantsFromContext1.Should().Contain(t => t.Name == "Tenant A");
             tenantsFromContext1.Should().Contain(t => t.Name == "Tenant B");
         }
@@ -69,7 +69,7 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
         {
             var service2 = new TenantService(context2);
             var tenantsFromContext2 = (await service2.GetAllTenantsAsync()).ToList();
-            
+
             tenantsFromContext2.Should().Contain(t => t.Name == "Tenant A");
             tenantsFromContext2.Should().Contain(t => t.Name == "Tenant B");
         }
@@ -80,7 +80,7 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
     {
         // This test demonstrates that a null tenant context (admin/system context)
         // can see all tenants, which is necessary for administrative operations.
-        
+
         // Arrange - Create tenants in admin context
         TenantDto tenant1, tenant2;
         using (var adminContext = CreateDbContext(_fixture.ConnectionString, null))
@@ -129,7 +129,7 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
     {
         // This test demonstrates that the Tenant entity (master table) is accessible
         // from any tenant context, which is the expected behavior.
-        
+
         // Arrange - Create a tenant in admin context
         TenantDto createdTenant;
         using (var adminContext = CreateDbContext(_fixture.ConnectionString, null))
@@ -170,7 +170,7 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
         // This test demonstrates how the multi-tenancy query filter works.
         // While the Tenant entity itself is not tenant-isolated (it's the master table),
         // this shows that the infrastructure is in place for tenant-isolated entities.
-        
+
         // Arrange - Create tenants in admin context
         var uniqueId = Guid.NewGuid().ToString()[..8];
         var uniqueSlug = $"demo-{uniqueId}";
@@ -220,10 +220,10 @@ public class MultiTenancyIsolationTests : IClassFixture<DatabaseFixture>
 
         var tenantContext = new TestTenantContext(tenantId);
         var context = new GloboTicketDbContext(options, tenantContext);
-        
+
         // Apply migrations to ensure database schema matches production behavior
         context.Database.Migrate();
-        
+
         return context;
     }
 }
