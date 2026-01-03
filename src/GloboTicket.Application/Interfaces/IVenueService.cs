@@ -56,4 +56,11 @@ public interface IVenueService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if the venue was deleted; false if not found.</returns>
     Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the total count of venues for the current tenant.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The total number of venues for the current tenant.</returns>
+    Task<int> GetCountAsync(CancellationToken cancellationToken = default);
 }

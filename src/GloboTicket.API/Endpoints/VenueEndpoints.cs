@@ -27,6 +27,14 @@ public static class VenueEndpoints
         })
         .WithName("GetAllVenues");
 
+        // GET /api/venues/count
+        venues.MapGet("/count", async (IVenueService venueService, CancellationToken cancellationToken) =>
+        {
+            var count = await venueService.GetCountAsync(cancellationToken);
+            return Results.Ok(new { count });
+        })
+        .WithName("GetVenuesCount");
+
         // GET /api/venues/{guid}
         venues.MapGet("/{guid:guid}", async (Guid guid, IVenueService venueService, CancellationToken cancellationToken) =>
         {

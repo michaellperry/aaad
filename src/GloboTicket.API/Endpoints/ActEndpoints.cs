@@ -27,6 +27,14 @@ public static class ActEndpoints
         })
         .WithName("GetAllActs");
 
+        // GET /api/acts/count
+        acts.MapGet("/count", async (IActService actService, CancellationToken cancellationToken) =>
+        {
+            var count = await actService.GetCountAsync(cancellationToken);
+            return Results.Ok(new { count });
+        })
+        .WithName("GetActsCount");
+
         // GET /api/acts/{guid}
         acts.MapGet("/{guid:guid}", async (Guid guid, IActService actService, CancellationToken cancellationToken) =>
         {

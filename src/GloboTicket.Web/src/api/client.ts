@@ -89,6 +89,15 @@ export async function getVenues(): Promise<Venue[]> {
   return handleResponse<Venue[]>(response);
 }
 
+export async function getVenuesCount(): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/api/venues/count`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  const data = await handleResponse<{ count: number }>(response);
+  return data.count;
+}
+
 export async function getVenue(id: string): Promise<Venue> {
   const response = await fetch(`${API_BASE_URL}/api/venues/${id}`, {
     method: 'GET',
@@ -141,6 +150,15 @@ export async function getActs(): Promise<Act[]> {
     credentials: 'include',
   });
   return handleResponse<Act[]>(response);
+}
+
+export async function getActsCount(): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/api/acts/count`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  const data = await handleResponse<{ count: number }>(response);
+  return data.count;
 }
 
 export async function getAct(id: string): Promise<Act> {

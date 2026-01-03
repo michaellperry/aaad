@@ -186,4 +186,10 @@ public class VenueService : IVenueService
 
         return true;
     }
+
+    /// <inheritdoc />
+    public async Task<int> GetCountAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Venues.CountAsync(cancellationToken);
+    }
 }

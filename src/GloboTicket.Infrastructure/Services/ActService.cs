@@ -152,4 +152,10 @@ public class ActService : IActService
 
         return true;
     }
+
+    /// <inheritdoc />
+    public async Task<int> GetCountAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Acts.CountAsync(cancellationToken);
+    }
 }

@@ -3,24 +3,26 @@ import { Heading, Text, Button } from '../components/atoms';
 import { Card } from '../components/molecules';
 import { Grid, Stack } from '../components/layout';
 import { ROUTES } from '../router/routes';
+import { useDashboardStats } from '../features/dashboard/hooks';
 
 /**
  * Dashboard overview page with key metrics and quick actions
  */
 export const DashboardPage = () => {
-  // Mock statistics
+  const { totalVenues, activeActs, isLoading, error } = useDashboardStats();
+
   const stats = [
     {
       id: 'venues',
       label: 'Total Venues',
-      value: '12',
+      value: isLoading ? '...' : totalVenues.toString(),
       icon: MapPin,
       href: ROUTES.VENUES,
     },
     {
       id: 'acts',
       label: 'Active Acts',
-      value: '48',
+      value: isLoading ? '...' : activeActs.toString(),
       icon: Users,
       href: ROUTES.ACTS,
     },
@@ -44,6 +46,23 @@ export const DashboardPage = () => {
           Welcome to GloboTicket. Here's an overview of your event management system.
         </Text>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <Card>
+          <Stack gap="md">
+            <Heading level="h3" variant="default">
+              ⚠️ Error Loading Dashboard Data
+            </Heading>
+            <Text variant="muted">
+              Unable to load dashboard statistics. Please try refreshing the page.
+            </Text>
+            <Text variant="muted" size="sm">
+              {error.message}
+            </Text>
+          </Stack>
+        </Card>
+      )}
 
       {/* Statistics Grid */}
       <Grid cols={1} gap="lg" responsive={{ sm: 2, lg: 4 }}>
@@ -106,18 +125,6 @@ export const DashboardPage = () => {
         </Stack>
       </Card>
 
-      {/* Placeholder Notice */}
-      <Card>
-        <Stack gap="md">
-          <Heading level="h3" variant="default">
-            🚧 Development Notice
-          </Heading>
-          <Text variant="muted">
-            This is a placeholder dashboard demonstrating the design system and navigation structure.
-            Real data integration and features will be implemented in future iterations.
-          </Text>
-        </Stack>
-      </Card>
     </Stack>
   );
 };
