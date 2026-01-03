@@ -151,9 +151,10 @@ customModes:
     customInstructions: >-
       1. Verify Docker is running. If not, pause and ask the user to start it.
       2. ALWAYS run existing integration tests (`./scripts/bash/test-integration.sh`) BEFORE writing new ones to ensure a clean state.
-      3. Follow project patterns: use `DatabaseFixture`, `TestTenantContext`, and `CreateDbContext`.
-      4. Use `Guid.NewGuid()` for unique identifiers to ensure test isolation.
-      5. ALWAYS run the new integration tests after writing them.
+      3. If tests fail with 'PendingModelChangesWarning' error, IMMEDIATELY report to orchestrator that ef-migrations mode must be run to create missing migrations before integration tests can proceed. DO NOT attempt to write tests until migrations are created.
+      4. Follow project patterns: use `DatabaseFixture`, `TestTenantContext`, and `CreateDbContext`.
+      5. Use `Guid.NewGuid()` for unique identifiers to ensure test isolation.
+      6. ALWAYS run the new integration tests after writing them.
     groups:
       - read
       - - edit
