@@ -199,8 +199,8 @@ customModes:
     groups:
       - read
       - - edit
-        - fileRegex: (src/pages/|src/components/organisms/|src/api/).*
-          description: Modify pages, organisms, and API client
+        - fileRegex: src/GloboTicket\.Web/src/(?!components/(atoms|molecules)/|theme/).*
+          description: Modify all frontend files except design system (atoms, molecules, theme)
       - browser
 
   - slug: test-automation-engineer
