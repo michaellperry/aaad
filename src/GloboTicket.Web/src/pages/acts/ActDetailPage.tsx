@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Music, Trash2 } from 'lucide-react';
 import { Heading, Text, Button, Spinner } from '../../components/atoms';
-import { Card } from '../../components/molecules';
+import { Card, ShowCard } from '../../components/molecules';
 import { Stack, Row } from '../../components/layout';
-import { getAct, deleteAct } from '../../api/client';
+import { getAct, deleteAct, getShowsByAct } from '../../api/client';
 import type { Act } from '../../types/act';
+import type { Show } from '../../types/show';
 
 /**
  * Act detail page - displays act information and management options
@@ -16,6 +17,9 @@ export const ActDetailPage = () => {
   const [act, setAct] = useState<Act | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [shows, setShows] = useState<Show[]>([]);
+  const [isLoadingShows, setIsLoadingShows] = useState(false);
+  const [showsError, setShowsError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAct = async () => {
@@ -37,6 +41,24 @@ export const ActDetailPage = () => {
 
     fetchAct();
   }, [id]);
+
+  useEffect(() => {
+    const fetchShows = async () => {
+      if (!act?.actGuid) return;
+
+      setIsLoadingShows(true);
+      try {
+        const data = await getShowsByAct(act.actGuid);
+        setShows(data);
+      } catch (err) {
+        setShowsError(err instanceof Error ? err.message : 'Failed to load shows');
+      } finally {
+        setIsLoadingShows(false);
+      }
+    };
+
+    fetchShows();
+  }, [act?.actGuid]);
 
   const handleDelete = async () => {
     if (!act) return;
@@ -143,9 +165,27 @@ export const ActDetailPage = () => {
 
       {/* Upcoming Shows */}
       <Card header={<Heading level="h2">Upcoming Shows</Heading>}>
-        <Text variant="muted">
-          No upcoming shows scheduled for this act.
-        </Text>
+        {isLoadingShows ? (
+          <div className="flex justify-center p-8">
+            <Spinner size="md" />
+          </div>
+        ) : showsError ? (
+          <Text className="text-error">{showsError}</Text>
+        ) : shows.length === 0 ? (
+          <Text variant="muted">
+            No upcoming shows scheduled for this act.
+          </Text>
+        ) : (
+          <Stack gap="md">
+            {shows.map((show) => (
+              <ShowCard
+                key={show.showGuid}
+                show={show}
+                onClick={(showGuid) => navigate(`/shows/${showGuid}`)}
+              />
+            ))}
+          </Stack>
+        )}
       </Card>
 
     </Stack>

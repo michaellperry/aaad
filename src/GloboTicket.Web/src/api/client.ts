@@ -6,6 +6,7 @@ import type {
 } from '../types/api';
 import type { Venue, CreateVenueDto, UpdateVenueDto } from '../types/venue';
 import type { Act, CreateActDto, UpdateActDto } from '../types/act';
+import type { Show } from '../types/show';
 
 const API_BASE_URL = '';
 
@@ -184,4 +185,20 @@ export async function deleteAct(id: string): Promise<void> {
     const errorText = await response.text();
     throw new Error(`API Error: ${response.status} - ${errorText}`);
   }
+}
+
+export async function getShow(id: string): Promise<Show> {
+  const response = await fetch(`${API_BASE_URL}/api/shows/${id}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<Show>(response);
+}
+
+export async function getShowsByAct(actGuid: string): Promise<Show[]> {
+  const response = await fetch(`${API_BASE_URL}/api/acts/${actGuid}/shows`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<Show[]>(response);
 }
