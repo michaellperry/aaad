@@ -63,7 +63,6 @@
    - Provide follow-up suggestions:
      - "Approved - proceed to next steps"
      - "Request changes: [describe changes needed]"
-     - "Approved - create technical specification"
    - **STOP HERE and wait for user response**
    
    **Step 3: Handle User Response**
