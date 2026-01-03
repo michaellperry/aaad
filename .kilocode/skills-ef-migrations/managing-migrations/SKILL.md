@@ -140,7 +140,7 @@ You should **never need to specify these manually** when using the scripts.
 
 ### "No migrations configuration type was found"
 - Ensure you're running the script from the project root directory
-- The scripts expect to be run from `/home/mperry/projects/Pluralsight/aaad`
+- The scripts expect to be run from the workspace root (not from subdirectories)
 
 ### "The migration has already been applied to the database"
 - You cannot remove a migration that has been applied
