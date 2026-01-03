@@ -47,9 +47,14 @@
 
 6. **Request User Approval Before Proceeding**
    - After creating the user story file, **ALWAYS pause and ask the user to review and approve it**
-   - Provide a clickable markdown link to the user story file in your message:
-     - Format: `Please review the user story: [Feature Name](docs/user-stories/feature-name.md)`
+   - **Use the `ask_followup_question` tool** to request approval:
+     - Question format: `I've created the user story: [Feature Name](docs/user-stories/feature-name.md). Please review it and let me know if you approve it or if any changes are needed.`
+     - Provide follow-up suggestions:
+       - "Approved - proceed to next steps"
+       - "Request changes: [describe changes needed]"
+       - "Approved - create technical specification"
    - Wait for explicit user approval before proceeding to any next steps
-   - If the user requests changes, update the user story and request approval again
+   - If the user requests changes, update the user story and use `ask_followup_question` again to request approval
+   - **DO NOT** use `attempt_completion` until the user has explicitly approved the user story
    - **DO NOT** automatically proceed to create technical specifications or other artifacts
    - The user story serves as the foundation for all downstream work - it must be approved first
