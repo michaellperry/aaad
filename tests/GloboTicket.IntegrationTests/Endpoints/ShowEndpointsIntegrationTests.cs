@@ -273,7 +273,7 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         var venueGuid = Guid.NewGuid();
         var venue = new Venue
         {
-            TenantId = tenant.Id,
+            Tenant = tenant,
             VenueGuid = venueGuid,
             Name = $"Test Venue {tenantId}",
             Address = "123 Test St",
@@ -287,7 +287,7 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         var actGuid = Guid.NewGuid();
         var act = new Act
         {
-            TenantId = tenant.Id,
+            Tenant = tenant,
             ActGuid = actGuid,
             Name = $"Test Act {tenantId}"
         };
@@ -337,7 +337,7 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         var venueGuid = Guid.NewGuid();
         var venue = new Venue
         {
-            TenantId = tenant.Id,
+            Tenant = tenant,
             VenueGuid = venueGuid,
             Name = $"Test Venue {_testTenantId}",
             Address = "123 Test St",
@@ -351,7 +351,7 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         var actGuid = Guid.NewGuid();
         var act = new Act
         {
-            TenantId = tenant.Id,
+            Tenant = tenant,
             ActGuid = actGuid,
             Name = $"Test Act {_testTenantId}"
         };

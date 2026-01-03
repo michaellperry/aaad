@@ -83,11 +83,17 @@ public class ActService : IActService
     /// <inheritdoc />
     public async Task<ActDto> CreateAsync(CreateActDto dto, CancellationToken cancellationToken = default)
     {
+        // Validate tenant context is available
+        if (!_tenantContext.CurrentTenantId.HasValue)
+        {
+            throw new InvalidOperationException("Tenant context is required for act creation.");
+        }
+
         var act = new Act
         {
             ActGuid = dto.ActGuid,
-            Name = dto.Name,
-            TenantId = _tenantContext.CurrentTenantId ?? throw new InvalidOperationException("Tenant context is required for act creation.")
+            Name = dto.Name
+            // TenantId will be automatically set by DbContext.SaveChangesAsync
         };
 
         _dbContext.Acts.Add(act);

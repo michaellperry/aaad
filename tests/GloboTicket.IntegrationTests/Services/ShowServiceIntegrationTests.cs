@@ -208,7 +208,7 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         var venueGuid = Guid.NewGuid();
         var venue = new Venue
         {
-            TenantId = tenant.Id,
+            Tenant = tenant,
             VenueGuid = venueGuid,
             Name = venueName,
             Address = "123 Test St",
@@ -223,7 +223,7 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         var actGuid = Guid.NewGuid();
         var act = new Act
         {
-            TenantId = tenant.Id,
+            Tenant = tenant,
             ActGuid = actGuid,
             Name = actName
         };

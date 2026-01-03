@@ -9,13 +9,15 @@ namespace GloboTicket.Domain.Entities;
 public abstract class MultiTenantEntity : Entity, ITenantEntity
 {
     /// <summary>
-    /// Gets or sets the tenant identifier that this entity belongs to.
-    /// This property is used for multi-tenant data isolation.
+    /// Gets the tenant identifier that this entity belongs to.
+    /// This property is managed by Entity Framework Core through the Tenant navigation property.
+    /// Set via the <see cref="Tenant"/> navigation property instead of directly.
     /// </summary>
-    public int TenantId { get; set; } = 0;
+    public int TenantId { get; private set; } = 0;
 
     /// <summary>
     /// Gets or sets the navigation property to the tenant that owns this entity.
+    /// Setting this property automatically updates the TenantId foreign key.
     /// </summary>
     public Tenant? Tenant { get; set; } = null;
 }

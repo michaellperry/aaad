@@ -8,8 +8,9 @@ namespace GloboTicket.Domain.Interfaces;
 public interface ITenantEntity
 {
     /// <summary>
-    /// Gets or sets the tenant identifier that this entity belongs to.
+    /// Gets the tenant identifier that this entity belongs to.
     /// This property is used for multi-tenant data isolation.
+    /// Implementations should manage this through the Tenant navigation property.
     /// </summary>
-    int TenantId { get; set; }
+    int TenantId { get; }
 }

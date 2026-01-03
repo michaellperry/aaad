@@ -99,6 +99,12 @@ public class VenueService : IVenueService
     /// <inheritdoc />
     public async Task<VenueDto> CreateAsync(CreateVenueDto dto, CancellationToken cancellationToken = default)
     {
+        // Validate tenant context is available
+        if (!_tenantContext.CurrentTenantId.HasValue)
+        {
+            throw new InvalidOperationException("Tenant context is required for venue creation.");
+        }
+
         var venue = new Venue
         {
             VenueGuid = dto.VenueGuid,
@@ -106,8 +112,8 @@ public class VenueService : IVenueService
             Address = dto.Address,
             Location = GeographyService.CreatePoint(dto.Latitude, dto.Longitude),
             SeatingCapacity = dto.SeatingCapacity,
-            Description = dto.Description,
-            TenantId = _tenantContext.CurrentTenantId ?? throw new InvalidOperationException("Tenant context is required for venue creation.")
+            Description = dto.Description
+            // TenantId will be automatically set by DbContext.SaveChangesAsync
         };
 
         _dbContext.Venues.Add(venue);

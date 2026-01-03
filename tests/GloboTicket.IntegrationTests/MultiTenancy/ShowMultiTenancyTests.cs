@@ -117,7 +117,7 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
         var venueGuid = Guid.NewGuid();
         var venue = new Venue
         {
-            TenantId = tenantA.Id,
+            Tenant = tenantA,
             VenueGuid = venueGuid,
             Name = "Venue A",
             Address = "123 Test St",
@@ -131,7 +131,7 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
         var actGuid = Guid.NewGuid();
         var act = new Act
         {
-            TenantId = tenantA.Id,
+            Tenant = tenantA,
             ActGuid = actGuid,
             Name = "Act A"
         };
@@ -197,7 +197,7 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
 
             var venueA = new Venue
             {
-                TenantId = tenantA.Id,
+                Tenant = tenantA,
                 VenueGuid = Guid.NewGuid(),
                 Name = $"Venue A {uniqueId}",
                 Address = "123 A St",
@@ -210,7 +210,7 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
 
             var actA = new Act
             {
-                TenantId = tenantA.Id,
+                Tenant = tenantA,
                 ActGuid = actGuid,
                 Name = $"Shared Act {uniqueId}"
             };
@@ -250,7 +250,7 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
 
             var venueB = new Venue
             {
-                TenantId = tenantB.Id,
+                Tenant = tenantB,
                 VenueGuid = Guid.NewGuid(),
                 Name = $"Venue B {uniqueId}",
                 Address = "456 B St",
@@ -263,7 +263,7 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
 
             var actB = new Act
             {
-                TenantId = tenantB.Id,
+                Tenant = tenantB,
                 ActGuid = actGuid, // Same GUID as actA but in different tenant
                 Name = $"Shared Act {uniqueId}"
             };
