@@ -34,13 +34,16 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var showGuid = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert - Simulates 200 OK response
-        result.Should().NotBeNull("endpoint should return 200 OK with show data");
+            // Assert - Simulates 200 OK response
+            result.Should().NotBeNull("endpoint should return 200 OK with show data");
+        }
     }
 
     [Fact]
@@ -49,15 +52,18 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var showGuid = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert - Verify response body contains show data
-        result.Should().NotBeNull();
-        result!.ShowGuid.Should().Be(showGuid);
-        result.Id.Should().BeGreaterThan(0);
+            // Assert - Verify response body contains show data
+            result.Should().NotBeNull();
+            result!.ShowGuid.Should().Be(showGuid);
+            result.Id.Should().BeGreaterThan(0);
+        }
     }
 
     [Fact]
@@ -66,14 +72,17 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var showGuid = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert - Verify act name is included in response
-        result.Should().NotBeNull();
-        result!.ActName.Should().NotBeNullOrEmpty("response should include act name");
+            // Assert - Verify act name is included in response
+            result.Should().NotBeNull();
+            result!.ActName.Should().NotBeNullOrEmpty("response should include act name");
+        }
     }
 
     [Fact]
@@ -82,14 +91,17 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var showGuid = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert - Verify venue name is included in response
-        result.Should().NotBeNull();
-        result!.VenueName.Should().NotBeNullOrEmpty("response should include venue name");
+            // Assert - Verify venue name is included in response
+            result.Should().NotBeNull();
+            result!.VenueName.Should().NotBeNullOrEmpty("response should include venue name");
+        }
     }
 
     [Fact]
@@ -98,15 +110,18 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var showGuid = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert - Verify start time is included in response
-        result.Should().NotBeNull();
-        result!.StartTime.Should().BeAfter(DateTimeOffset.UtcNow.AddDays(-1), 
-            "response should include start time");
+            // Assert - Verify start time is included in response
+            result.Should().NotBeNull();
+            result!.StartTime.Should().BeAfter(DateTimeOffset.UtcNow.AddDays(-1),
+                "response should include start time");
+        }
     }
 
     [Fact]
@@ -115,13 +130,16 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var nonExistentGuid = Guid.NewGuid();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(nonExistentGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(nonExistentGuid);
 
-        // Assert - Simulates 404 Not Found response
-        result.Should().BeNull("endpoint should return 404 Not Found for non-existent show");
+            // Assert - Simulates 404 Not Found response
+            result.Should().BeNull("endpoint should return 404 Not Found for non-existent show");
+        }
     }
 
     [Fact]
@@ -132,12 +150,15 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         var showGuid = await CreateShowInTenantAsync(otherTenantId);
 
         // Act - Try to access from current tenant context
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, _testTenantId);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert - Simulates 404 Not Found response for cross-tenant access
-        result.Should().BeNull("endpoint should return 404 Not Found for cross-tenant show access");
+            // Assert - Simulates 404 Not Found response for cross-tenant access
+            result.Should().BeNull("endpoint should return 404 Not Found for cross-tenant show access");
+        }
     }
 
     [Fact]
@@ -147,14 +168,17 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         var showGuid = await CreateTestShowAsync();
 
         // Act - Create context without tenant (simulates unauthenticated request)
-        using var context = CreateDbContext(_fixture.ConnectionString, null);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert - With null tenant context, show should still be accessible
-        // Note: In actual API, RequireAuthorization() would return 401 before reaching service
-        // This test verifies service behavior with null tenant context
-        result.Should().NotBeNull("service allows null tenant context (admin access)");
+            // Assert - With null tenant context, show should still be accessible
+            // Note: In actual API, RequireAuthorization() would return 401 before reaching service
+            // This test verifies service behavior with null tenant context
+            result.Should().NotBeNull("service allows null tenant context (admin access)");
+        }
     }
 
     [Fact]
@@ -163,14 +187,17 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var (actGuid, _) = await CreateActWithShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetShowsByActGuidAsync(actGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetShowsByActGuidAsync(actGuid);
 
-        // Assert - Simulates 200 OK response
-        result.Should().NotBeNull("endpoint should return 200 OK with shows list");
-        result.Should().NotBeEmpty("act should have at least one show");
+            // Assert - Simulates 200 OK response
+            result.Should().NotBeNull("endpoint should return 200 OK with shows list");
+            result.Should().NotBeEmpty("act should have at least one show");
+        }
     }
 
     [Fact]
@@ -179,15 +206,18 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var (actGuid, showGuid) = await CreateActWithShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetShowsByActGuidAsync(actGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetShowsByActGuidAsync(actGuid);
 
-        // Assert - Verify response contains shows list
-        var showsList = result.ToList();
-        showsList.Should().NotBeEmpty();
-        showsList.Should().Contain(s => s.ShowGuid == showGuid);
+            // Assert - Verify response contains shows list
+            var showsList = result.ToList();
+            showsList.Should().NotBeEmpty();
+            showsList.Should().Contain(s => s.ShowGuid == showGuid);
+        }
     }
 
     [Fact]
@@ -197,12 +227,15 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         var nonExistentActGuid = Guid.NewGuid();
 
         // Act & Assert - Service throws KeyNotFoundException which maps to 404
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var act = async () => await service.GetShowsByActGuidAsync(nonExistentActGuid);
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var act = async () => await service.GetShowsByActGuidAsync(nonExistentActGuid);
 
-        await act.Should().ThrowAsync<KeyNotFoundException>(
-            "endpoint should return 404 Not Found for non-existent act");
+            await act.Should().ThrowAsync<KeyNotFoundException>(
+                "endpoint should return 404 Not Found for non-existent act");
+        }
     }
 
     /// <summary>
@@ -221,25 +254,28 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
     /// <returns>The GUID of the created show.</returns>
     private async Task<Guid> CreateShowInTenantAsync(int tenantId)
     {
-        using var setupContext = CreateDbContext(_fixture.ConnectionString, tenantId);
+        // Use null context for setup to avoid global query filter issues
+        using var setupContext = _fixture.CreateDbContext(_fixture.ConnectionString, null);
 
-        // Create tenant
+        // Create tenant directly in this context
         var uniqueId = Guid.NewGuid().ToString()[..8];
         var tenant = new Tenant
         {
-            TenantIdentifier = $"test-tenant-{uniqueId}",
-            Name = $"Test Tenant {uniqueId}",
-            Slug = $"test-tenant-{uniqueId}"
+            TenantIdentifier = $"test-tenant-{tenantId}-{uniqueId}",
+            Name = $"Test Tenant {tenantId} {uniqueId}",
+            Slug = $"test-tenant-{tenantId}-{uniqueId}",
+            IsActive = true
         };
         setupContext.Tenants.Add(tenant);
         await setupContext.SaveChangesAsync();
 
-        // Create venue
+        // Create venue with proper tenant reference
+        var venueGuid = Guid.NewGuid();
         var venue = new Venue
         {
             TenantId = tenant.Id,
-            VenueGuid = Guid.NewGuid(),
-            Name = $"Test Venue {uniqueId}",
+            VenueGuid = venueGuid,
+            Name = $"Test Venue {tenantId}",
             Address = "123 Test St",
             SeatingCapacity = 1000,
             Description = "Test venue description"
@@ -247,17 +283,18 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         setupContext.Venues.Add(venue);
         await setupContext.SaveChangesAsync();
 
-        // Create act
+        // Create act with proper tenant reference
+        var actGuid = Guid.NewGuid();
         var act = new Act
         {
             TenantId = tenant.Id,
-            ActGuid = Guid.NewGuid(),
-            Name = $"Test Act {uniqueId}"
+            ActGuid = actGuid,
+            Name = $"Test Act {tenantId}"
         };
         setupContext.Acts.Add(act);
         await setupContext.SaveChangesAsync();
 
-        // Create show
+        // Create show with proper references
         var showGuid = Guid.NewGuid();
         var show = new Show
         {
@@ -281,25 +318,28 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
     /// <returns>A tuple containing the act GUID and show GUID.</returns>
     private async Task<(Guid actGuid, Guid showGuid)> CreateActWithShowAsync()
     {
-        using var setupContext = CreateDbContext(_fixture.ConnectionString, _testTenantId);
+        // Use null context for setup to avoid global query filter issues
+        using var setupContext = _fixture.CreateDbContext(_fixture.ConnectionString, null);
 
-        // Create tenant
+        // Create tenant directly in this context
         var uniqueId = Guid.NewGuid().ToString()[..8];
         var tenant = new Tenant
         {
-            TenantIdentifier = $"test-tenant-{uniqueId}",
-            Name = $"Test Tenant {uniqueId}",
-            Slug = $"test-tenant-{uniqueId}"
+            TenantIdentifier = $"test-tenant-{_testTenantId}-{uniqueId}",
+            Name = $"Test Tenant {_testTenantId} {uniqueId}",
+            Slug = $"test-tenant-{_testTenantId}-{uniqueId}",
+            IsActive = true
         };
         setupContext.Tenants.Add(tenant);
         await setupContext.SaveChangesAsync();
 
-        // Create venue
+        // Create venue with proper tenant reference
+        var venueGuid = Guid.NewGuid();
         var venue = new Venue
         {
             TenantId = tenant.Id,
-            VenueGuid = Guid.NewGuid(),
-            Name = $"Test Venue {uniqueId}",
+            VenueGuid = venueGuid,
+            Name = $"Test Venue {_testTenantId}",
             Address = "123 Test St",
             SeatingCapacity = 1000,
             Description = "Test venue description"
@@ -313,7 +353,7 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         {
             TenantId = tenant.Id,
             ActGuid = actGuid,
-            Name = $"Test Act {uniqueId}"
+            Name = $"Test Act {_testTenantId}"
         };
         setupContext.Acts.Add(act);
         await setupContext.SaveChangesAsync();
@@ -336,24 +376,4 @@ public class ShowEndpointsIntegrationTests : IClassFixture<DatabaseFixture>
         return (actGuid, showGuid);
     }
 
-    /// <summary>
-    /// Creates and configures a GloboTicketDbContext for integration testing.
-    /// </summary>
-    /// <param name="connectionString">The database connection string.</param>
-    /// <param name="tenantId">The tenant ID for the test context.</param>
-    /// <returns>A configured GloboTicketDbContext instance.</returns>
-    private static GloboTicketDbContext CreateDbContext(string connectionString, int? tenantId)
-    {
-        var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
-            .UseSqlServer(connectionString, sqlOptions => sqlOptions.UseNetTopologySuite())
-            .Options;
-
-        var tenantContext = new TestTenantContext(tenantId);
-        var context = new GloboTicketDbContext(options, tenantContext);
-        
-        // Apply migrations to ensure database schema matches production behavior
-        context.Database.Migrate();
-        
-        return context;
-    }
 }

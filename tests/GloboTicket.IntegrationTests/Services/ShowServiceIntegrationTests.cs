@@ -34,16 +34,19 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var (showGuid, _, _) = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert
-        result.Should().NotBeNull();
-        result!.ShowGuid.Should().Be(showGuid);
-        result.ActName.Should().NotBeNullOrEmpty();
-        result.VenueName.Should().NotBeNullOrEmpty();
+            // Assert
+            result.Should().NotBeNull();
+            result!.ShowGuid.Should().Be(showGuid);
+            result.ActName.Should().NotBeNullOrEmpty();
+            result.VenueName.Should().NotBeNullOrEmpty();
+        }
     }
 
     [Fact]
@@ -52,16 +55,19 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var (showGuid, _, _) = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert
-        result.Should().NotBeNull();
-        result.Should().BeOfType<ShowDto>();
-        result!.Id.Should().BeGreaterThan(0);
-        result.ShowGuid.Should().Be(showGuid);
+            // Assert
+            result.Should().NotBeNull();
+            result.Should().BeOfType<ShowDto>();
+            result!.Id.Should().BeGreaterThan(0);
+            result.ShowGuid.Should().Be(showGuid);
+        }
     }
 
     [Fact]
@@ -70,13 +76,16 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var nonExistentGuid = Guid.NewGuid();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(nonExistentGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(nonExistentGuid);
 
-        // Assert
-        result.Should().BeNull();
+            // Assert
+            result.Should().BeNull();
+        }
     }
 
     [Fact]
@@ -85,14 +94,17 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var (showGuid, actName, _) = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert
-        result.Should().NotBeNull();
-        result!.ActName.Should().Be(actName);
+            // Assert
+            result.Should().NotBeNull();
+            result!.ActName.Should().Be(actName);
+        }
     }
 
     [Fact]
@@ -101,14 +113,17 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var (showGuid, _, venueName) = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert
-        result.Should().NotBeNull();
-        result!.VenueName.Should().Be(venueName);
+            // Assert
+            result.Should().NotBeNull();
+            result!.VenueName.Should().Be(venueName);
+        }
     }
 
     [Fact]
@@ -117,14 +132,17 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var (showGuid, _, _) = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert
-        result.Should().NotBeNull();
-        result!.VenueCapacity.Should().BeGreaterThan(0);
+            // Assert
+            result.Should().NotBeNull();
+            result!.VenueCapacity.Should().BeGreaterThan(0);
+        }
     }
 
     [Fact]
@@ -133,14 +151,17 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var (showGuid, _, _) = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert
-        result.Should().NotBeNull();
-        result!.StartTime.Should().BeAfter(DateTimeOffset.UtcNow);
+            // Assert
+            result.Should().NotBeNull();
+            result!.StartTime.Should().BeAfter(DateTimeOffset.UtcNow);
+        }
     }
 
     [Fact]
@@ -149,14 +170,17 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         var (showGuid, _, _) = await CreateTestShowAsync();
 
-        // Act
-        using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
-        var service = new ShowService(context);
-        var result = await service.GetByGuidAsync(showGuid);
+        // Act - Use null context (admin mode) since we're not testing tenant isolation here
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, null);
+        using (context)
+        {
+            var service = new ShowService(context, tenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert
-        result.Should().NotBeNull();
-        result!.TicketCount.Should().BeGreaterThan(0);
+            // Assert
+            result.Should().NotBeNull();
+            result!.TicketCount.Should().BeGreaterThan(0);
+        }
     }
 
     /// <summary>
@@ -165,25 +189,27 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
     /// <returns>A tuple containing the show GUID, act name, and venue name.</returns>
     private async Task<(Guid showGuid, string actName, string venueName)> CreateTestShowAsync()
     {
-        using var setupContext = CreateDbContext(_fixture.ConnectionString, _testTenantId);
+        using var setupContext = _fixture.CreateDbContext(_fixture.ConnectionString, null);
 
-        // Create tenant
+        // Create tenant directly in this context
         var uniqueId = Guid.NewGuid().ToString()[..8];
         var tenant = new Tenant
         {
-            TenantIdentifier = $"test-tenant-{uniqueId}",
-            Name = $"Test Tenant {uniqueId}",
-            Slug = $"test-tenant-{uniqueId}"
+            TenantIdentifier = $"test-tenant-{_testTenantId}-{uniqueId}",
+            Name = $"Test Tenant {_testTenantId} {uniqueId}",
+            Slug = $"test-tenant-{_testTenantId}-{uniqueId}",
+            IsActive = true
         };
         setupContext.Tenants.Add(tenant);
         await setupContext.SaveChangesAsync();
 
-        // Create venue
-        var venueName = $"Test Venue {uniqueId}";
+        // Create venue with proper tenant reference
+        var venueName = $"Test Venue {_testTenantId}";
+        var venueGuid = Guid.NewGuid();
         var venue = new Venue
         {
             TenantId = tenant.Id,
-            VenueGuid = Guid.NewGuid(),
+            VenueGuid = venueGuid,
             Name = venueName,
             Address = "123 Test St",
             SeatingCapacity = 1000,
@@ -192,18 +218,19 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         setupContext.Venues.Add(venue);
         await setupContext.SaveChangesAsync();
 
-        // Create act
-        var actName = $"Test Act {uniqueId}";
+        // Create act with proper tenant reference
+        var actName = $"Test Act {_testTenantId}";
+        var actGuid = Guid.NewGuid();
         var act = new Act
         {
             TenantId = tenant.Id,
-            ActGuid = Guid.NewGuid(),
+            ActGuid = actGuid,
             Name = actName
         };
         setupContext.Acts.Add(act);
         await setupContext.SaveChangesAsync();
 
-        // Create show
+        // Create show with proper references
         var showGuid = Guid.NewGuid();
         var show = new Show
         {
@@ -221,24 +248,4 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
         return (showGuid, actName, venueName);
     }
 
-    /// <summary>
-    /// Creates and configures a GloboTicketDbContext for integration testing.
-    /// </summary>
-    /// <param name="connectionString">The database connection string.</param>
-    /// <param name="tenantId">The tenant ID for the test context.</param>
-    /// <returns>A configured GloboTicketDbContext instance.</returns>
-    private static GloboTicketDbContext CreateDbContext(string connectionString, int? tenantId)
-    {
-        var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
-            .UseSqlServer(connectionString, sqlOptions => sqlOptions.UseNetTopologySuite())
-            .Options;
-
-        var tenantContext = new TestTenantContext(tenantId);
-        var context = new GloboTicketDbContext(options, tenantContext);
-        
-        // Apply migrations to ensure database schema matches production behavior
-        context.Database.Migrate();
-        
-        return context;
-    }
 }

@@ -15,8 +15,6 @@ namespace GloboTicket.IntegrationTests.MultiTenancy;
 public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
 {
     private readonly DatabaseFixture _fixture;
-    private readonly int _tenantAId;
-    private readonly int _tenantBId;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ShowMultiTenancyTests"/> class.
@@ -25,92 +23,103 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
     public ShowMultiTenancyTests(DatabaseFixture fixture)
     {
         _fixture = fixture;
-        _tenantAId = _fixture.GenerateRandomTenantId();
-        _tenantBId = _fixture.GenerateRandomTenantId();
     }
 
     [Fact]
     public async Task GetShowByGuid_InTenantA_NotAccessibleToTenantB()
     {
         // Arrange - Create show in Tenant A
-        var showGuid = await CreateShowInTenantAsync(_tenantAId);
+        var (showGuid, tenantAId, tenantBId) = await CreateShowInTwoTenantsAsync();
 
         // Act - Try to access from Tenant B context
-        using var tenantBContext = CreateDbContext(_fixture.ConnectionString, _tenantBId);
-        var service = new ShowService(tenantBContext);
-        var result = await service.GetByGuidAsync(showGuid);
+        var (tenantBContext, tenantBTenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, tenantBId);
+        using (tenantBContext)
+        {
+            var service = new ShowService(tenantBContext, tenantBTenantContext);
+            var result = await service.GetByGuidAsync(showGuid);
 
-        // Assert - Show should not be accessible from Tenant B
-        result.Should().BeNull();
+            // Assert - Show should not be accessible from Tenant B
+            result.Should().BeNull();
+        }
     }
 
     [Fact]
     public async Task GetShowByGuid_ForShowInOtherTenantVenue_ReturnsNull()
     {
         // Arrange - Create show in Tenant A's venue
-        var showGuid = await CreateShowInTenantAsync(_tenantAId);
+        var (showGuid, tenantAId, tenantBId) = await CreateShowInTwoTenantsAsync();
 
         // Verify show exists in Tenant A context
-        using (var tenantAContext = CreateDbContext(_fixture.ConnectionString, _tenantAId))
+        var (tenantAContext, tenantATenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, tenantAId);
+        using (tenantAContext)
         {
-            var serviceA = new ShowService(tenantAContext);
+            var serviceA = new ShowService(tenantAContext, tenantATenantContext);
             var showInTenantA = await serviceA.GetByGuidAsync(showGuid);
             showInTenantA.Should().NotBeNull("show should exist in Tenant A");
         }
 
         // Act - Try to access from Tenant B context
-        using var tenantBContext = CreateDbContext(_fixture.ConnectionString, _tenantBId);
-        var serviceB = new ShowService(tenantBContext);
-        var result = await serviceB.GetByGuidAsync(showGuid);
+        var (tenantBContext, tenantBTenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, tenantBId);
+        using (tenantBContext)
+        {
+            var serviceB = new ShowService(tenantBContext, tenantBTenantContext);
+            var result = await serviceB.GetByGuidAsync(showGuid);
 
-        // Assert - Show should not be accessible from Tenant B
-        result.Should().BeNull("show belongs to Tenant A's venue and should not be visible to Tenant B");
+            // Assert - Show should not be accessible from Tenant B
+            result.Should().BeNull("show belongs to Tenant A's venue and should not be visible to Tenant B");
+        }
     }
 
     [Fact]
     public async Task GetShowsByActGuid_ReturnsOnlyShowsInCurrentTenantVenues()
     {
         // Arrange - Create act in Tenant A
-        var (actGuid, venueAGuid, venueBGuid) = await CreateActWithShowsInMultipleTenantsAsync();
+        var (actGuid, venueAGuid, venueBGuid, tenantAId, tenantBId) = await CreateActWithShowsInMultipleTenantsAsync();
 
         // Act - Get shows for act from Tenant A context
-        using var tenantAContext = CreateDbContext(_fixture.ConnectionString, _tenantAId);
-        var serviceA = new ShowService(tenantAContext);
-        var showsInTenantA = await serviceA.GetShowsByActGuidAsync(actGuid);
+        var (tenantAContext, tenantATenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, tenantAId);
+        using (tenantAContext)
+        {
+            var serviceA = new ShowService(tenantAContext, tenantATenantContext);
+            var showsInTenantA = await serviceA.GetShowsByActGuidAsync(actGuid);
 
-        // Assert - Should only see shows in Tenant A's venues
-        var showsList = showsInTenantA.ToList();
-        showsList.Should().NotBeEmpty();
-        showsList.Should().OnlyContain(s => s.VenueGuid == venueAGuid, 
-            "only shows in Tenant A's venues should be visible");
+            // Assert - Should only see shows in Tenant A's venues
+            var showsList = showsInTenantA.ToList();
+            showsList.Should().NotBeEmpty();
+            showsList.Should().OnlyContain(s => s.VenueGuid == venueAGuid,
+                "only shows in Tenant A's venues should be visible");
+        }
+
     }
 
     /// <summary>
-    /// Creates a show in the specified tenant's venue.
+    /// Creates a show in two different tenant contexts for testing tenant isolation.
     /// </summary>
-    /// <param name="tenantId">The tenant ID to create the show for.</param>
-    /// <returns>The GUID of the created show.</returns>
-    private async Task<Guid> CreateShowInTenantAsync(int tenantId)
+    /// <returns>A tuple containing the show GUID and the actual database tenant IDs for tenants A and B.</returns>
+    private async Task<(Guid showGuid, int tenantAId, int tenantBId)> CreateShowInTwoTenantsAsync()
     {
-        using var setupContext = CreateDbContext(_fixture.ConnectionString, tenantId);
+        // Use null context for setup to avoid global query filter issues
+        using var setupContext = _fixture.CreateDbContext(_fixture.ConnectionString, null);
 
-        // Create tenant
-        var uniqueId = Guid.NewGuid().ToString()[..8];
-        var tenant = new Tenant
+        // Create Tenant A
+        var uniqueIdA = Guid.NewGuid().ToString()[..8];
+        var tenantA = new Tenant
         {
-            TenantIdentifier = $"tenant-{tenantId}-{uniqueId}",
-            Name = $"Tenant {tenantId}",
-            Slug = $"tenant-{tenantId}-{uniqueId}"
+            TenantIdentifier = $"test-tenant-a-{uniqueIdA}",
+            Name = $"Test Tenant A {uniqueIdA}",
+            Slug = $"test-tenant-a-{uniqueIdA}",
+            IsActive = true
         };
-        setupContext.Tenants.Add(tenant);
+        setupContext.Tenants.Add(tenantA);
         await setupContext.SaveChangesAsync();
 
-        // Create venue in this tenant
+        // Create venue in Tenant A
+        var venueGuid = Guid.NewGuid();
         var venue = new Venue
         {
-            TenantId = tenant.Id,
-            VenueGuid = Guid.NewGuid(),
-            Name = $"Venue {tenantId} {uniqueId}",
+            TenantId = tenantA.Id,
+            VenueGuid = venueGuid,
+            Name = "Venue A",
             Address = "123 Test St",
             SeatingCapacity = 1000,
             Description = "Test venue"
@@ -118,12 +127,13 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
         setupContext.Venues.Add(venue);
         await setupContext.SaveChangesAsync();
 
-        // Create act in this tenant
+        // Create act in Tenant A
+        var actGuid = Guid.NewGuid();
         var act = new Act
         {
-            TenantId = tenant.Id,
-            ActGuid = Guid.NewGuid(),
-            Name = $"Act {tenantId} {uniqueId}"
+            TenantId = tenantA.Id,
+            ActGuid = actGuid,
+            Name = "Act A"
         };
         setupContext.Acts.Add(act);
         await setupContext.SaveChangesAsync();
@@ -143,31 +153,47 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
         setupContext.Shows.Add(show);
         await setupContext.SaveChangesAsync();
 
-        return showGuid;
+        // Create Tenant B for isolation testing
+        var uniqueIdB = Guid.NewGuid().ToString()[..8];
+        var tenantB = new Tenant
+        {
+            TenantIdentifier = $"test-tenant-b-{uniqueIdB}",
+            Name = $"Test Tenant B {uniqueIdB}",
+            Slug = $"test-tenant-b-{uniqueIdB}",
+            IsActive = true
+        };
+        setupContext.Tenants.Add(tenantB);
+        await setupContext.SaveChangesAsync();
+
+        return (showGuid, tenantA.Id, tenantB.Id);
     }
 
     /// <summary>
     /// Creates an act with shows in venues from multiple tenants.
     /// This simulates a scenario where an act might perform at venues in different tenants.
     /// </summary>
-    /// <returns>A tuple containing the act GUID and venue GUIDs for both tenants.</returns>
-    private async Task<(Guid actGuid, Guid venueAGuid, Guid venueBGuid)> CreateActWithShowsInMultipleTenantsAsync()
+    /// <returns>A tuple containing the act GUID, venue GUIDs for both tenants, and the actual database tenant IDs.</returns>
+    private async Task<(Guid actGuid, Guid venueAGuid, Guid venueBGuid, int tenantAId, int tenantBId)> CreateActWithShowsInMultipleTenantsAsync()
     {
         var uniqueId = Guid.NewGuid().ToString()[..8];
         var actGuid = Guid.NewGuid();
 
         // Create Tenant A with venue and show
         Guid venueAGuid;
-        using (var contextA = CreateDbContext(_fixture.ConnectionString, _tenantAId))
+        int tenantAId;
+        using (var contextA = _fixture.CreateDbContext(_fixture.ConnectionString, null))
         {
+            // Create tenant A directly in this context
             var tenantA = new Tenant
             {
-                TenantIdentifier = $"tenant-a-{uniqueId}",
-                Name = "Tenant A",
-                Slug = $"tenant-a-{uniqueId}"
+                TenantIdentifier = $"test-tenant-a-{uniqueId}",
+                Name = $"Test Tenant A {uniqueId}",
+                Slug = $"test-tenant-a-{uniqueId}",
+                IsActive = true
             };
             contextA.Tenants.Add(tenantA);
             await contextA.SaveChangesAsync();
+            tenantAId = tenantA.Id;
 
             var venueA = new Venue
             {
@@ -207,16 +233,20 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
 
         // Create Tenant B with venue and show (same act GUID but different tenant)
         Guid venueBGuid;
-        using (var contextB = CreateDbContext(_fixture.ConnectionString, _tenantBId))
+        int tenantBId;
+        using (var contextB = _fixture.CreateDbContext(_fixture.ConnectionString, null))
         {
+            // Create tenant B directly in this context
             var tenantB = new Tenant
             {
-                TenantIdentifier = $"tenant-b-{uniqueId}",
-                Name = "Tenant B",
-                Slug = $"tenant-b-{uniqueId}"
+                TenantIdentifier = $"test-tenant-b-{uniqueId}",
+                Name = $"Test Tenant B {uniqueId}",
+                Slug = $"test-tenant-b-{uniqueId}",
+                IsActive = true
             };
             contextB.Tenants.Add(tenantB);
             await contextB.SaveChangesAsync();
+            tenantBId = tenantB.Id;
 
             var venueB = new Venue
             {
@@ -254,27 +284,6 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
             await contextB.SaveChangesAsync();
         }
 
-        return (actGuid, venueAGuid, venueBGuid);
-    }
-
-    /// <summary>
-    /// Creates and configures a GloboTicketDbContext for integration testing.
-    /// </summary>
-    /// <param name="connectionString">The database connection string.</param>
-    /// <param name="tenantId">The tenant ID for the test context.</param>
-    /// <returns>A configured GloboTicketDbContext instance.</returns>
-    private static GloboTicketDbContext CreateDbContext(string connectionString, int? tenantId)
-    {
-        var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
-            .UseSqlServer(connectionString, sqlOptions => sqlOptions.UseNetTopologySuite())
-            .Options;
-
-        var tenantContext = new TestTenantContext(tenantId);
-        var context = new GloboTicketDbContext(options, tenantContext);
-        
-        // Apply migrations to ensure database schema matches production behavior
-        context.Database.Migrate();
-        
-        return context;
+        return (actGuid, venueAGuid, venueBGuid, tenantAId, tenantBId);
     }
 }

@@ -2,6 +2,7 @@ using GloboTicket.Application.DTOs;
 using GloboTicket.Application.Interfaces;
 using GloboTicket.Domain.Entities;
 using GloboTicket.Infrastructure.Data;
+using GloboTicket.Infrastructure.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
 
 namespace GloboTicket.Infrastructure.Services;
@@ -13,23 +14,31 @@ namespace GloboTicket.Infrastructure.Services;
 public class ShowService : IShowService
 {
     private readonly GloboTicketDbContext _dbContext;
+    private readonly ITenantContext _tenantContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ShowService"/> class.
     /// </summary>
     /// <param name="dbContext">The database context for data access.</param>
-    public ShowService(GloboTicketDbContext dbContext)
+    /// <param name="tenantContext">The tenant context for accessing current tenant ID.</param>
+    public ShowService(GloboTicketDbContext dbContext, ITenantContext tenantContext)
     {
         _dbContext = dbContext;
+        _tenantContext = tenantContext;
     }
 
     /// <inheritdoc />
     public async Task<ShowDto?> GetByGuidAsync(Guid showGuid, CancellationToken cancellationToken = default)
     {
+        // Use IgnoreQueryFilters to bypass global filter, then manually filter by Venue.TenantId
+        // This ensures proper tenant isolation through the Venue relationship
         var show = await _dbContext.Shows
+            .IgnoreQueryFilters()
             .Include(s => s.Act)
             .Include(s => s.Venue)
-            .FirstOrDefaultAsync(s => s.ShowGuid == showGuid, cancellationToken);
+            .Where(s => s.ShowGuid == showGuid)
+            .Where(s => _tenantContext.CurrentTenantId == null || s.Venue.TenantId == _tenantContext.CurrentTenantId)
+            .FirstOrDefaultAsync(cancellationToken);
 
         return show == null ? null : MapToDto(show);
     }
@@ -37,18 +46,23 @@ public class ShowService : IShowService
     /// <inheritdoc />
     public async Task<IEnumerable<ShowDto>> GetShowsByActGuidAsync(Guid actGuid, CancellationToken cancellationToken = default)
     {
-        var act = await _dbContext.Acts
-            .FirstOrDefaultAsync(a => a.ActGuid == actGuid, cancellationToken);
+        // Validate act exists (with tenant filtering if context is set)
+        var actExists = await _dbContext.Acts
+            .AnyAsync(a => a.ActGuid == actGuid, cancellationToken);
 
-        if (act == null)
+        if (!actExists)
         {
             throw new KeyNotFoundException($"Act with GUID {actGuid} not found");
         }
 
+        // Query shows directly by Act.ActGuid to support multi-tenant acts
+        // Use IgnoreQueryFilters to bypass Act tenant filtering, but manually filter by Venue tenant
         var shows = await _dbContext.Shows
+            .IgnoreQueryFilters()
             .Include(s => s.Act)
             .Include(s => s.Venue)
-            .Where(s => s.ActId == act.Id)
+            .Where(s => s.Act.ActGuid == actGuid)
+            .Where(s => _tenantContext.CurrentTenantId == null || s.Venue.TenantId == _tenantContext.CurrentTenantId)
             .ToListAsync(cancellationToken);
 
         return shows.Select(MapToDto);
@@ -108,8 +122,14 @@ public class ShowService : IShowService
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(Guid showGuid, CancellationToken cancellationToken = default)
     {
+        // Use IgnoreQueryFilters to bypass global filter, then manually filter by Venue.TenantId
+        // This ensures proper tenant isolation through the Venue relationship
         var show = await _dbContext.Shows
-            .FirstOrDefaultAsync(s => s.ShowGuid == showGuid, cancellationToken);
+            .IgnoreQueryFilters()
+            .Include(s => s.Venue)
+            .Where(s => s.ShowGuid == showGuid)
+            .Where(s => _tenantContext.CurrentTenantId == null || s.Venue.TenantId == _tenantContext.CurrentTenantId)
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (show == null)
         {
