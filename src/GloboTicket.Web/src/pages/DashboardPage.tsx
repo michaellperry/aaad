@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { BarChart3, MapPin, Users } from 'lucide-react';
 import { Heading, Text, Button } from '../components/atoms';
 import { Card } from '../components/molecules';
@@ -9,6 +10,7 @@ import { useDashboardStats } from '../features/dashboard/hooks';
  * Dashboard overview page with key metrics and quick actions
  */
 export const DashboardPage = () => {
+  const navigate = useNavigate();
   const { totalVenues, activeActs, isLoading, error } = useDashboardStats();
 
   const stats = [
@@ -85,12 +87,12 @@ export const DashboardPage = () => {
                   </Heading>
                 </div>
                 {stat.href !== '#' && (
-                  <a
-                    href={stat.href}
-                    className="text-sm text-brand-primary hover:text-brand-primary-hover"
+                  <button
+                    onClick={() => navigate(stat.href)}
+                    className="text-sm text-brand-primary hover:text-brand-primary-hover text-left"
                   >
                     View all →
-                  </a>
+                  </button>
                 )}
               </Stack>
             </Card>
@@ -108,7 +110,7 @@ export const DashboardPage = () => {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => (window.location.href = ROUTES.VENUE_CREATE)}
+              onClick={() => navigate(ROUTES.VENUE_CREATE)}
               className="w-full"
             >
               Create Venue
@@ -116,7 +118,7 @@ export const DashboardPage = () => {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => (window.location.href = ROUTES.ACT_CREATE)}
+              onClick={() => navigate(ROUTES.ACT_CREATE)}
               className="w-full"
             >
               Add Act
