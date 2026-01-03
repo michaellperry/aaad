@@ -53,7 +53,7 @@ export const Icon = ({
 
   return (
     <IconComponent
-      className={cn(sizeStyles[size], className)}
+      className={cn(sizeStyles[size], 'flex-shrink-0', className)}
       aria-label={label}
       aria-hidden={!label}
       {...props}

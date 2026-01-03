@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../../utils';
-import { Button, Text } from '../atoms';
+import { Button, Text, Icon } from '../atoms';
 import { Stack } from '../layout';
 import { NavItem } from './NavItem';
 
@@ -168,15 +168,15 @@ export const Sidebar = ({
             onClick={handleToggleCollapse}
             className={cn(
               'w-full',
-              collapsed && 'justify-center'
+              collapsed && 'justify-center px-0'
             )}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? (
-              <ChevronRight className="w-4 h-4" />
+              <Icon icon={ChevronRight} size="md" />
             ) : (
               <>
-                <ChevronLeft className="w-4 h-4" />
+                <Icon icon={ChevronLeft} size="md" />
                 <span className="flex-1 text-left">Collapse</span>
               </>
             )}
