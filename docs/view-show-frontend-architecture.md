@@ -237,80 +237,55 @@ export const ShowCard = ({ show, onClick }: ShowCardProps) => {
 
 ## 2. State Management
 
-### 2.1 Component-Level State
+### 2.1 TanStack Query Integration
 
-Following the existing pattern from [`ActDetailPage`](../src/GloboTicket.Web/src/pages/acts/ActDetailPage.tsx) and [`VenueDetailPage`](../src/GloboTicket.Web/src/pages/venues/VenueDetailPage.tsx), the View Show feature uses React's built-in `useState` and `useEffect` hooks for state management.
+**Status**: ✅ **IMPLEMENTED** - The GloboTicket frontend now uses TanStack Query for all server state management across all features (shows, venues, acts).
 
-**ShowDetailPage State**:
-```typescript
-const [show, setShow] = useState<Show | null>(null);
-const [isLoading, setIsLoading] = useState(true);
-const [error, setError] = useState<string | null>(null);
-```
-
-**ActDetailPage Additional State**:
-```typescript
-const [shows, setShows] = useState<Show[]>([]);
-const [isLoadingShows, setIsLoadingShows] = useState(false);
-const [showsError, setShowsError] = useState<string | null>(null);
-```
-
-### 2.2 Data Fetching Pattern
-
-**Pattern**: Fetch data in `useEffect` on component mount, following existing conventions.
+The View Show feature uses TanStack Query hooks for data fetching, following the project-wide migration completed in January 2026.
 
 **ShowDetailPage Data Fetching**:
 ```typescript
-useEffect(() => {
-  const fetchShow = async () => {
-    if (!id) {
-      setError('Show ID is required');
-      setIsLoading(false);
-      return;
-    }
+import { useShow } from '../../features/shows/hooks';
 
-    try {
-      const data = await getShow(id);
-      setShow(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load show');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  fetchShow();
-}, [id]);
+const { data: show, isLoading, error } = useShow(id!);
 ```
 
 **ActDetailPage Shows Fetching**:
 ```typescript
-useEffect(() => {
-  const fetchShows = async () => {
-    if (!act?.actGuid) return;
+import { useShowsByAct } from '../../features/shows/hooks';
 
-    setIsLoadingShows(true);
-    try {
-      const data = await getShowsByAct(act.actGuid);
-      setShows(data);
-    } catch (err) {
-      setShowsError(err instanceof Error ? err.message : 'Failed to load shows');
-    } finally {
-      setIsLoadingShows(false);
-    }
-  };
-
-  fetchShows();
-}, [act?.actGuid]);
+const { data: shows = [], isLoading: isLoadingShows, error: showsError } = useShowsByAct(act?.actGuid);
 ```
 
-### 2.3 State Management Rationale
+### 2.2 Query Hooks
 
-**Why Not TanStack Query?**
+**Location**: [`src/GloboTicket.Web/src/features/shows/hooks/`](../src/GloboTicket.Web/src/features/shows/hooks/)
 
-While the design system architecture document mentions TanStack Query for server state management, the existing implementation uses simple `useState` and `useEffect` patterns. For consistency with the existing codebase and to avoid introducing new dependencies mid-project, the View Show feature follows the established pattern.
+**Available Hooks**:
+- [`useShow(id)`](../src/GloboTicket.Web/src/features/shows/hooks/useShow.ts) - Fetch single show by ID
+- [`useShowsByAct(actGuid)`](../src/GloboTicket.Web/src/features/shows/hooks/useShowsByAct.ts) - Fetch shows for an act
 
-**Future Consideration**: If the application grows and requires more sophisticated caching, optimistic updates, or background refetching, migrating to TanStack Query would be beneficial. However, this should be a project-wide refactoring, not introduced piecemeal.
+**Query Keys**: Centralized in [`queryKeys.ts`](../src/GloboTicket.Web/src/features/queryKeys.ts)
+```typescript
+queryKeys.shows.detail(id)      // ['shows', id]
+queryKeys.shows.byAct(actGuid)  // ['shows', 'by-act', actGuid]
+```
+
+### 2.3 Benefits of TanStack Query
+
+**Automatic Features**:
+- ✅ Automatic caching - Eliminates redundant API calls
+- ✅ Background refetching - Keeps data fresh without user interaction
+- ✅ Request deduplication - Multiple components share single request
+- ✅ Loading and error states - Built-in state management
+- ✅ Retry logic - Automatic retry on failure
+- ✅ DevTools integration - Visual debugging of query state
+
+**Performance Improvements**:
+- Reduced network traffic through intelligent caching
+- Faster page loads with cached data
+- Optimistic updates for better UX
+- Stale-while-revalidate pattern for instant UI updates
 
 ---
 

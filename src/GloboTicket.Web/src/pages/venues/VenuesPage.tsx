@@ -13,6 +13,7 @@ import { Stack } from '../../components/layout/Stack';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { ROUTES } from '../../router/routes';
+import { useVenues } from '../../features/venues/hooks';
 import type { Venue } from '../../types/venue';
 
 /**
@@ -25,9 +26,12 @@ import type { Venue } from '../../types/venue';
  */
 export function VenuesPage() {
   const navigate = useNavigate();
+  
+  // Fetch venues using TanStack Query
+  const { data: venues = [], isLoading, error } = useVenues();
 
   const handleVenueClick = (venue: Venue) => {
-    // Navigate to venue detail page when implemented
+    // Navigate to venue detail page
     navigate(`/venues/${venue.venueGuid}`);
   };
 
@@ -48,7 +52,12 @@ export function VenuesPage() {
         }
       />
       
-      <VenueList onVenueClick={handleVenueClick} />
+      <VenueList 
+        venues={venues}
+        isLoading={isLoading}
+        error={error?.message}
+        onVenueClick={handleVenueClick}
+      />
     </Stack>
   );
 }

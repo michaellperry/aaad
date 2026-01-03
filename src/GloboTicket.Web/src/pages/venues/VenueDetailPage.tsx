@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, MapPin, Trash2 } from 'lucide-react';
 import { Heading, Text, Button, Spinner } from '../../components/atoms';
 import { Card } from '../../components/molecules';
 import { Stack, Row } from '../../components/layout';
-import { getVenue, deleteVenue } from '../../api/client';
-import type { Venue } from '../../types/venue';
+import { useVenue, useDeleteVenue } from '../../features/venues/hooks';
 
 /**
  * Venue detail page - displays venue information and management options
@@ -13,41 +11,25 @@ import type { Venue } from '../../types/venue';
 export const VenueDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [venue, setVenue] = useState<Venue | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchVenue = async () => {
-      if (!id) {
-        setError('Venue ID is required');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const data = await getVenue(id);
-        setVenue(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load venue');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchVenue();
-  }, [id]);
+  
+  // Fetch venue data using TanStack Query
+  const { data: venue, isLoading, error } = useVenue(id);
+  
+  // Delete mutation
+  const deleteMutation = useDeleteVenue();
 
   const handleDelete = async () => {
     if (!venue) return;
     
     if (window.confirm(`Are you sure you want to delete "${venue.name}"? This action cannot be undone.`)) {
-      try {
-        await deleteVenue(venue.venueGuid);
-        navigate('/venues');
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to delete venue');
-      }
+      deleteMutation.mutate(venue.venueGuid, {
+        onSuccess: () => {
+          navigate('/venues');
+        },
+        onError: (err) => {
+          alert(`Failed to delete venue: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        },
+      });
     }
   };
 
@@ -64,7 +46,9 @@ export const VenueDetailPage = () => {
       <Stack gap="xl">
         <Card>
           <div className="p-8 text-center">
-            <Text className="text-error">{error || 'Venue not found'}</Text>
+            <Text className="text-error">
+              {error instanceof Error ? error.message : 'Venue not found'}
+            </Text>
           </div>
         </Card>
       </Stack>
@@ -108,9 +92,10 @@ export const VenueDetailPage = () => {
           <Button
             variant="danger"
             onClick={handleDelete}
+            disabled={deleteMutation.isPending}
           >
             <Trash2 className="w-4 h-4 mr-2" />
-            Delete
+            {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
           </Button>
         </Row>
       </div>

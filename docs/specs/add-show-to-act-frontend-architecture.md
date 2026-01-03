@@ -382,9 +382,11 @@ export const ShowForm = ({ actGuid, actName, onSuccess, onCancel }: ShowFormProp
 
 ## 2. State Management
 
-### 2.1 Component-Level State
+### 2.1 TanStack Query Integration
 
-Following the existing pattern from [`ActForm`](../../src/GloboTicket.Web/src/components/organisms/ActForm.tsx:14) and [`VenueForm`](../../src/GloboTicket.Web/src/components/organisms/VenueForm.tsx:15), the Add Show to Act feature uses React's built-in `useState` and `useEffect` hooks for state management.
+**Status**: ✅ **IMPLEMENTED** - The GloboTicket frontend now uses TanStack Query for all server state management across all features (shows, venues, acts).
+
+The Add Show to Act feature uses TanStack Query hooks for data fetching, following the project-wide migration completed in January 2026.
 
 **CreateShowPage State**:
 ```typescript
@@ -559,13 +561,22 @@ const handleSubmit = async () => {
 };
 ```
 
-### 2.4 State Management Rationale
+### 2.4 Query Hooks for Data Fetching
 
-**Why Not TanStack Query?**
+**Available Hooks**:
+- [`useAct(id)`](../../src/GloboTicket.Web/src/features/acts/hooks/useAct.ts) - Fetch act details
+- [`useVenues()`](../../src/GloboTicket.Web/src/features/venues/hooks/useVenues.ts) - Fetch all venues
 
-While TanStack Query is mentioned in the design system architecture, the existing implementation uses simple `useState` and `useEffect` patterns. For consistency with the existing codebase (ActForm, VenueForm, ActDetailPage), the Add Show to Act feature follows the established pattern.
+**Form State Management**:
+- Form fields (venueGuid, ticketCount, startDate, startTime) still use `useState` for local form state
+- Server data fetching uses TanStack Query hooks
+- Form submission uses mutation hooks for optimistic updates and cache invalidation
 
-**Future Consideration**: If the application grows and requires more sophisticated caching, optimistic updates, or background refetching, migrating to TanStack Query would be beneficial. However, this should be a project-wide refactoring, not introduced piecemeal.
+**Benefits**:
+- Automatic caching of venues list
+- Background refetching keeps venue data fresh
+- Optimistic updates for better UX
+- Automatic retry on failure
 
 ---
 

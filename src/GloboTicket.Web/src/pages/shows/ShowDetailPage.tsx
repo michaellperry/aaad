@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Heading, Text, Button, Spinner } from '../../components/atoms';
 import { Card } from '../../components/molecules';
 import { Stack } from '../../components/layout';
-import { getShow } from '../../api/client';
-import type { Show } from '../../types/show';
+import { useShow } from '../../features/shows/hooks';
 
 /**
  * Format date in long format (e.g., "March 15, 2026")
@@ -49,30 +47,7 @@ function formatTimestamp(dateString: string): string {
 export const ShowDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [show, setShow] = useState<Show | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchShow = async () => {
-      if (!id) {
-        setError('Show ID is required');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const data = await getShow(id);
-        setShow(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load show');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchShow();
-  }, [id]);
+  const { data: show, isLoading, error } = useShow(id);
 
   if (isLoading) {
     return (
@@ -87,7 +62,9 @@ export const ShowDetailPage = () => {
       <Stack gap="xl">
         <Card>
           <div className="p-8 text-center">
-            <Text className="text-error">{error || 'Show not found'}</Text>
+            <Text className="text-error">
+              {error ? error.message : 'Show not found'}
+            </Text>
           </div>
         </Card>
       </Stack>
