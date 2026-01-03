@@ -102,13 +102,9 @@ public class ShowService : IShowService
         }
 
         // Create show entity
-        var show = new Show
+        var show = new Show(act, venue)
         {
             ShowGuid = dto.ShowGuid,
-            ActId = act.Id,
-            Act = act,
-            VenueId = venue.Id,
-            Venue = venue,
             TicketCount = dto.TicketCount,
             StartTime = dto.StartTime
         };

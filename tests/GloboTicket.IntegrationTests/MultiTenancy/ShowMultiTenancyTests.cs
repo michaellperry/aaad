@@ -140,13 +140,9 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
 
         // Create show
         var showGuid = Guid.NewGuid();
-        var show = new Show
+        var show = new Show(act, venue)
         {
             ShowGuid = showGuid,
-            VenueId = venue.Id,
-            Venue = venue,
-            ActId = act.Id,
-            Act = act,
             TicketCount = 500,
             StartTime = DateTimeOffset.UtcNow.AddDays(30)
         };
@@ -217,13 +213,9 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
             contextA.Acts.Add(actA);
             await contextA.SaveChangesAsync();
 
-            var showA = new Show
+            var showA = new Show(actA, venueA)
             {
                 ShowGuid = Guid.NewGuid(),
-                VenueId = venueA.Id,
-                Venue = venueA,
-                ActId = actA.Id,
-                Act = actA,
                 TicketCount = 500,
                 StartTime = DateTimeOffset.UtcNow.AddDays(30)
             };
@@ -270,13 +262,9 @@ public class ShowMultiTenancyTests : IClassFixture<DatabaseFixture>
             contextB.Acts.Add(actB);
             await contextB.SaveChangesAsync();
 
-            var showB = new Show
+            var showB = new Show(actB, venueB)
             {
                 ShowGuid = Guid.NewGuid(),
-                VenueId = venueB.Id,
-                Venue = venueB,
-                ActId = actB.Id,
-                Act = actB,
                 TicketCount = 800,
                 StartTime = DateTimeOffset.UtcNow.AddDays(45)
             };

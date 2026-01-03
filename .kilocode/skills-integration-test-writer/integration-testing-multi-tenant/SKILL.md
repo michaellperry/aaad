@@ -96,12 +96,10 @@ var act = new Act
 setupContext.Acts.Add(act);
 await setupContext.SaveChangesAsync();
 
-// 4. Create show with FKs to venue and act
-var show = new Show
+// 4. Create show using constructor with navigation parameters
+var show = new Show(act, venue)  // ✅ Constructor sets navigation properties and FKs
 {
     ShowGuid = Guid.NewGuid(),
-    VenueId = venue.Id,    // Valid FK - same context
-    ActId = act.Id,        // Valid FK - same context
     TicketCount = 500,
     StartTime = DateTimeOffset.UtcNow.AddDays(30)
 };
@@ -288,7 +286,7 @@ public async Task GetShow_FromOtherTenant_Returns404()
         contextA.Acts.Add(act);
         await contextA.SaveChangesAsync();
         
-        var show = new Show { VenueId = venue.Id, ActId = act.Id, ... };
+        var show = new Show(act, venue) { ... };  // ✅ Constructor with navigation parameters
         contextA.Shows.Add(show);
         await contextA.SaveChangesAsync();
         showGuid = show.ShowGuid;

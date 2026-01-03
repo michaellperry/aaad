@@ -232,13 +232,9 @@ public class ShowServiceIntegrationTests : IClassFixture<DatabaseFixture>
 
         // Create show with proper references
         var showGuid = Guid.NewGuid();
-        var show = new Show
+        var show = new Show(act, venue)
         {
             ShowGuid = showGuid,
-            VenueId = venue.Id,
-            Venue = venue,
-            ActId = act.Id,
-            Act = act,
             TicketCount = 500,
             StartTime = DateTimeOffset.UtcNow.AddDays(30)
         };
