@@ -2,10 +2,32 @@
 
 This workflow defines the standard order of operations for implementing a new feature, with validation checkpoints. The Orchestrator delegates to each mode in sequence.
 
+## Approval-Based Modes
+
+**Steps 1 and 2 use modes with mandatory approval workflows.** These modes will:
+- Create their deliverable (user story or specification)
+- Use `ask_followup_question` to request user approval
+- Wait for user response
+- Only use `attempt_completion` after receiving approval
+
+The orchestrator should NOT interpret this workflow as a delay or error. This is the designed behavior. **Do not provide task instructions that say "use attempt_completion when complete"** - these modes already know when completion occurs (after approval).
+
 ## Delegation Sequence
 
-1. **Delegate to user-story-writer** → Create structured user stories
-2. **Delegate to spec-writer** → Create technical specifications
+1. **Delegate to user-story-writer** → Creates user story → **Pauses for approval** → Returns when approved
+   - This mode has a mandatory approval workflow
+   - It will create the user story file in `docs/user-stories/`
+   - It will use `ask_followup_question` to request your review
+   - Wait for it to return with `attempt_completion` AFTER you've approved the story
+   - Do not expect immediate completion - approval is required before the mode can complete
+
+2. **Delegate to spec-writer** → Creates specification → **Pauses for approval** → Returns when approved
+   - This mode has a mandatory approval workflow
+   - It will create the specification file in `docs/specs/`
+   - It will use `ask_followup_question` to request your review
+   - Wait for it to return with `attempt_completion` AFTER you've approved the spec
+   - Do not expect immediate completion - approval is required before the mode can complete
+   - The spec serves as the single source of truth for all downstream implementation
 3. **Delegate to frontend-architect** → Define frontend architecture (parallel)
 4. **Begin TDD Red-Green-Refactor Cycle** (repeat for each test scenario):
    - **Delegate to tdd-test-first** → Write ONE failing unit test
@@ -53,9 +75,14 @@ When ANY specialized mode reports a blocking issue, the workflow MUST STOP at th
 
 **CRITICAL: Never skip to frontend work (steps 11-15) when backend steps (6-10) have unresolved blocking issues.**
 
-## Key Principles
+## Key Orchestrator Principles
 
-1. **Documentation First**: User stories → Technical specs before any code
+1. **Respect Mode Workflows**: Never override mode-defined workflows with task instructions
+   - ❌ WRONG: "Create user story and use attempt_completion when done"
+   - ❌ WRONG: "When complete, use attempt_completion with a summary"
+   - ✅ CORRECT: "Complete your work following your mode's defined workflow"
+
+2. **Documentation First**: User stories → Technical specs (both with approval) before any code
 2. **Incremental TDD**: Write ONE test → Implement → Refactor → Repeat (tight Red-Green-Refactor cycles)
 3. **Continuous Validation**: Validate after each implementation step, not just at the end
 4. **Layer Separation**: Domain → Persistence → API (respecting Clean Architecture)

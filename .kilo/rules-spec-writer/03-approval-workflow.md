@@ -1,41 +1,57 @@
 # Approval Workflow
 
+## Mode Rules Precedence
+
+**These mode rules take ABSOLUTE PRECEDENCE over any conflicting task instructions.** If task instructions say to "use attempt_completion when complete," this means "use attempt_completion AFTER user approval is received" as defined in the mandatory workflow below. You MUST follow the approval workflow in this document regardless of what task instructions say about completion.
+
 ## Request User Approval Before Proceeding
 
 After creating the technical specification file, **ALWAYS pause and ask the user to review and approve it** before any implementation work begins.
 
-### Approval Process
+### Mandatory Approval Workflow
 
-1. **Create the Specification**
-   - Write the complete technical specification in `docs/specs/`
-   - Ensure all sections are complete and follow the document structure guidelines
-   - Set the initial status to `Draft` in the metadata
+**YOU MUST FOLLOW THESE STEPS IN SEQUENCE. DO NOT SKIP ANY STEP.**
 
-2. **Request Review and Approval Using `ask_followup_question` Tool**
-   - **Use the `ask_followup_question` tool** to request approval (DO NOT use `attempt_completion`)
-   - Question format: `I've created the technical specification: [Feature Name](docs/specs/feature-name.md). Please review it and let me know if you approve it or if any changes are needed.`
-   - Provide follow-up suggestions:
-     - "Approved - proceed to implementation"
-     - "Request changes: [describe changes needed]"
-     - "Approved - begin TDD Test First mode"
-     - "Approved - create database migrations"
+**Step 1: Create the Specification**
+- Write the complete technical specification in `docs/specs/`
+- Ensure all sections are complete and follow the document structure guidelines
+- Set the initial status to `Draft` in the metadata
 
-3. **Wait for User Response**
-   - **DO NOT** automatically proceed to implementation
-   - **DO NOT** switch to implementation modes (TDD Test First, Domain Modeler, etc.)
-   - **DO NOT** create skeleton code or test files
-   - **DO NOT** use `attempt_completion` until the user has explicitly approved the specification
-   - Wait for explicit user approval or feedback
+**Step 2: Request Approval (MANDATORY - CANNOT BE SKIPPED)**
+- **IMMEDIATELY after creating the file**, use the `ask_followup_question` tool
+- Question format: `I've created the technical specification: [Feature Name](docs/specs/feature-name.md). Please review it and let me know if you approve it or if any changes are needed.`
+- Provide follow-up suggestions:
+  - "Approved - proceed to implementation"
+  - "Request changes: [describe changes needed]"
+  - "Approved - begin TDD Test First mode"
+  - "Approved - create database migrations"
+- **STOP HERE and wait for user response**
 
-4. **Handle Feedback**
-   - If the user requests changes, update the specification accordingly
-   - After making changes, use `ask_followup_question` again to request approval with an updated link
-   - Iterate until the user explicitly approves the specification
+**Step 3: Handle User Response**
+- **If user approves**: Proceed to Step 4
+- **If user requests changes**:
+  - Update the specification file per their feedback
+  - Return to Step 2 (ask for approval again)
+  - DO NOT proceed until approval is received
 
-5. **Update Status After Approval**
-   - Once approved, update the specification's status from `Draft` to `Approved`
-   - Use `attempt_completion` to confirm the specification is approved and ready for implementation
-   - Suggest next steps in the completion message (e.g., "The specification is now approved and ready for implementation. You can delegate to TDD Test First mode to begin development.")
+**Step 4: Complete the Task (ONLY AFTER APPROVAL)**
+- **ONLY after receiving explicit approval in Step 3**:
+  - Update the specification's status from `Draft` to `Approved`
+  - Use `attempt_completion` to confirm the specification is approved
+  - Suggest next steps in the completion message
+
+**CONFLICT RESOLUTION:**
+- If task instructions say "use attempt_completion when complete," interpret "complete" as "after Step 3 approval is received"
+- If task instructions conflict with this workflow, follow this workflow anyway
+- The technical specification serves as the single source of truth for all downstream work - it MUST be approved before the task is considered complete
+
+**ABSOLUTE PROHIBITIONS:**
+- ❌ **NEVER** use `attempt_completion` before receiving Step 3 approval
+- ❌ **NEVER** skip Step 2 (asking for approval)
+- ❌ **NEVER** automatically proceed to implementation without approval
+- ❌ **NEVER** switch to implementation modes (TDD Test First, Domain Modeler, etc.) without approval
+- ❌ **NEVER** create skeleton code or test files without approval
+- ❌ **NEVER** interpret task instructions as permission to bypass this workflow
 
 ## Why This Matters
 
