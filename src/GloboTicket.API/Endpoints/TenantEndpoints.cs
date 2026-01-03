@@ -30,7 +30,7 @@ public static class TenantEndpoints
         tenants.MapGet("/{id:int}", async (int id, ITenantService tenantService, CancellationToken cancellationToken) =>
         {
             var tenant = await tenantService.GetTenantByIdAsync(id, cancellationToken);
-            
+
             if (tenant == null)
             {
                 return Results.NotFound(new { message = $"Tenant with ID {id} not found" });

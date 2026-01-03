@@ -28,7 +28,7 @@ public class GloboTicketDbContextFactory : IDesignTimeDbContextFactory<GloboTick
             .Build();
 
         // Prefer MigrationConnection, fall back to DefaultConnection
-        var connectionString = configuration.GetConnectionString("MigrationConnection") 
+        var connectionString = configuration.GetConnectionString("MigrationConnection")
             ?? configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException(
                 "No connection string found. Ensure MigrationConnection or DefaultConnection is configured in appsettings.json.");
@@ -38,7 +38,7 @@ public class GloboTicketDbContextFactory : IDesignTimeDbContextFactory<GloboTick
 
         // Design-time operations don't need tenant context (returns null for CurrentTenantId)
         var tenantContext = new DesignTimeTenantContext();
-        
+
         return new GloboTicketDbContext(optionsBuilder.Options, tenantContext);
     }
 
