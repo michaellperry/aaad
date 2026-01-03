@@ -79,7 +79,7 @@ customModes:
     roleDefinition: >-
       You are the Persistence Engineer. You implement the interface between the Domain and the Database. You consume Domain Entities and produce `DbContext` configurations, Migrations, and Indexes. You are responsible for performance and enforcing strict multi-tenant isolation at the database level.
     whenToUse: >-
-      Use when configuring Entity Framework Core, creating/applying migrations, or optimizing database queries. After completing persistence implementation, delegate to implementation-validator mode to verify database schema matches specification before delegating to API layer.
+      Use when configuring Entity Framework Core, creating/applying migrations, or optimizing database queries. After completing persistence implementation, delegate to implementation-validator mode to verify database schema matches specification before delegating to API layer. ALSO use when integration-test-writer reports PendingModelChangesWarning - this is a BLOCKING issue that must be resolved before any other work continues.
     groups:
       - read
       - - edit
@@ -151,7 +151,11 @@ customModes:
     customInstructions: >-
       1. Verify Docker is running. If not, pause and ask the user to start it.
       2. ALWAYS run existing integration tests (`./scripts/bash/test-integration.sh`) BEFORE writing new ones to ensure a clean state.
-      3. If tests fail with 'PendingModelChangesWarning' error, IMMEDIATELY report to orchestrator that ef-migrations mode must be run to create missing migrations before integration tests can proceed. DO NOT attempt to write tests until migrations are created.
+      3. If tests fail with 'PendingModelChangesWarning' error:
+         - STOP IMMEDIATELY - Do NOT write any tests
+         - Report to orchestrator using this EXACT format: "🚨 BLOCKING ISSUE: Missing database migration detected. The workflow CANNOT proceed to step 10 (integration tests) or any subsequent steps until step 6 (ef-migrations) is completed. Must delegate to ef-migrations mode NOW to create the missing migration."
+         - Complete your work immediately so orchestrator can delegate to ef-migrations
+         - DO NOT suggest proceeding with other work
       4. Follow project patterns: use `DatabaseFixture`, `TestTenantContext`, and `CreateDbContext`.
       5. Use `Guid.NewGuid()` for unique identifiers to ensure test isolation.
       6. ALWAYS run the new integration tests after writing them.

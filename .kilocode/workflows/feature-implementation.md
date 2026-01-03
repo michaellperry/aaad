@@ -28,6 +28,31 @@ This workflow defines the standard order of operations for implementing a new fe
 
 **The Orchestrator MUST delegate to implementation-validator after EVERY implementation step** to verify spec compliance before delegating to the next implementation mode. This ensures early detection of gaps and reduces rework.
 
+## Workflow Sequencing Rules
+
+**Backend steps (6-10) MUST be fully complete before frontend steps (11-15) begin:**
+- Step 6: ef-migrations → Step 7: validate persistence → Step 8: backend-api-developer → Step 9: validate API → Step 10: integration-test-writer
+- **Only after step 10 completes successfully** can steps 11-15 (frontend) begin
+- If any backend step reports a blocking issue, the workflow STOPS until resolved
+
+## Blocking Issues Protocol
+
+When ANY specialized mode reports a blocking issue, the workflow MUST STOP at that step:
+
+1. **STOP all forward progress** - Do not proceed to subsequent steps or parallel tracks
+2. **Immediately delegate to the appropriate fix mode** to resolve the blocking issue
+3. **Re-validate the fixed layer** - Delegate to implementation-validator after the fix
+4. **Only then resume the workflow** from where the block occurred
+
+### Blocking Issue Examples:
+- **PendingModelChangesWarning** from integration-test-writer → Delegate to ef-migrations immediately
+- **Missing migrations** → Delegate to ef-migrations immediately
+- **Failed validation** from implementation-validator → Delegate back to implementation mode
+- **Compilation errors** → Delegate to appropriate implementation mode
+- **Failed tests** → Delegate to mode responsible for that layer
+
+**CRITICAL: Never skip to frontend work (steps 11-15) when backend steps (6-10) have unresolved blocking issues.**
+
 ## Key Principles
 
 1. **Documentation First**: User stories → Technical specs before any code
@@ -76,11 +101,13 @@ Refactoring is FORBIDDEN when:
 - Unit tests pass
 - No dependencies on infrastructure concerns
 
-### After Persistence Implementation
+### After Persistence Implementation (Step 7 - MANDATORY CHECKPOINT)
+- **CRITICAL**: Verify no pending model changes exist by running integration tests
 - Migrations match schema specification
 - Multi-tenant isolation is enforced
 - Indexes are created
 - DbContext configurations are correct
+- **If PendingModelChangesWarning appears, this is a BLOCKING ISSUE - delegate back to ef-migrations immediately**
 
 ### After API Implementation
 - Endpoints match OpenAPI spec
