@@ -62,7 +62,8 @@ public class ShowConfiguration : IEntityTypeConfiguration<Show>
             .IsRequired();
 
         // Foreign key relationship to Act with restrict delete to avoid multiple cascade paths
-        // (Both Venue and Act cascade from Tenant, so we need to break the cycle)
+        // SQL Server limitation: Both Venue and Act cascade from Tenant, creating multiple paths
+        // The specification requires cascade, but SQL Server prevents this. Application logic must handle Act deletion.
         builder.HasOne(s => s.Act)
             .WithMany()
             .HasForeignKey(s => s.ActId)
