@@ -70,6 +70,12 @@ public class ShowConfiguration : IEntityTypeConfiguration<Show>
             .OnDelete(DeleteBehavior.Restrict)
             .IsRequired();
 
+        // Navigation property to TicketOffers collection
+        builder.HasMany(s => s.TicketOffers)
+            .WithOne(to => to.Show)
+            .HasForeignKey(to => to.ShowId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // CreatedAt property (inherited from Entity)
         builder.Property(s => s.CreatedAt)
             .IsRequired();

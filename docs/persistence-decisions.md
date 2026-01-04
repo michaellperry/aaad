@@ -209,6 +209,42 @@ This log ensures decisions remain consistent across features and provides ration
 
 **Related Decisions**: [Act Entity](#act-entity---2025-11-28), [Venue Entity](#venue-entity---2025-11-28)
 
+### TicketOffer Entity - 2026-01-03
+**Migration**: `20260103200905_AddTicketOfferEntity`
+**Related Files**:
+- [`src/GloboTicket.Infrastructure/Data/Configurations/TicketOfferConfiguration.cs`](../src/GloboTicket.Infrastructure/Data/Configurations/TicketOfferConfiguration.cs)
+- [`src/GloboTicket.Infrastructure/Data/Configurations/ShowConfiguration.cs`](../src/GloboTicket.Infrastructure/Data/Configurations/ShowConfiguration.cs)
+
+**Decisions Made**:
+- No direct TenantId property (tenant isolation via Show → Venue navigation property chain)
+- Unique index on `TicketOfferGuid` for public identifier lookups
+- Index on `ShowId` for efficient ticket offer listing by show
+- Composite index on `(ShowId, CreatedAt)` for chronological ordering of offers per show
+- `Price` as `decimal(18,2)` with CHECK constraint `> 0`
+- `TicketCount` as `int` with CHECK constraint `> 0`
+- `Name` max length 100 characters
+- Required fields: TicketOfferGuid, ShowId, Name, Price, TicketCount
+- Show relationship: Cascade delete
+
+**Rationale**:
+- TicketOffer inherits tenant context through Show → Venue relationship chain (no redundant TenantId)
+- TicketOfferGuid unique index enables efficient public API lookups
+- ShowId index critical for "list offers by show" queries (primary access pattern)
+- Composite (ShowId, CreatedAt) index optimizes chronological display of offers
+- CHECK constraints enforce business rules at database level (price and ticket count must be positive)
+- Cascade delete ensures orphaned ticket offers removed when show deleted
+- Name length (100 chars) sufficient for offer types like "General Admission", "VIP", "Early Bird"
+
+**Trade-offs**:
+- No direct TenantId: Cleaner model but requires navigation property chain for query filter
+- Composite index adds write overhead but critical for chronological offer display
+- CHECK constraints prevent invalid data but add validation overhead on inserts/updates
+- Cascade delete from Show: Acceptable because ticket offers have no independent lifecycle
+
+**Related Decisions**: [Show Entity](#show-entity---2026-01-03), [Venue Entity](#venue-entity---2025-11-28)
+
+---
+
 ## Patterns and Conventions
 
 ### Multi-Tenancy Isolation
@@ -222,12 +258,17 @@ builder.HasIndex(e => e.TenantId);
 - Enables query filtering in both unit tests (in-memory) and integration tests
 - Always add index on TenantId for query performance
 
-**Navigation Property Filtering** (Show):
+**Navigation Property Filtering** (Show, TicketOffer):
 ```csharp
+// Single-level navigation
 builder.HasQueryFilter(s => s.Act.TenantId == _tenantContext.CurrentTenantId);
+
+// Multi-level navigation chain
+builder.HasQueryFilter(to => to.Show.Venue.TenantId == _tenantContext.CurrentTenantId);
 ```
 - Use when entity inherits tenant context through parent relationship
 - Avoids redundant TenantId storage
+- Supports multi-level navigation chains (e.g., TicketOffer → Show → Venue → TenantId)
 - Requires integration tests (not supported by EF Core in-memory provider)
 
 ### Index Strategy

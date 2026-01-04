@@ -21,6 +21,7 @@ public class Show : Entity
         ActId = act.Id;
         Venue = venue;
         VenueId = venue.Id;
+        TicketOffers = new List<TicketOffer>();
     }
 
     /// <summary>
@@ -30,6 +31,7 @@ public class Show : Entity
     {
         Act = null!;
         Venue = null!;
+        TicketOffers = new List<TicketOffer>();
     }
 
     /// <summary>
@@ -66,4 +68,34 @@ public class Show : Entity
     /// Gets or sets the start time of the show with timezone offset.
     /// </summary>
     public DateTimeOffset StartTime { get; set; } = default;
+
+    /// <summary>
+    /// Gets the collection of ticket offers for this show.
+    /// </summary>
+    public ICollection<TicketOffer> TicketOffers { get; private set; }
+
+    /// <summary>
+    /// Calculates the available capacity for new ticket offers.
+    /// </summary>
+    /// <returns>The number of tickets available for new offers.</returns>
+    public int GetAvailableCapacity()
+    {
+        if (TicketOffers == null || !TicketOffers.Any())
+        {
+            return TicketCount;
+        }
+
+        var allocatedTickets = TicketOffers.Sum(o => o.TicketCount);
+        return TicketCount - allocatedTickets;
+    }
+
+    /// <summary>
+    /// Validates whether a new ticket offer with the specified ticket count can be added.
+    /// </summary>
+    /// <param name="ticketCount">The number of tickets for the new offer.</param>
+    /// <returns>True if the offer can be added; otherwise, false.</returns>
+    public bool CanAddTicketOffer(int ticketCount)
+    {
+        return ticketCount <= GetAvailableCapacity();
+    }
 }
