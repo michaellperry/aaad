@@ -31,3 +31,9 @@ export { VenueLocationPicker } from './VenueLocationPicker';
 export type { VenueLocationPickerProps } from './VenueLocationPicker';
 
 export { ShowForm } from './ShowForm';
+
+export { TicketOfferForm } from './TicketOfferForm';
+export type { TicketOfferFormProps } from './TicketOfferForm';
+
+export { TicketOffersList } from './TicketOffersList';
+export type { TicketOffersListProps } from './TicketOffersList';
