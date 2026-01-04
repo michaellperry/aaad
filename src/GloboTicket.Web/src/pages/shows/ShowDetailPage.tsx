@@ -1,9 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { Heading, Text, Button, Spinner } from '../../components/atoms';
-import { Card } from '../../components/molecules';
+import { Card, CapacityDisplay } from '../../components/molecules';
 import { Stack } from '../../components/layout';
+import { TicketOfferForm, TicketOffersList } from '../../components/organisms';
 import { useShow } from '../../features/shows/hooks';
+import { useShowCapacity } from '../../features/ticketOffers/hooks';
 
 /**
  * Format date in long format (e.g., "March 15, 2026")
@@ -48,6 +50,7 @@ export const ShowDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: show, isLoading, error } = useShow(id);
+  const { data: capacity } = useShowCapacity(id);
 
   if (isLoading) {
     return (
@@ -149,6 +152,40 @@ export const ShowDetailPage = () => {
             </div>
           )}
         </Stack>
+      </Card>
+
+      {/* Capacity Information */}
+      <Card header={<Heading level="h2">Capacity Information</Heading>}>
+        {capacity ? (
+          <CapacityDisplay
+            totalTickets={capacity.totalTickets}
+            allocatedTickets={capacity.allocatedTickets}
+            availableCapacity={capacity.availableCapacity}
+          />
+        ) : (
+          <div className="flex justify-center py-4">
+            <Spinner size="md" />
+          </div>
+        )}
+      </Card>
+
+      {/* Create Ticket Offer */}
+      <Card header={<Heading level="h2">Create Ticket Offer</Heading>}>
+        {capacity ? (
+          <TicketOfferForm
+            showGuid={id!}
+            availableCapacity={capacity.availableCapacity}
+          />
+        ) : (
+          <div className="flex justify-center py-4">
+            <Spinner size="md" />
+          </div>
+        )}
+      </Card>
+
+      {/* Ticket Offers */}
+      <Card header={<Heading level="h2">Ticket Offers</Heading>}>
+        <TicketOffersList showGuid={id!} />
       </Card>
     </Stack>
   );

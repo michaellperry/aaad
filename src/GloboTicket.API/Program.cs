@@ -4,6 +4,7 @@ using GloboTicket.Application.Interfaces;
 using GloboTicket.Application.MultiTenancy;
 using GloboTicket.Application.Services;
 using GloboTicket.Infrastructure.Data;
+using GloboTicket.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,6 +33,7 @@ builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IVenueService, VenueService>();
 builder.Services.AddScoped<IActService, ActService>();
 builder.Services.AddScoped<IShowService, ShowService>();
+builder.Services.AddScoped<ITicketOfferService, TicketOfferService>();
 
 // Register rate limiting service
 builder.Services.AddSingleton<GloboTicket.API.Services.IRateLimitService, GloboTicket.API.Services.RateLimitService>();
@@ -118,6 +120,9 @@ app.MapActEndpoints();
 
 // Map show endpoints
 app.MapShowEndpoints();
+
+// Map ticket offer endpoints
+app.MapTicketOfferEndpoints();
 
 // Map geocoding endpoints
 app.MapGeocodingEndpoints();

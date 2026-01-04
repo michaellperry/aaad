@@ -7,6 +7,7 @@ import type {
 import type { Venue, CreateVenueDto, UpdateVenueDto } from '../types/venue';
 import type { Act, CreateActDto, UpdateActDto } from '../types/act';
 import type { Show, CreateShowDto, NearbyShowsResponse } from '../types/show';
+import type { TicketOffer, CreateTicketOfferDto, ShowCapacity } from '../types/ticketOffer';
 
 const API_BASE_URL = '';
 
@@ -242,4 +243,42 @@ export async function getNearbyShows(venueGuid: string, startTime: string): Prom
     }
   );
   return handleResponse<NearbyShowsResponse>(response);
+}
+
+/**
+ * Get all ticket offers for a show
+ */
+export async function getTicketOffers(showGuid: string): Promise<TicketOffer[]> {
+  const response = await fetch(`${API_BASE_URL}/api/shows/${showGuid}/ticket-offers`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<TicketOffer[]>(response);
+}
+
+/**
+ * Get capacity information for a show
+ */
+export async function getShowCapacity(showGuid: string): Promise<ShowCapacity> {
+  const response = await fetch(`${API_BASE_URL}/api/shows/${showGuid}/capacity`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<ShowCapacity>(response);
+}
+
+/**
+ * Create a new ticket offer for a show
+ */
+export async function createTicketOffer(
+  showGuid: string,
+  dto: CreateTicketOfferDto
+): Promise<TicketOffer> {
+  const response = await fetch(`${API_BASE_URL}/api/shows/${showGuid}/ticket-offers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(dto),
+  });
+  return handleResponse<TicketOffer>(response);
 }
