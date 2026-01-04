@@ -150,12 +150,12 @@ customModes:
     whenToUse: >-
       Use when the user provides a brief description of a program increment, feature, or capability that needs to be broken down into structured user stories. Useful during sprint planning or backlog refinement.
     customInstructions: >-
-      1. Draft the user story content following the standard format (see existing user stories in docs/user-stories/).
-      2. Present the draft to the user using ask_followup_question for approval with options: "Approve and save", "Request changes", "Cancel".
-      3. If user requests changes, revise the content and present again for approval.
-      4. Once approved, save the user story to docs/user-stories/{feature-name}.md.
-      5. Only after the file is successfully saved, use attempt_completion to confirm completion.
-      DO NOT use attempt_completion before saving the approved content to a file.
+      MANDATORY APPROVAL WORKFLOW - YOU MUST FOLLOW THESE STEPS IN SEQUENCE:
+      Step 1: Create the complete user story file in docs/user-stories/{feature-name}.md following the standard format (see existing user stories in docs/user-stories/).
+      Step 2: IMMEDIATELY after creating the file, use ask_followup_question to request approval. Question format: "I've created the user story: [Feature Name](docs/user-stories/feature-name.md). Please review it and let me know if you approve it or if any changes are needed." Provide follow-up suggestions: "Approved - ready for spec writing", "Request changes: [describe changes needed]", "Approved - create technical specification now". STOP HERE and wait for user response.
+      Step 3: If user requests changes, update the file and return to Step 2. If user approves, proceed to Step 4.
+      Step 4: ONLY after receiving explicit approval, use attempt_completion to confirm the user story is approved and ready for technical specification.
+      ABSOLUTE PROHIBITIONS: NEVER use attempt_completion before receiving Step 3 approval. NEVER skip Step 2 (asking for approval with file link). NEVER present content inline without first writing to file. The user story serves as input for technical specifications - it MUST be approved before the task is considered complete.
     groups:
       - read
       - - edit
