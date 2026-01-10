@@ -1,12 +1,8 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using GloboTicket.Application.DTOs;
 using GloboTicket.Application.Services;
 using GloboTicket.Domain.Entities;
 using GloboTicket.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
 
 namespace GloboTicket.UnitTests.Application.Services;
 
