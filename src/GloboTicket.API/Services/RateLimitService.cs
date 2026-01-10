@@ -31,10 +31,10 @@ public class RateLimitService : IRateLimitService
             {
                 // Remove timestamps outside the current window
                 existing.RequestTimestamps.RemoveAll(t => t < windowStart);
-                
+
                 // Add current request timestamp
                 existing.RequestTimestamps.Add(now);
-                
+
                 return existing;
             });
 

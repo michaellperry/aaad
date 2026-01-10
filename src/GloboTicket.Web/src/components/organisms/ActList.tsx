@@ -1,13 +1,12 @@
 /**
  * ActList Organism
- * 
- * Fetches and displays a grid of act cards with loading, error, and empty states.
+ *
+ * Displays a grid of act cards with loading, error, and empty states.
+ * Pure presentational component - data fetching is handled by parent.
  * Follows atomic design principles - composes molecules and atoms.
  */
 
-import { useState, useEffect } from 'react';
 import { Music, AlertCircle } from 'lucide-react';
-import { getActs } from '../../api/client';
 import type { Act } from '../../types/act';
 import { ActCard } from '../molecules/ActCard';
 import { EmptyState } from '../molecules/EmptyState';
@@ -17,40 +16,31 @@ import { Grid } from '../layout/Grid';
 import { Stack } from '../layout/Stack';
 
 export interface ActListProps {
+  /** Acts data to display */
+  acts: Act[];
+  /** Loading state */
+  isLoading: boolean;
+  /** Optional error message */
+  error?: string | null;
   /** Optional click handler for act cards */
   onActClick?: (act: Act) => void;
 }
 
 /**
- * ActList component that fetches and displays acts in a responsive grid.
- * 
+ * ActList component that displays acts in a responsive grid.
+ *
  * @example
  * ```tsx
- * <ActList onActClick={(act) => navigate(`/acts/${act.actGuid}`)} />
+ * const { data: acts, isLoading, error } = useActs();
+ * <ActList
+ *   acts={acts || []}
+ *   isLoading={isLoading}
+ *   error={error?.message}
+ *   onActClick={(act) => navigate(`/acts/${act.actGuid}`)}
+ * />
  * ```
  */
-export function ActList({ onActClick }: ActListProps) {
-  const [acts, setActs] = useState<Act[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchActs = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await getActs();
-        setActs(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load acts');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchActs();
-  }, []);
-
+export function ActList({ acts, isLoading, error, onActClick }: ActListProps) {
   // Loading state
   if (isLoading) {
     return (

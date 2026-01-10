@@ -6,6 +6,7 @@ import type {
 } from '../types/api';
 import type { Venue, CreateVenueDto, UpdateVenueDto } from '../types/venue';
 import type { Act, CreateActDto, UpdateActDto } from '../types/act';
+import type { Show, CreateShowDto, NearbyShowsResponse } from '../types/show';
 
 const API_BASE_URL = '';
 
@@ -88,6 +89,15 @@ export async function getVenues(): Promise<Venue[]> {
   return handleResponse<Venue[]>(response);
 }
 
+export async function getVenuesCount(): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/api/venues/count`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  const data = await handleResponse<{ count: number }>(response);
+  return data.count;
+}
+
 export async function getVenue(id: string): Promise<Venue> {
   const response = await fetch(`${API_BASE_URL}/api/venues/${id}`, {
     method: 'GET',
@@ -142,6 +152,15 @@ export async function getActs(): Promise<Act[]> {
   return handleResponse<Act[]>(response);
 }
 
+export async function getActsCount(): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/api/acts/count`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  const data = await handleResponse<{ count: number }>(response);
+  return data.count;
+}
+
 export async function getAct(id: string): Promise<Act> {
   const response = await fetch(`${API_BASE_URL}/api/acts/${id}`, {
     method: 'GET',
@@ -184,4 +203,43 @@ export async function deleteAct(id: string): Promise<void> {
     const errorText = await response.text();
     throw new Error(`API Error: ${response.status} - ${errorText}`);
   }
+}
+
+export async function getShow(id: string): Promise<Show> {
+  const response = await fetch(`${API_BASE_URL}/api/shows/${id}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<Show>(response);
+}
+
+export async function getShowsByAct(actGuid: string): Promise<Show[]> {
+  const response = await fetch(`${API_BASE_URL}/api/acts/${actGuid}/shows`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<Show[]>(response);
+}
+
+export async function createShow(actGuid: string, dto: CreateShowDto): Promise<Show> {
+  const response = await fetch(`${API_BASE_URL}/api/acts/${actGuid}/shows`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(dto),
+  });
+  return handleResponse<Show>(response);
+}
+
+export async function getNearbyShows(venueGuid: string, startTime: string): Promise<NearbyShowsResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/venues/${venueGuid}/shows/nearby?startTime=${encodeURIComponent(startTime)}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+    }
+  );
+  return handleResponse<NearbyShowsResponse>(response);
 }

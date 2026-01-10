@@ -28,3 +28,6 @@ export type { AddressSearchInputProps } from './AddressSearchInput';
 
 export { MapDisplay } from './MapDisplay';
 export type { MapDisplayProps } from './MapDisplay';
+
+export { ShowCard } from './ShowCard';
+export type { ShowCardProps } from './ShowCard';

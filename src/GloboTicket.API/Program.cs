@@ -72,7 +72,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    
+
     // Enable Swagger UI
     app.UseSwagger();
     app.UseSwaggerUI(options =>

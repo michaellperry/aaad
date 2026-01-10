@@ -1,26 +1,30 @@
+import { useNavigate } from 'react-router-dom';
 import { BarChart3, MapPin, Users } from 'lucide-react';
 import { Heading, Text, Button } from '../components/atoms';
 import { Card } from '../components/molecules';
 import { Grid, Stack } from '../components/layout';
 import { ROUTES } from '../router/routes';
+import { useDashboardStats } from '../features/dashboard/hooks';
 
 /**
  * Dashboard overview page with key metrics and quick actions
  */
 export const DashboardPage = () => {
-  // Mock statistics
+  const navigate = useNavigate();
+  const { totalVenues, activeActs, isLoading, error } = useDashboardStats();
+
   const stats = [
     {
       id: 'venues',
       label: 'Total Venues',
-      value: '12',
+      value: isLoading ? '...' : totalVenues.toString(),
       icon: MapPin,
       href: ROUTES.VENUES,
     },
     {
       id: 'acts',
       label: 'Active Acts',
-      value: '48',
+      value: isLoading ? '...' : activeActs.toString(),
       icon: Users,
       href: ROUTES.ACTS,
     },
@@ -45,6 +49,23 @@ export const DashboardPage = () => {
         </Text>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <Card>
+          <Stack gap="md">
+            <Heading level="h3" variant="default">
+              ⚠️ Error Loading Dashboard Data
+            </Heading>
+            <Text variant="muted">
+              Unable to load dashboard statistics. Please try refreshing the page.
+            </Text>
+            <Text variant="muted" size="sm">
+              {error.message}
+            </Text>
+          </Stack>
+        </Card>
+      )}
+
       {/* Statistics Grid */}
       <Grid cols={1} gap="lg" responsive={{ sm: 2, lg: 4 }}>
         {stats.map((stat) => {
@@ -66,12 +87,12 @@ export const DashboardPage = () => {
                   </Heading>
                 </div>
                 {stat.href !== '#' && (
-                  <a
-                    href={stat.href}
-                    className="text-sm text-brand-primary hover:text-brand-primary-hover"
+                  <button
+                    onClick={() => navigate(stat.href)}
+                    className="text-sm text-brand-primary hover:text-brand-primary-hover text-left"
                   >
                     View all →
-                  </a>
+                  </button>
                 )}
               </Stack>
             </Card>
@@ -89,7 +110,7 @@ export const DashboardPage = () => {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => (window.location.href = ROUTES.VENUE_CREATE)}
+              onClick={() => navigate(ROUTES.VENUE_CREATE)}
               className="w-full"
             >
               Create Venue
@@ -97,7 +118,7 @@ export const DashboardPage = () => {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => (window.location.href = ROUTES.ACT_CREATE)}
+              onClick={() => navigate(ROUTES.ACT_CREATE)}
               className="w-full"
             >
               Add Act
@@ -106,18 +127,6 @@ export const DashboardPage = () => {
         </Stack>
       </Card>
 
-      {/* Placeholder Notice */}
-      <Card>
-        <Stack gap="md">
-          <Heading level="h3" variant="default">
-            🚧 Development Notice
-          </Heading>
-          <Text variant="muted">
-            This is a placeholder dashboard demonstrating the design system and navigation structure.
-            Real data integration and features will be implemented in future iterations.
-          </Text>
-        </Stack>
-      </Card>
     </Stack>
   );
 };

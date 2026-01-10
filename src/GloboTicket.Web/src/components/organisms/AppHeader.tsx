@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Moon, Sun } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '../../utils';
@@ -129,9 +130,9 @@ export const AppHeader = ({
             {navLinks.length > 0 && (
               <nav className="hidden md:flex items-center gap-1">
                 {navLinks.map((link) => (
-                  <a
+                  <Link
                     key={link.id}
-                    href={link.href}
+                    to={link.href}
                     className={cn(
                       'flex items-center gap-2',
                       'px-3 py-2',
@@ -147,7 +148,7 @@ export const AppHeader = ({
                   >
                     {link.icon && <Icon icon={link.icon} size="sm" />}
                     {link.label}
-                  </a>
+                  </Link>
                 ))}
               </nav>
             )}

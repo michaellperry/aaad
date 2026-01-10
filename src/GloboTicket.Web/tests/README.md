@@ -14,11 +14,18 @@ This directory contains reusable test utilities, fixtures, and comprehensive end
 tests/
 ├── auth/                    # Authentication tests
 │   └── login.spec.ts       # Login functionality (7 tests)
+├── acts/                    # Act management tests
+│   ├── view-acts.spec.ts   # View acts list (10 tests)
+│   ├── create-act.spec.ts  # Create act (tests)
+│   ├── edit-act.spec.ts    # Edit act (tests)
+│   └── delete-act.spec.ts  # Delete act (tests)
 ├── venues/                  # Venue management tests
 │   ├── view-venues.spec.ts # View venues list (10 tests)
 │   ├── create-venue.spec.ts # Create venue (10 tests)
 │   ├── edit-venue.spec.ts  # Edit venue (8 tests)
 │   └── delete-venue.spec.ts # Delete venue (SKIPPED - not implemented)
+├── shows/                   # Show management tests
+│   └── view-show.spec.ts   # View show detail (18 tests)
 ├── fixtures/
 │   └── auth.ts             # Authentication fixtures and constants
 ├── helpers/
@@ -43,10 +50,16 @@ npm run test:e2e
 # Authentication tests
 npx playwright test tests/auth/login.spec.ts
 
+# Act tests
+npx playwright test tests/acts/view-acts.spec.ts
+
 # Venue tests
 npx playwright test tests/venues/view-venues.spec.ts
 npx playwright test tests/venues/create-venue.spec.ts
 npx playwright test tests/venues/edit-venue.spec.ts
+
+# Show tests
+npx playwright test tests/shows/view-show.spec.ts
 ```
 
 ### Run Tests in UI Mode
@@ -64,11 +77,15 @@ npx playwright test --debug
 | Feature | Tests | Status |
 |---------|-------|--------|
 | Login | 7 | ✅ Active |
+| View Acts | 10 | ✅ Active |
 | View Venues | 10 | ✅ Active |
 | Create Venue | 10 | ✅ Active |
 | Edit Venue | 8 | ✅ Active |
 | Delete Venue | 8 | ⚠️ Skipped (not implemented) |
-| **Total** | **43** | **35 active, 8 skipped** |
+| View Show Detail | 12 | ✅ Active |
+| Act Detail - Shows List | 3 | ✅ Active |
+| End-to-End Show Flow | 3 | ✅ Active |
+| **Total** | **71** | **63 active, 8 skipped** |
 
 ## 🧪 Test Files
 
@@ -82,6 +99,18 @@ Tests the login functionality including:
 - Form element verification
 - Keyboard navigation (Enter key)
 - Accessibility attributes
+
+### Act Management Tests
+
+#### [`acts/view-acts.spec.ts`](acts/view-acts.spec.ts)
+Tests the acts list page including:
+- Page structure and act cards display
+- Add Act button functionality
+- Card interaction and navigation
+- Empty state handling
+- Loading states
+- Responsive grid layout
+- Keyboard accessibility
 
 ### Venue Management Tests
 
@@ -115,6 +144,35 @@ Tests venue editing including:
 ⚠️ **Currently skipped** - Delete functionality not yet implemented.
 
 See the file for planned test coverage and implementation requirements.
+
+### Show Management Tests
+
+#### [`shows/view-show.spec.ts`](shows/view-show.spec.ts)
+Tests the show detail page and related flows including:
+
+**Show Detail Page Tests (12 scenarios):**
+- Display show details when navigating from acts page
+- Show act name correctly
+- Show venue name correctly
+- Show start date/time correctly
+- Show ticket count correctly
+- Back button navigation to acts page
+- Loading state while fetching show data
+- Error message for non-existent show
+- Error message for network failure
+- Keyboard navigation accessibility
+- Proper ARIA labels
+- Responsive layout on mobile
+
+**Act Detail Page Enhancement Tests (3 scenarios):**
+- Display list of shows for an act
+- Navigate to show detail when show card is clicked
+- Show empty state when act has no shows
+
+**End-to-End Flow Tests (3 scenarios):**
+- Complete flow: Acts page → Act detail → Show detail → Back
+- Direct URL access to show detail page
+- Browser back button functionality
 
 ## Authentication Utilities
 

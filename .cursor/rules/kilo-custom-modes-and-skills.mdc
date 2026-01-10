@@ -1,0 +1,142 @@
+---
+description: Best practices for creating Kilo custom modes and skills
+alwaysApply: false
+---
+# Kilo Custom Modes and Skills
+
+This rule captures best practices for creating and maintaining Kilo custom modes and skills.
+
+## Custom Modes
+
+Custom modes tailor Kilo's behavior to specific tasks or workflows.
+
+### Configuration
+- **Location**: Define project-specific modes in `.kilocodemodes` (YAML or JSON) in the project root.
+- **Format**: Prefer **YAML** for better readability and comment support.
+- **Preservation**: When adding a new mode, ensure that the existing contents of `.kilocodemodes` are preserved.
+
+### Key Properties
+- **`slug`**: Unique identifier (e.g., `docs-writer`, `test-engineer`). Kebab-case recommended.
+- **`name`**: Human-readable display name (e.g., "📝 Documentation Writer").
+- **`roleDefinition`**: Defines Kilo's identity/persona (e.g., "You are a technical writer specializing in..."). Critical for setting the tone.
+- **`groups`**: Defines tool/file access.
+  - Common groups: `read`, `edit`, `browser`, `command`.
+  - **File Restrictions**: Use `fileRegex` within the `edit` group to limit write access (e.g., only `.md` files).
+- **`customInstructions`**: Specific behavioral rules.
+- **`whenToUse`**: Guidance for Kilo's Orchestrator mode to know when to select this mode.
+  - **Best Practice**: Be specific about the *task type* to distinguish it from default modes.
+  - **Example**: "Use this mode when the user specifically asks to write or refactor documentation, but NOT for general coding questions."
+
+### Example (YAML)
+```yaml
+customModes:
+  - slug: docs-writer
+    name: 📝 Documentation Writer
+    description: Specialized for writing and editing documentation.
+    roleDefinition: You are a technical writer ensuring clarity and accuracy.
+    whenToUse: Use this mode when the user asks to write or update documentation.
+    groups:
+      - read
+      - - edit
+        - fileRegex: \.md$
+          description: Markdown files only
+      - browser
+```
+
+### Workflow & Sequencing (Advanced)
+The Orchestrator selects modes based on the current context. To enforce a specific workflow (e.g., Story -> Tests -> Code), use `whenToUse` to check for prerequisites.
+
+*   **Pattern**: "Use this mode when [Goal], AND [Prerequisites are missing]."
+*   **Example (TDD Writer)**:
+    *   `whenToUse`: "Use this mode when the user wants to implement a feature, but **unit tests do not yet exist**. Do not use if tests are already written."
+*   **Example (Code Implementation)**:
+    *   `whenToUse`: "Use this mode when implementing a feature **and unit tests already exist**."
+
+This forces the Orchestrator to "fail over" to the upstream mode (Test Writer) first, ensuring constraints are generated before implementation begins.
+
+### Mode-Specific Rules
+- Place mode-specific instructions in `.kilo/rules-{slug}/`.
+- Files in this directory are read recursively and appended to the prompt when the mode is active.
+
+## Skills
+
+Skills provide Kilo with specific knowledge or capabilities, often documenting best practices or patterns.
+
+### Directory Structure
+- **Global Skills**: `.kilocode/skills/<skill-name>/SKILL.md`
+  - Available to all modes (unless restricted).
+- **Mode-Specific Skills**: `.kilocode/skills-<mode-slug>/<skill-name>/SKILL.md`
+  - Only available when the specific mode is active (e.g., `.kilocode/skills-code/` for the `code` mode).
+
+### SKILL.md Format
+- **Frontmatter**: Must include `name` and `description` in YAML format.
+  - **`name`**: Maximum 64 characters. Must contain only lowercase letters, numbers, and hyphens. Cannot contain XML tags or reserved words.
+  - **`description`**: Maximum 1024 characters, non-empty. Cannot contain XML tags. Must be written in **third person** (e.g., "Processes Excel files" not "I can help you process Excel files").
+- **Content**: Standard Markdown. Use clear headings and code blocks.
+
+### Example SKILL.md
+```markdown
+---
+name: ef-core-patterns
+description: Configures Entity Framework Core entities using Fluent API patterns. Use when configuring entities, relationships, or database contexts.
+---
+
+# EF Core Patterns
+
+## Entity Configuration
+Always use Fluent API in `IEntityTypeConfiguration<T>` classes, not data annotations.
+
+```csharp
+public void Configure(EntityTypeBuilder<Venue> builder)
+{
+    builder.HasKey(v => v.Id);
+    // ...
+}
+```
+```
+
+### Best Practices for Skills
+
+1.  **Description Engineering**:
+    *   The `description` is the primary way the model decides to use the skill (semantic trigger).
+    *   **Write in third person**: "Processes Excel files" not "I can help you" or "You can use this".
+    *   Include **trigger terms** and specific verbs (e.g., "Use when reviewing PRs for security" vs just "Security").
+    *   Format: Describe both **what the skill does** and **when to use it** (e.g., "Extract text and tables from PDF files. Use when working with PDF files or when the user mentions PDFs, forms, or document extraction.").
+    *   Be specific: Avoid vague descriptions like "Helps with documents" or "Processes data".
+
+2.  **Naming Conventions**:
+    *   Use **kebab-case** for skill directory names (e.g., `processing-pdfs`, `analyzing-spreadsheets`).
+    *   **Prefer gerund form** (verb + -ing) for clarity: `processing-pdfs` over `pdf-processing`, `testing-code` over `code-testing`.
+    *   Avoid vague names: `helper`, `utils`, `tools`, `documents`, `data`.
+    *   Use consistent naming patterns across your skill collection.
+
+3.  **Concise is Key**:
+    *   Assume the model is already smart—only add context it doesn't have.
+    *   Challenge each piece of information: "Does the model really need this explanation?"
+    *   Keep instructions focused and avoid over-explaining basic concepts.
+
+4.  **Progressive Disclosure**:
+    *   Keep `SKILL.md` as a lightweight entry point (under 500 lines for optimal performance).
+    *   Move detailed documentation, large examples, or reference data into separate files (e.g., `PATTERNS.md`, `examples/`, `reference/`) within the skill directory.
+    *   Reference these files in `SKILL.md` so the model can read them on demand.
+    *   Split content when approaching the 500-line limit.
+
+5.  **Set Appropriate Degrees of Freedom**:
+    *   **High freedom** (text-based instructions): Use when multiple approaches are valid, decisions depend on context, or heuristics guide the approach (e.g., code reviews).
+    *   **Medium freedom** (pseudocode or scripts with parameters): Use when a preferred pattern exists but some variation is acceptable (e.g., report generation templates).
+    *   **Low freedom** (specific scripts, few/no parameters): Use when operations are fragile, consistency is critical, or a specific sequence must be followed (e.g., database migrations).
+
+6.  **Focus**: Keep skills focused on a single topic (e.g., "testing-patterns", "api-conventions").
+
+7.  **Examples**: Provide clear "Good" and "Bad" code examples to demonstrate the desired pattern.
+
+8.  **Mode-Specific**: Place technical coding patterns in `skills-code/` to avoid cluttering other modes (like `architect` or `ask`).
+
+9.  **Code and Scripts**:
+    *   Use forward slashes (`reference/guide.md`) for file paths, not backslashes.
+    *   Name files descriptively: `form_validation_rules.md` not `doc2.md`.
+    *   Don't assume packages are installed—explicitly list required packages and installation steps.
+    *   Prefer scripts for deterministic operations rather than asking the model to generate validation code.
+    *   Make execution intent clear: "Run `analyze_form.py`" (execute) vs "See `analyze_form.py`" (reference).
+
+10. **Testing**: Test skills with all models you plan to use (Haiku, Sonnet, Opus) to ensure effectiveness across different model capabilities.

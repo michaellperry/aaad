@@ -38,4 +38,9 @@ public class Venue : MultiTenantEntity
     /// Gets or sets a description of the venue.
     /// </summary>
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the collection of shows held at this venue.
+    /// </summary>
+    public ICollection<Show> Shows { get; set; } = new List<Show>();
 }

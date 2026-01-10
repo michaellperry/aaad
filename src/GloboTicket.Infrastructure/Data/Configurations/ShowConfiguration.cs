@@ -56,16 +56,18 @@ public class ShowConfiguration : IEntityTypeConfiguration<Show>
 
         // Foreign key relationship to Venue with cascade delete
         builder.HasOne(s => s.Venue)
-            .WithMany()
+            .WithMany(v => v.Shows)
             .HasForeignKey(s => s.VenueId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
-        // Foreign key relationship to Act with cascade delete
+        // Foreign key relationship to Act with restrict delete to avoid multiple cascade paths
+        // SQL Server limitation: Both Venue and Act cascade from Tenant, creating multiple paths
+        // The specification requires cascade, but SQL Server prevents this. Application logic must handle Act deletion.
         builder.HasOne(s => s.Act)
-            .WithMany()
+            .WithMany(a => a.Shows)
             .HasForeignKey(s => s.ActId)
-            .OnDelete(DeleteBehavior.Cascade)
+            .OnDelete(DeleteBehavior.Restrict)
             .IsRequired();
 
         // CreatedAt property (inherited from Entity)

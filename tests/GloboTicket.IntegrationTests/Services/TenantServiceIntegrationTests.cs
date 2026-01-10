@@ -32,7 +32,7 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         using var context = CreateDbContext(_fixture.ConnectionString, _testTenantId);
         var service = new TenantService(context);
-        
+
         var uniqueId = Guid.NewGuid().ToString()[..8];
         var createDto = new CreateTenantDto
         {
@@ -65,7 +65,7 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         using var setupContext = CreateDbContext(_fixture.ConnectionString, _testTenantId);
         var setupService = new TenantService(setupContext);
-        
+
         var uniqueId = Guid.NewGuid().ToString()[..8];
         var createDto = new CreateTenantDto
         {
@@ -108,7 +108,7 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         using var setupContext = CreateDbContext(_fixture.ConnectionString, _testTenantId);
         var setupService = new TenantService(setupContext);
-        
+
         var uniqueId = Guid.NewGuid().ToString()[..8];
         var slug = $"get-by-slug-test-{uniqueId}";
         var createDto = new CreateTenantDto
@@ -152,7 +152,7 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
         // Arrange
         using var setupContext = CreateDbContext(_fixture.ConnectionString, _testTenantId);
         var setupService = new TenantService(setupContext);
-        
+
         var uniqueId1 = Guid.NewGuid().ToString()[..8];
         var uniqueId2 = Guid.NewGuid().ToString()[..8];
         var tenant1 = new CreateTenantDto
@@ -197,10 +197,10 @@ public class TenantServiceIntegrationTests : IClassFixture<DatabaseFixture>
 
         var tenantContext = new TestTenantContext(tenantId);
         var context = new GloboTicketDbContext(options, tenantContext);
-        
+
         // Apply migrations to ensure database schema matches production behavior
         context.Database.Migrate();
-        
+
         return context;
     }
 }

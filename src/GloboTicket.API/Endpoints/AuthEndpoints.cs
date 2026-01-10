@@ -27,7 +27,7 @@ public static class AuthEndpoints
         {
             // Get users from configuration
             var users = configuration.GetSection("Users").Get<List<UserConfiguration>>();
-            
+
             if (users == null || users.Count == 0)
             {
                 return Results.Problem("No users configured in the system");
@@ -106,7 +106,7 @@ public static class AuthEndpoints
         auth.MapGet("/me", (HttpContext httpContext) =>
         {
             var user = httpContext.User;
-            
+
             if (user?.Identity?.IsAuthenticated != true)
             {
                 return Results.Unauthorized();
@@ -115,7 +115,7 @@ public static class AuthEndpoints
             var username = user.FindFirst(ClaimTypes.Name)?.Value;
             var tenantIdClaim = user.FindFirst("TenantId")?.Value;
             var tenantIdentifier = user.FindFirst("TenantIdentifier")?.Value;
-            
+
             return Results.Ok(new
             {
                 username,

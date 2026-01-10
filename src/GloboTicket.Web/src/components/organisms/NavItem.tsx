@@ -1,10 +1,11 @@
 import { forwardRef } from 'react';
 import type { AnchorHTMLAttributes } from 'react';
+import { Link } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '../../utils';
 import { Icon, Text, Badge } from '../atoms';
 
-export interface NavItemProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+export interface NavItemProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> {
   /**
    * Icon to display
    */
@@ -14,6 +15,11 @@ export interface NavItemProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
    * Label text
    */
   label: string;
+  
+  /**
+   * Navigation path (required)
+   */
+  href: string;
   
   /**
    * Whether the item is active
@@ -60,6 +66,7 @@ export const NavItem = forwardRef<HTMLAnchorElement, NavItemProps>(
     {
       icon,
       label,
+      href,
       active = false,
       badge,
       collapsed = false,
@@ -87,8 +94,9 @@ export const NavItem = forwardRef<HTMLAnchorElement, NavItemProps>(
         ];
 
     return (
-      <a
+      <Link
         ref={ref}
+        to={href}
         className={cn(
           baseStyles,
           stateStyles,
@@ -117,7 +125,7 @@ export const NavItem = forwardRef<HTMLAnchorElement, NavItemProps>(
             )}
           </>
         )}
-      </a>
+      </Link>
     );
   }
 );

@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Link } from 'react-router-dom';
 import { AppLayout } from '../components/templates';
 import { DashboardPage, LoginPage } from '../pages';
 import {
@@ -13,6 +13,7 @@ import {
   CreateActPage,
   EditActPage,
 } from '../pages/acts';
+import { ShowDetailPage, CreateShowPage } from '../pages/shows';
 import { ProtectedRoute } from '../components/routing/ProtectedRoute';
 import { ROUTES } from './routes';
 
@@ -27,12 +28,12 @@ const NotFoundPage = () => (
     <div className="text-center">
       <h1 className="text-6xl font-bold text-text-secondary mb-4">404</h1>
       <p className="text-xl text-text-muted mb-8">Page not found</p>
-      <a
-        href={ROUTES.DASHBOARD}
+      <Link
+        to={ROUTES.DASHBOARD}
         className="text-brand-primary hover:text-brand-primary-hover underline"
       >
         Return to Dashboard
-      </a>
+      </Link>
     </div>
   </div>
 );
@@ -126,6 +127,24 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <EditActPage />
+          </ProtectedRoute>
+        ),
+      },
+      
+      // Shows
+      {
+        path: ROUTES.SHOW_CREATE,
+        element: (
+          <ProtectedRoute>
+            <CreateShowPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.SHOW_DETAIL,
+        element: (
+          <ProtectedRoute>
+            <ShowDetailPage />
           </ProtectedRoute>
         ),
       },

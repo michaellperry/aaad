@@ -56,4 +56,11 @@ public interface IActService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>True if the act was deleted; false if not found.</returns>
     Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the total count of acts for the current tenant.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The total number of acts for the current tenant.</returns>
+    Task<int> GetCountAsync(CancellationToken cancellationToken = default);
 }

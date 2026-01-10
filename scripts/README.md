@@ -377,6 +377,27 @@ pwsh scripts/powershell/clean.ps1
 
 ---
 
+#### format.ps1 / format.sh
+Format code and remove unnecessary imports.
+
+**Usage:**
+```powershell
+pwsh scripts/powershell/format.ps1
+```
+```bash
+./scripts/bash/format.sh
+```
+
+**What it does:**
+- Runs `dotnet format` on the entire solution
+- Removes unnecessary using statements (IDE0005)
+- Applies code style rules from `.editorconfig`
+- Formats code according to configured style preferences
+
+**Note:** The `.editorconfig` file in the repository root configures the formatting rules, including the IDE0005 rule set to warning severity.
+
+---
+
 ### Run Scripts
 
 #### run-api.ps1 / run-api.sh
@@ -430,6 +451,15 @@ pwsh scripts/powershell/run-web.ps1
 
 # Run tests
 ./scripts/bash/test.sh
+```
+
+### Formatting Code
+```bash
+# Format entire solution
+./scripts/bash/format.sh
+
+# Verify no formatting changes are needed (useful for CI/CD)
+dotnet format GloboTicket.sln --verify-no-changes
 ```
 
 ### Creating a New Migration

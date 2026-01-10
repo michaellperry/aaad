@@ -27,11 +27,19 @@ public static class ActEndpoints
         })
         .WithName("GetAllActs");
 
+        // GET /api/acts/count
+        acts.MapGet("/count", async (IActService actService, CancellationToken cancellationToken) =>
+        {
+            var count = await actService.GetCountAsync(cancellationToken);
+            return Results.Ok(new { count });
+        })
+        .WithName("GetActsCount");
+
         // GET /api/acts/{guid}
         acts.MapGet("/{guid:guid}", async (Guid guid, IActService actService, CancellationToken cancellationToken) =>
         {
             var act = await actService.GetByGuidAsync(guid, cancellationToken);
-            
+
             if (act == null)
             {
                 return Results.NotFound(new { message = $"Act with GUID {guid} not found" });
@@ -54,14 +62,14 @@ public static class ActEndpoints
         {
             // First, find the act by GUID to get its ID
             var existingAct = await actService.GetByGuidAsync(guid, cancellationToken);
-            
+
             if (existingAct == null)
             {
                 return Results.NotFound(new { message = $"Act with GUID {guid} not found" });
             }
 
             var updatedAct = await actService.UpdateAsync(existingAct.Id, dto, cancellationToken);
-            
+
             if (updatedAct == null)
             {
                 return Results.NotFound(new { message = $"Act with GUID {guid} not found" });
@@ -76,14 +84,14 @@ public static class ActEndpoints
         {
             // First, find the act by GUID to get its ID
             var existingAct = await actService.GetByGuidAsync(guid, cancellationToken);
-            
+
             if (existingAct == null)
             {
                 return Results.NotFound(new { message = $"Act with GUID {guid} not found" });
             }
 
             var deleted = await actService.DeleteAsync(existingAct.Id, cancellationToken);
-            
+
             if (!deleted)
             {
                 return Results.NotFound(new { message = $"Act with GUID {guid} not found" });

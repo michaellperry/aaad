@@ -119,10 +119,12 @@ public class GloboTicketDbContext : DbContext
             // Handle MultiTenantEntity TenantId assignment
             if (entry.Entity is MultiTenantEntity multiTenantEntity && entry.State == EntityState.Added)
             {
-                // Only set TenantId if current tenant context is available
-                if (_tenantContext.CurrentTenantId.HasValue)
+                // Only set TenantId if current tenant context is available and not already set
+                if (_tenantContext.CurrentTenantId.HasValue && multiTenantEntity.TenantId == 0)
                 {
-                    multiTenantEntity.TenantId = _tenantContext.CurrentTenantId.Value;
+                    // Use reflection to set the private TenantId property
+                    var tenantIdProperty = typeof(MultiTenantEntity).GetProperty(nameof(MultiTenantEntity.TenantId));
+                    tenantIdProperty?.SetValue(multiTenantEntity, _tenantContext.CurrentTenantId.Value);
                 }
             }
         }

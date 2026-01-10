@@ -30,54 +30,94 @@ public class ActService : IActService
     /// <inheritdoc />
     public async Task<ActDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var act = await _dbContext.Acts
-            .AsNoTracking()
-            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        var actSpec =
+            from act in _dbContext.Acts.AsNoTracking()
+            where act.Id == id
+            select new ActDto
+            {
+                Id = act.Id,
+                ActGuid = act.ActGuid,
+                Name = act.Name,
+                CreatedAt = act.CreatedAt,
+                UpdatedAt = act.UpdatedAt
+            };
 
-        return act == null ? null : MapToDto(act);
+        return await actSpec.FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<ActDto?> GetByGuidAsync(Guid actGuid, CancellationToken cancellationToken = default)
     {
-        var act = await _dbContext.Acts
-            .AsNoTracking()
-            .FirstOrDefaultAsync(a => a.ActGuid == actGuid, cancellationToken);
+        var actSpec =
+            from act in _dbContext.Acts.AsNoTracking()
+            where act.ActGuid == actGuid
+            select new ActDto
+            {
+                Id = act.Id,
+                ActGuid = act.ActGuid,
+                Name = act.Name,
+                CreatedAt = act.CreatedAt,
+                UpdatedAt = act.UpdatedAt
+            };
 
-        return act == null ? null : MapToDto(act);
+        return await actSpec.FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<ActDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var acts = await _dbContext.Acts
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var actsSpec =
+            from act in _dbContext.Acts.AsNoTracking()
+            select new ActDto
+            {
+                Id = act.Id,
+                ActGuid = act.ActGuid,
+                Name = act.Name,
+                CreatedAt = act.CreatedAt,
+                UpdatedAt = act.UpdatedAt
+            };
 
-        return acts.Select(MapToDto);
+        return await actsSpec.ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<ActDto> CreateAsync(CreateActDto dto, CancellationToken cancellationToken = default)
     {
+        // Validate tenant context is available
+        if (!_tenantContext.CurrentTenantId.HasValue)
+        {
+            throw new InvalidOperationException("Tenant context is required for act creation.");
+        }
+
         var act = new Act
         {
             ActGuid = dto.ActGuid,
-            Name = dto.Name,
-            TenantId = _tenantContext.CurrentTenantId ?? throw new InvalidOperationException("Tenant context is required for act creation.")
+            Name = dto.Name
+            // TenantId will be automatically set by DbContext.SaveChangesAsync
         };
 
         _dbContext.Acts.Add(act);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(act);
+        return new ActDto
+        {
+            Id = act.Id,
+            ActGuid = act.ActGuid,
+            Name = act.Name,
+            CreatedAt = act.CreatedAt,
+            UpdatedAt = act.UpdatedAt
+        };
     }
 
     /// <inheritdoc />
     public async Task<ActDto?> UpdateAsync(int id, UpdateActDto dto, CancellationToken cancellationToken = default)
     {
-        var act = await _dbContext.Acts
-            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        var actSpec =
+            from a in _dbContext.Acts
+            where a.Id == id
+            select a;
+
+        var act = await actSpec.FirstOrDefaultAsync(cancellationToken);
 
         if (act == null)
         {
@@ -88,14 +128,25 @@ public class ActService : IActService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(act);
+        return new ActDto
+        {
+            Id = act.Id,
+            ActGuid = act.ActGuid,
+            Name = act.Name,
+            CreatedAt = act.CreatedAt,
+            UpdatedAt = act.UpdatedAt
+        };
     }
 
     /// <inheritdoc />
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var act = await _dbContext.Acts
-            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        var actSpec =
+            from a in _dbContext.Acts
+            where a.Id == id
+            select a;
+
+        var act = await actSpec.FirstOrDefaultAsync(cancellationToken);
 
         if (act == null)
         {
@@ -108,20 +159,9 @@ public class ActService : IActService
         return true;
     }
 
-    /// <summary>
-    /// Maps an Act entity to an ActDto.
-    /// </summary>
-    /// <param name="act">The act entity to map.</param>
-    /// <returns>The mapped act DTO.</returns>
-    private static ActDto MapToDto(Act act)
+    /// <inheritdoc />
+    public async Task<int> GetCountAsync(CancellationToken cancellationToken = default)
     {
-        return new ActDto
-        {
-            Id = act.Id,
-            ActGuid = act.ActGuid,
-            Name = act.Name,
-            CreatedAt = act.CreatedAt,
-            UpdatedAt = act.UpdatedAt
-        };
+        return await _dbContext.Acts.CountAsync(cancellationToken);
     }
 }

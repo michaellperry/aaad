@@ -1,13 +1,12 @@
 /**
  * VenueList Organism
  * 
- * Fetches and displays a grid of venue cards with loading, error, and empty states.
+ * Displays a grid of venue cards with loading, error, and empty states.
  * Follows atomic design principles - composes molecules and atoms.
+ * This is a pure presentational component that receives data via props.
  */
 
-import { useState, useEffect } from 'react';
 import { Building2, AlertCircle } from 'lucide-react';
-import { getVenues } from '../../api/client';
 import type { Venue } from '../../types/venue';
 import { VenueCard } from '../molecules/VenueCard';
 import { EmptyState } from '../molecules/EmptyState';
@@ -17,40 +16,31 @@ import { Grid } from '../layout/Grid';
 import { Stack } from '../layout/Stack';
 
 export interface VenueListProps {
+  /** Array of venues to display */
+  venues: Venue[];
+  /** Loading state */
+  isLoading: boolean;
+  /** Error message if any */
+  error?: string | null;
   /** Optional click handler for venue cards */
   onVenueClick?: (venue: Venue) => void;
 }
 
 /**
- * VenueList component that fetches and displays venues in a responsive grid.
+ * VenueList component that displays venues in a responsive grid.
  * 
  * @example
  * ```tsx
- * <VenueList onVenueClick={(venue) => navigate(`/venues/${venue.id}`)} />
+ * const { data: venues = [], isLoading, error } = useVenues();
+ * <VenueList 
+ *   venues={venues} 
+ *   isLoading={isLoading}
+ *   error={error?.message}
+ *   onVenueClick={(venue) => navigate(`/venues/${venue.id}`)} 
+ * />
  * ```
  */
-export function VenueList({ onVenueClick }: VenueListProps) {
-  const [venues, setVenues] = useState<Venue[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchVenues = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await getVenues();
-        setVenues(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load venues');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchVenues();
-  }, []);
-
+export function VenueList({ venues, isLoading, error, onVenueClick }: VenueListProps) {
   // Loading state
   if (isLoading) {
     return (

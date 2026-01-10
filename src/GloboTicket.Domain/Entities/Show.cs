@@ -7,29 +7,55 @@ namespace GloboTicket.Domain.Entities;
 public class Show : Entity
 {
     /// <summary>
+    /// Initializes a new instance of the <see cref="Show"/> class.
+    /// </summary>
+    /// <param name="act">The Act that is performing in this show.</param>
+    /// <param name="venue">The Venue where this show is held.</param>
+    /// <exception cref="ArgumentNullException">Thrown when act or venue is null.</exception>
+    public Show(Act act, Venue venue)
+    {
+        ArgumentNullException.ThrowIfNull(act);
+        ArgumentNullException.ThrowIfNull(venue);
+
+        Act = act;
+        ActId = act.Id;
+        Venue = venue;
+        VenueId = venue.Id;
+    }
+
+    /// <summary>
+    /// Private parameterless constructor for Entity Framework Core.
+    /// </summary>
+    private Show()
+    {
+        Act = null!;
+        Venue = null!;
+    }
+
+    /// <summary>
     /// Gets or sets the unique identifier (GUID) for this show.
     /// </summary>
     public Guid ShowGuid { get; set; } = Guid.Empty;
 
     /// <summary>
-    /// Gets or sets the foreign key to the Venue where the show will be held.
+    /// Gets the foreign key to the Venue where the show will be held.
     /// </summary>
-    public int VenueId { get; set; }
+    public int VenueId { get; private set; }
 
     /// <summary>
-    /// Gets or sets the navigation property to the Venue.
+    /// Gets the Venue where this show is held.
     /// </summary>
-    public required Venue Venue { get; set; }
+    public Venue Venue { get; private set; }
 
     /// <summary>
-    /// Gets or sets the foreign key to the Act performing at this show.
+    /// Gets the foreign key to the Act performing at this show.
     /// </summary>
-    public int ActId { get; set; }
+    public int ActId { get; private set; }
 
     /// <summary>
-    /// Gets or sets the navigation property to the Act.
+    /// Gets the Act that is performing in this show.
     /// </summary>
-    public required Act Act { get; set; }
+    public Act Act { get; private set; }
 
     /// <summary>
     /// Gets or sets the number of tickets available for this show.

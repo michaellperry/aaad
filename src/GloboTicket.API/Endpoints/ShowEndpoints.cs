@@ -44,7 +44,30 @@ public static class ShowEndpoints
             }
             catch (ArgumentException ex)
             {
-                return Results.BadRequest(new { message = ex.Message });
+                // Return validation error in problem details format
+                var errors = new Dictionary<string, string[]>();
+
+                // Parse the parameter name from the exception to determine which field failed
+                if (ex.ParamName == nameof(dto.TicketCount))
+                {
+                    errors["TicketCount"] = new[] { ex.Message };
+                }
+                else if (ex.ParamName == nameof(dto.StartTime))
+                {
+                    errors["StartTime"] = new[] { ex.Message };
+                }
+                else
+                {
+                    errors["General"] = new[] { ex.Message };
+                }
+
+                return Results.BadRequest(new
+                {
+                    type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    title = "One or more validation errors occurred.",
+                    status = 400,
+                    errors
+                });
             }
             catch (KeyNotFoundException)
             {

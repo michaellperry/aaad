@@ -14,4 +14,9 @@ public class Act : MultiTenantEntity
     /// Gets or sets the name of the act.
     /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the collection of shows this act is performing in.
+    /// </summary>
+    public ICollection<Show> Shows { get; set; } = new List<Show>();
 }

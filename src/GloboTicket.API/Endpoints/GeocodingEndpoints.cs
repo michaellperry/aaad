@@ -1,6 +1,4 @@
-using System.Net.Http.Json;
 using System.Text.Json;
-using System.Linq;
 
 namespace GloboTicket.API.Endpoints;
 
@@ -24,7 +22,7 @@ public static class GeocodingEndpoints
         geocoding.MapGet("/search", async (string query, IConfiguration configuration, ILoggerFactory loggerFactory, CancellationToken cancellationToken) =>
         {
             var logger = loggerFactory.CreateLogger("GloboTicket.API.Endpoints.GeocodingEndpoints");
-            
+
             if (string.IsNullOrWhiteSpace(query))
             {
                 return Results.BadRequest(new { error = "Query parameter is required" });

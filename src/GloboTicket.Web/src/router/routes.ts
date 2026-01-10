@@ -19,6 +19,11 @@ export const ROUTES = {
   ACT_DETAIL: '/acts/:id',
   ACT_CREATE: '/acts/new',
   ACT_EDIT: '/acts/:id/edit',
+  
+  // Shows
+  SHOWS: '/shows',
+  SHOW_DETAIL: '/shows/:id',
+  SHOW_CREATE: '/acts/:id/shows/new',
 } as const;
 
 /**
@@ -30,4 +35,7 @@ export const routeHelpers = {
   
   actDetail: (id: string) => `/acts/${id}`,
   actEdit: (id: string) => `/acts/${id}/edit`,
+  
+  showDetail: (id: string) => `/shows/${id}`,
+  showCreate: (actId: string) => `/acts/${actId}/shows/new`,
 };

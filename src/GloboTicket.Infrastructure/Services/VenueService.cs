@@ -31,36 +31,80 @@ public class VenueService : IVenueService
     /// <inheritdoc />
     public async Task<VenueDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var venue = await _dbContext.Venues
-            .AsNoTracking()
-            .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+        var venueSpec =
+            from v in _dbContext.Venues.AsNoTracking()
+            where v.Id == id
+            select new VenueDto
+            {
+                Id = v.Id,
+                VenueGuid = v.VenueGuid,
+                Name = v.Name,
+                Address = v.Address,
+                Latitude = v.Location != null ? v.Location.Y : null,
+                Longitude = v.Location != null ? v.Location.X : null,
+                SeatingCapacity = v.SeatingCapacity,
+                Description = v.Description,
+                CreatedAt = v.CreatedAt,
+                UpdatedAt = v.UpdatedAt
+            };
 
-        return venue == null ? null : MapToDto(venue);
+        return await venueSpec.FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<VenueDto?> GetByGuidAsync(Guid venueGuid, CancellationToken cancellationToken = default)
     {
-        var venue = await _dbContext.Venues
-            .AsNoTracking()
-            .FirstOrDefaultAsync(v => v.VenueGuid == venueGuid, cancellationToken);
+        var venueSpec =
+            from v in _dbContext.Venues.AsNoTracking()
+            where v.VenueGuid == venueGuid
+            select new VenueDto
+            {
+                Id = v.Id,
+                VenueGuid = v.VenueGuid,
+                Name = v.Name,
+                Address = v.Address,
+                Latitude = v.Location != null ? v.Location.Y : null,
+                Longitude = v.Location != null ? v.Location.X : null,
+                SeatingCapacity = v.SeatingCapacity,
+                Description = v.Description,
+                CreatedAt = v.CreatedAt,
+                UpdatedAt = v.UpdatedAt
+            };
 
-        return venue == null ? null : MapToDto(venue);
+        return await venueSpec.FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<VenueDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        var venues = await _dbContext.Venues
-            .AsNoTracking()
-            .ToListAsync(cancellationToken);
+        var venuesSpec =
+            from v in _dbContext.Venues.AsNoTracking()
+            select new VenueDto
+            {
+                Id = v.Id,
+                VenueGuid = v.VenueGuid,
+                Name = v.Name,
+                Address = v.Address,
+                Latitude = v.Location != null ? v.Location.Y : null,
+                Longitude = v.Location != null ? v.Location.X : null,
+                SeatingCapacity = v.SeatingCapacity,
+                Description = v.Description,
+                CreatedAt = v.CreatedAt,
+                UpdatedAt = v.UpdatedAt
+            };
 
-        return venues.Select(MapToDto);
+        return await venuesSpec.ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<VenueDto> CreateAsync(CreateVenueDto dto, CancellationToken cancellationToken = default)
     {
+        // Validate tenant context is available
+        if (!_tenantContext.CurrentTenantId.HasValue)
+        {
+            throw new InvalidOperationException("Tenant context is required for venue creation.");
+        }
+
         var venue = new Venue
         {
             VenueGuid = dto.VenueGuid,
@@ -68,21 +112,37 @@ public class VenueService : IVenueService
             Address = dto.Address,
             Location = GeographyService.CreatePoint(dto.Latitude, dto.Longitude),
             SeatingCapacity = dto.SeatingCapacity,
-            Description = dto.Description,
-            TenantId = _tenantContext.CurrentTenantId ?? throw new InvalidOperationException("Tenant context is required for venue creation.")
+            Description = dto.Description
+            // TenantId will be automatically set by DbContext.SaveChangesAsync
         };
 
         _dbContext.Venues.Add(venue);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(venue);
+        return new VenueDto
+        {
+            Id = venue.Id,
+            VenueGuid = venue.VenueGuid,
+            Name = venue.Name,
+            Address = venue.Address,
+            Latitude = venue.Location?.Y,
+            Longitude = venue.Location?.X,
+            SeatingCapacity = venue.SeatingCapacity,
+            Description = venue.Description,
+            CreatedAt = venue.CreatedAt,
+            UpdatedAt = venue.UpdatedAt
+        };
     }
 
     /// <inheritdoc />
     public async Task<VenueDto?> UpdateAsync(int id, UpdateVenueDto dto, CancellationToken cancellationToken = default)
     {
-        var venue = await _dbContext.Venues
-            .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
+        var venueSpec =
+            from v in _dbContext.Venues
+            where v.Id == id
+            select v;
+
+        var venue = await venueSpec.FirstOrDefaultAsync(cancellationToken);
 
         if (venue == null)
         {
@@ -97,33 +157,6 @@ public class VenueService : IVenueService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(venue);
-    }
-
-    /// <inheritdoc />
-    public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
-    {
-        var venue = await _dbContext.Venues
-            .FirstOrDefaultAsync(v => v.Id == id, cancellationToken);
-
-        if (venue == null)
-        {
-            return false;
-        }
-
-        _dbContext.Venues.Remove(venue);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return true;
-    }
-
-    /// <summary>
-    /// Maps a Venue entity to a VenueDto.
-    /// </summary>
-    /// <param name="venue">The venue entity to map.</param>
-    /// <returns>The mapped venue DTO.</returns>
-    private static VenueDto MapToDto(Venue venue)
-    {
         return new VenueDto
         {
             Id = venue.Id,
@@ -137,5 +170,32 @@ public class VenueService : IVenueService
             CreatedAt = venue.CreatedAt,
             UpdatedAt = venue.UpdatedAt
         };
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var venueSpec =
+            from v in _dbContext.Venues
+            where v.Id == id
+            select v;
+
+        var venue = await venueSpec.FirstOrDefaultAsync(cancellationToken);
+
+        if (venue == null)
+        {
+            return false;
+        }
+
+        _dbContext.Venues.Remove(venue);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    public async Task<int> GetCountAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Venues.CountAsync(cancellationToken);
     }
 }
