@@ -12,7 +12,7 @@ Best practices for defining Endpoints, DTOs, and Validators using ASP.NET Core M
 As an API Contract Guardian, you are responsible for:
 - **Contracts**: Defining clear Request/Response DTOs in `GloboTicket.Application/DTOs`
 - **Endpoints**: Implementing `MapGroup` definitions in `GloboTicket.API/Endpoints/`
-- **Services**: Implementing Application Services that orchestrate Domain Entities
+- **Services**: Implementing Application Services in `GloboTicket.Application/Services/` that orchestrate Domain Entities
 - **Validation**: Ensuring all inputs are validated before processing
 
 ## Endpoint Structure
@@ -197,39 +197,51 @@ venues.MapPost("/", async (CreateVenueDto dto, IVenueRepository repo) => { ... }
 ### Service Implementation Pattern
 
 ```csharp
-// Application service implementation
-public class VenueService : IVenueService
+// Application service implementation in GloboTicket.Application/Services/
+public class VenueService
 {
-    private readonly IVenueRepository _repository;
+    private readonly DbContext _dbContext;
     private readonly ITenantContext _tenantContext;
-    private readonly IMapper _mapper;
     
     public VenueService(
-        IVenueRepository repository,
-        ITenantContext tenantContext,
-        IMapper mapper)
+        DbContext dbContext,
+        ITenantContext tenantContext)
     {
-        _repository = repository;
+        _dbContext = dbContext;
         _tenantContext = tenantContext;
-        _mapper = mapper;
     }
     
-    public async Task<VenueDto> CreateAsync(CreateVenueDto dto)
+    public async Task<VenueDto> CreateAsync(CreateVenueDto dto, CancellationToken cancellationToken)
     {
+        if (!_tenantContext.CurrentTenantId.HasValue)
+            throw new InvalidOperationException("Tenant context is required");
+        
         // Business logic and domain entity creation
-        var venue = Venue.Create(
-            dto.Name,
-            dto.Address,
-            dto.Capacity,
-            dto.VenueType.Id,
-            _tenantContext.CurrentTenantId
-        );
+        var venue = new Venue
+        {
+            VenueGuid = dto.VenueGuid,
+            Name = dto.Name,
+            Address = dto.Address,
+            SeatingCapacity = dto.SeatingCapacity,
+            Description = dto.Description,
+            Location = GeographyService.CreatePoint(dto.Latitude, dto.Longitude)
+        };
         
-        await _repository.AddAsync(venue);
-        await _repository.SaveChangesAsync();
+        _dbContext.Set<Venue>().Add(venue);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         
-        return _mapper.Map<VenueDto>(venue);
+        return MapToDto(venue);
     }
+    
+    private static VenueDto MapToDto(Venue venue) => new VenueDto
+    {
+        Id = venue.Id,
+        VenueGuid = venue.VenueGuid,
+        Name = venue.Name,
+        Address = venue.Address,
+        SeatingCapacity = venue.SeatingCapacity,
+        Description = venue.Description
+    };
 }
 ```
 

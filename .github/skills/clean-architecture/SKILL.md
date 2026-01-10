@@ -123,9 +123,22 @@ public class CreateVenueCommandHandler :
 
 ### Project Structure
 - `GloboTicket.Domain/` - Domain entities and business logic
-- `GloboTicket.Application/` - Use cases, DTOs, interfaces
-- `GloboTicket.Infrastructure/` - EF Core, external services
-- `GloboTicket.API/` - Controllers, middleware, API endpoints
+- `GloboTicket.Application/` - Application services, use cases, DTOs, interfaces
+- `GloboTicket.Infrastructure/` - EF Core DbContext, configurations, external services
+- `GloboTicket.API/` - Minimal API endpoints, middleware, HTTP concerns
+
+### Layer Responsibilities in GloboTicket
+**Application Layer (`GloboTicket.Application/`):**
+- `Services/` - Application services that orchestrate domain logic (ActService, VenueService, ShowService, etc.)
+- `DTOs/` - Data transfer objects for API contracts
+- `MultiTenancy/` - ITenantContext interface for tenant resolution
+- Services inject EF Core's base `DbContext` class and use `Set<TEntity>()` for data access
+
+**Infrastructure Layer (`GloboTicket.Infrastructure/`):**
+- `Data/GloboTicketDbContext.cs` - Concrete EF Core DbContext implementation
+- `Data/Configurations/` - Entity Framework Fluent API configurations
+- `Data/Migrations/` - EF Core database migrations
+- Implements Application layer interfaces, never contains business logic
 
 ### Tenant Context Integration
 - Use ITenantContext for tenant resolution
