@@ -1,9 +1,9 @@
 using GloboTicket.API.Endpoints;
 using GloboTicket.API.Middleware;
 using GloboTicket.Application.Interfaces;
+using GloboTicket.Application.MultiTenancy;
+using GloboTicket.Application.Services;
 using GloboTicket.Infrastructure.Data;
-using GloboTicket.Infrastructure.MultiTenancy;
-using GloboTicket.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,6 +21,9 @@ builder.Services.AddDbContext<GloboTicketDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlOptions => sqlOptions.UseNetTopologySuite()));
+
+// Map base DbContext to the concrete GloboTicketDbContext for DI
+builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<GloboTicketDbContext>());
 
 // Register tenant services
 builder.Services.AddHttpContextAccessor();

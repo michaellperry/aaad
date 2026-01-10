@@ -1,4 +1,4 @@
-using GloboTicket.Infrastructure.MultiTenancy;
+using GloboTicket.Application.MultiTenancy;
 
 namespace GloboTicket.API.Middleware;
 

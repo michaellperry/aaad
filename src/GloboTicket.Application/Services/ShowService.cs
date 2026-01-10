@@ -1,11 +1,10 @@
 using GloboTicket.Application.DTOs;
 using GloboTicket.Application.Interfaces;
+using GloboTicket.Application.MultiTenancy;
 using GloboTicket.Domain.Entities;
-using GloboTicket.Infrastructure.Data;
-using GloboTicket.Infrastructure.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
 
-namespace GloboTicket.Infrastructure.Services;
+namespace GloboTicket.Application.Services;
 
 /// <summary>
 /// Service implementation for managing show operations.
@@ -13,7 +12,7 @@ namespace GloboTicket.Infrastructure.Services;
 /// </summary>
 public class ShowService : IShowService
 {
-    private readonly GloboTicketDbContext _dbContext;
+    private readonly DbContext _dbContext;
     private readonly ITenantContext _tenantContext;
 
     /// <summary>
@@ -21,7 +20,7 @@ public class ShowService : IShowService
     /// </summary>
     /// <param name="dbContext">The database context for data access.</param>
     /// <param name="tenantContext">The tenant context for accessing current tenant ID.</param>
-    public ShowService(GloboTicketDbContext dbContext, ITenantContext tenantContext)
+    public ShowService(DbContext dbContext, ITenantContext tenantContext)
     {
         _dbContext = dbContext;
         _tenantContext = tenantContext;
@@ -32,7 +31,7 @@ public class ShowService : IShowService
     {
         // Use IgnoreQueryFilters to bypass global filter, then manually filter by Venue.TenantId
         // This ensures proper tenant isolation through the Venue relationship
-        var show = await _dbContext.Shows
+        var show = await _dbContext.Set<Show>()
             .IgnoreQueryFilters()
             .Include(s => s.Act)
             .Include(s => s.Venue)
@@ -47,7 +46,7 @@ public class ShowService : IShowService
     public async Task<IEnumerable<ShowDto>> GetShowsByActGuidAsync(Guid actGuid, CancellationToken cancellationToken = default)
     {
         // Validate act exists (with tenant filtering if context is set)
-        var actExists = await _dbContext.Acts
+        var actExists = await _dbContext.Set<Act>()
             .AnyAsync(a => a.ActGuid == actGuid, cancellationToken);
 
         if (!actExists)
@@ -57,7 +56,7 @@ public class ShowService : IShowService
 
         // Query shows directly by Act.ActGuid to support multi-tenant acts
         // Use IgnoreQueryFilters to bypass Act tenant filtering, but manually filter by Venue tenant
-        var shows = await _dbContext.Shows
+        var shows = await _dbContext.Set<Show>()
             .IgnoreQueryFilters()
             .Include(s => s.Act)
             .Include(s => s.Venue)
@@ -72,7 +71,7 @@ public class ShowService : IShowService
     public async Task<ShowDto> CreateAsync(Guid actGuid, CreateShowDto dto, CancellationToken cancellationToken = default)
     {
         // Validate act exists (tenant-filtered)
-        var act = await _dbContext.Acts
+        var act = await _dbContext.Set<Act>()
             .FirstOrDefaultAsync(a => a.ActGuid == actGuid, cancellationToken);
 
         if (act == null)
@@ -81,7 +80,7 @@ public class ShowService : IShowService
         }
 
         // Validate venue exists (tenant-filtered)
-        var venue = await _dbContext.Venues
+        var venue = await _dbContext.Set<Venue>()
             .FirstOrDefaultAsync(v => v.VenueGuid == dto.VenueGuid, cancellationToken);
 
         if (venue == null)
@@ -109,7 +108,7 @@ public class ShowService : IShowService
             StartTime = dto.StartTime
         };
 
-        _dbContext.Shows.Add(show);
+        _dbContext.Set<Show>().Add(show);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return MapToDto(show);
@@ -120,7 +119,7 @@ public class ShowService : IShowService
     {
         // Use IgnoreQueryFilters to bypass global filter, then manually filter by Venue.TenantId
         // This ensures proper tenant isolation through the Venue relationship
-        var show = await _dbContext.Shows
+        var show = await _dbContext.Set<Show>()
             .IgnoreQueryFilters()
             .Include(s => s.Venue)
             .Where(s => s.ShowGuid == showGuid)
@@ -132,7 +131,7 @@ public class ShowService : IShowService
             return false;
         }
 
-        _dbContext.Shows.Remove(show);
+        _dbContext.Set<Show>().Remove(show);
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -141,7 +140,7 @@ public class ShowService : IShowService
     public async Task<NearbyShowsResponse> GetNearbyShowsAsync(Guid venueGuid, DateTimeOffset startTime, CancellationToken cancellationToken = default)
     {
         // Validate venue exists (tenant-filtered)
-        var venue = await _dbContext.Venues
+        var venue = await _dbContext.Set<Venue>()
             .FirstOrDefaultAsync(v => v.VenueGuid == venueGuid, cancellationToken);
 
         if (venue == null)
@@ -155,7 +154,7 @@ public class ShowService : IShowService
         var windowEnd = startUtc.AddHours(48);
 
         // Query shows within the 48-hour window
-        var nearbyShows = await _dbContext.Shows
+        var nearbyShows = await _dbContext.Set<Show>()
             .Include(s => s.Act)
             .Where(s => s.VenueId == venue.Id)
             .Where(s => s.StartTime.UtcDateTime >= windowStart)

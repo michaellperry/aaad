@@ -1,12 +1,11 @@
 using GloboTicket.Application.DTOs;
 using GloboTicket.Application.Interfaces;
+using GloboTicket.Application.MultiTenancy;
 using GloboTicket.Domain.Entities;
 using GloboTicket.Domain.Services;
-using GloboTicket.Infrastructure.Data;
-using GloboTicket.Infrastructure.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
 
-namespace GloboTicket.Infrastructure.Services;
+namespace GloboTicket.Application.Services;
 
 /// <summary>
 /// Service implementation for managing venue operations.
@@ -14,7 +13,7 @@ namespace GloboTicket.Infrastructure.Services;
 /// </summary>
 public class VenueService : IVenueService
 {
-    private readonly GloboTicketDbContext _dbContext;
+    private readonly DbContext _dbContext;
     private readonly ITenantContext _tenantContext;
 
     /// <summary>
@@ -22,7 +21,7 @@ public class VenueService : IVenueService
     /// </summary>
     /// <param name="dbContext">The database context for data access.</param>
     /// <param name="tenantContext">The tenant context for tenant isolation.</param>
-    public VenueService(GloboTicketDbContext dbContext, ITenantContext tenantContext)
+    public VenueService(DbContext dbContext, ITenantContext tenantContext)
     {
         _dbContext = dbContext;
         _tenantContext = tenantContext;
@@ -32,7 +31,7 @@ public class VenueService : IVenueService
     public async Task<VenueDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var venueSpec =
-            from v in _dbContext.Venues.AsNoTracking()
+            from v in _dbContext.Set<Venue>().AsNoTracking()
             where v.Id == id
             select new VenueDto
             {
@@ -55,7 +54,7 @@ public class VenueService : IVenueService
     public async Task<VenueDto?> GetByGuidAsync(Guid venueGuid, CancellationToken cancellationToken = default)
     {
         var venueSpec =
-            from v in _dbContext.Venues.AsNoTracking()
+            from v in _dbContext.Set<Venue>().AsNoTracking()
             where v.VenueGuid == venueGuid
             select new VenueDto
             {
@@ -78,7 +77,7 @@ public class VenueService : IVenueService
     public async Task<IEnumerable<VenueDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var venuesSpec =
-            from v in _dbContext.Venues.AsNoTracking()
+            from v in _dbContext.Set<Venue>().AsNoTracking()
             select new VenueDto
             {
                 Id = v.Id,
@@ -116,7 +115,7 @@ public class VenueService : IVenueService
             // TenantId will be automatically set by DbContext.SaveChangesAsync
         };
 
-        _dbContext.Venues.Add(venue);
+        _dbContext.Set<Venue>().Add(venue);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return new VenueDto
@@ -138,7 +137,7 @@ public class VenueService : IVenueService
     public async Task<VenueDto?> UpdateAsync(int id, UpdateVenueDto dto, CancellationToken cancellationToken = default)
     {
         var venueSpec =
-            from v in _dbContext.Venues
+            from v in _dbContext.Set<Venue>()
             where v.Id == id
             select v;
 
@@ -176,7 +175,7 @@ public class VenueService : IVenueService
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var venueSpec =
-            from v in _dbContext.Venues
+            from v in _dbContext.Set<Venue>()
             where v.Id == id
             select v;
 
@@ -187,7 +186,7 @@ public class VenueService : IVenueService
             return false;
         }
 
-        _dbContext.Venues.Remove(venue);
+        _dbContext.Set<Venue>().Remove(venue);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
@@ -196,6 +195,6 @@ public class VenueService : IVenueService
     /// <inheritdoc />
     public async Task<int> GetCountAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Venues.CountAsync(cancellationToken);
+        return await _dbContext.Set<Venue>().CountAsync(cancellationToken);
     }
 }

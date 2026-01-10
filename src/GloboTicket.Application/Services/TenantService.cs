@@ -1,10 +1,9 @@
 using GloboTicket.Application.DTOs;
 using GloboTicket.Application.Interfaces;
 using GloboTicket.Domain.Entities;
-using GloboTicket.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace GloboTicket.Infrastructure.Services;
+namespace GloboTicket.Application.Services;
 
 /// <summary>
 /// Service implementation for managing tenant operations.
@@ -12,13 +11,13 @@ namespace GloboTicket.Infrastructure.Services;
 /// </summary>
 public class TenantService : ITenantService
 {
-    private readonly GloboTicketDbContext _dbContext;
+    private readonly DbContext _dbContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TenantService"/> class.
     /// </summary>
     /// <param name="dbContext">The database context for data access.</param>
-    public TenantService(GloboTicketDbContext dbContext)
+    public TenantService(DbContext dbContext)
     {
         _dbContext = dbContext;
     }
@@ -27,7 +26,7 @@ public class TenantService : ITenantService
     public async Task<TenantDto?> GetTenantByIdAsync(int tenantId, CancellationToken cancellationToken = default)
     {
         var tenantSpec =
-            from t in _dbContext.Tenants.AsNoTracking()
+            from t in _dbContext.Set<Tenant>().AsNoTracking()
             where t.Id == tenantId
             select new TenantDto
             {
@@ -46,7 +45,7 @@ public class TenantService : ITenantService
     public async Task<TenantDto?> GetTenantBySlugAsync(string slug, CancellationToken cancellationToken = default)
     {
         var tenantSpec =
-            from t in _dbContext.Tenants.AsNoTracking()
+            from t in _dbContext.Set<Tenant>().AsNoTracking()
             where t.Slug == slug
             select new TenantDto
             {
@@ -65,7 +64,7 @@ public class TenantService : ITenantService
     public async Task<TenantDto?> GetTenantByIdentifierAsync(string tenantIdentifier, CancellationToken cancellationToken = default)
     {
         var tenantSpec =
-            from t in _dbContext.Tenants.AsNoTracking()
+            from t in _dbContext.Set<Tenant>().AsNoTracking()
             where t.TenantIdentifier == tenantIdentifier
             select new TenantDto
             {
@@ -84,7 +83,7 @@ public class TenantService : ITenantService
     public async Task<IEnumerable<TenantDto>> GetAllTenantsAsync(CancellationToken cancellationToken = default)
     {
         var tenantsSpec =
-            from t in _dbContext.Tenants.AsNoTracking()
+            from t in _dbContext.Set<Tenant>().AsNoTracking()
             select new TenantDto
             {
                 Id = t.Id,
@@ -109,7 +108,7 @@ public class TenantService : ITenantService
             IsActive = true
         };
 
-        _dbContext.Tenants.Add(tenant);
+        _dbContext.Set<Tenant>().Add(tenant);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return new TenantDto

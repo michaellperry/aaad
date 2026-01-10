@@ -1,4 +1,4 @@
-using GloboTicket.Infrastructure.MultiTenancy;
+using GloboTicket.Application.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;

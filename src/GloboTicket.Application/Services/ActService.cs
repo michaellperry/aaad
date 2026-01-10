@@ -1,11 +1,10 @@
 using GloboTicket.Application.DTOs;
 using GloboTicket.Application.Interfaces;
+using GloboTicket.Application.MultiTenancy;
 using GloboTicket.Domain.Entities;
-using GloboTicket.Infrastructure.Data;
-using GloboTicket.Infrastructure.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
 
-namespace GloboTicket.Infrastructure.Services;
+namespace GloboTicket.Application.Services;
 
 /// <summary>
 /// Service implementation for managing act operations.
@@ -13,7 +12,7 @@ namespace GloboTicket.Infrastructure.Services;
 /// </summary>
 public class ActService : IActService
 {
-    private readonly GloboTicketDbContext _dbContext;
+    private readonly DbContext _dbContext;
     private readonly ITenantContext _tenantContext;
 
     /// <summary>
@@ -21,7 +20,7 @@ public class ActService : IActService
     /// </summary>
     /// <param name="dbContext">The database context for data access.</param>
     /// <param name="tenantContext">The tenant context for tenant isolation.</param>
-    public ActService(GloboTicketDbContext dbContext, ITenantContext tenantContext)
+    public ActService(DbContext dbContext, ITenantContext tenantContext)
     {
         _dbContext = dbContext;
         _tenantContext = tenantContext;
@@ -31,7 +30,7 @@ public class ActService : IActService
     public async Task<ActDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var actSpec =
-            from act in _dbContext.Acts.AsNoTracking()
+            from act in _dbContext.Set<Act>().AsNoTracking()
             where act.Id == id
             select new ActDto
             {
@@ -49,7 +48,7 @@ public class ActService : IActService
     public async Task<ActDto?> GetByGuidAsync(Guid actGuid, CancellationToken cancellationToken = default)
     {
         var actSpec =
-            from act in _dbContext.Acts.AsNoTracking()
+            from act in _dbContext.Set<Act>().AsNoTracking()
             where act.ActGuid == actGuid
             select new ActDto
             {
@@ -67,7 +66,7 @@ public class ActService : IActService
     public async Task<IEnumerable<ActDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var actsSpec =
-            from act in _dbContext.Acts.AsNoTracking()
+            from act in _dbContext.Set<Act>().AsNoTracking()
             select new ActDto
             {
                 Id = act.Id,
@@ -96,7 +95,7 @@ public class ActService : IActService
             // TenantId will be automatically set by DbContext.SaveChangesAsync
         };
 
-        _dbContext.Acts.Add(act);
+        _dbContext.Set<Act>().Add(act);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return new ActDto
@@ -113,7 +112,7 @@ public class ActService : IActService
     public async Task<ActDto?> UpdateAsync(int id, UpdateActDto dto, CancellationToken cancellationToken = default)
     {
         var actSpec =
-            from a in _dbContext.Acts
+            from a in _dbContext.Set<Act>()
             where a.Id == id
             select a;
 
@@ -142,7 +141,7 @@ public class ActService : IActService
     public async Task<bool> DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
         var actSpec =
-            from a in _dbContext.Acts
+            from a in _dbContext.Set<Act>()
             where a.Id == id
             select a;
 
@@ -153,7 +152,7 @@ public class ActService : IActService
             return false;
         }
 
-        _dbContext.Acts.Remove(act);
+        _dbContext.Set<Act>().Remove(act);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return true;
@@ -162,6 +161,6 @@ public class ActService : IActService
     /// <inheritdoc />
     public async Task<int> GetCountAsync(CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Acts.CountAsync(cancellationToken);
+        return await _dbContext.Set<Act>().CountAsync(cancellationToken);
     }
 }
