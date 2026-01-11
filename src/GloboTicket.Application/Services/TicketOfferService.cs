@@ -141,6 +141,83 @@ public class TicketOfferService : ITicketOfferService
         };
     }
 
+    /// <inheritdoc />
+    public async Task<TicketOfferDto> GetTicketOfferByGuidAsync(Guid ticketOfferGuid, CancellationToken cancellationToken = default)
+    {
+        // Query ticket offer with tenant filtering through Show → Venue relationship
+        var ticketOffer = await _dbContext.Set<TicketOffer>()
+            .Include(to => to.Show)
+                .ThenInclude(s => s.Venue)
+            .Where(to => to.TicketOfferGuid == ticketOfferGuid)
+            .Where(to => _tenantContext.CurrentTenantId == null || to.Show.Venue.TenantId == _tenantContext.CurrentTenantId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (ticketOffer == null)
+        {
+            throw new KeyNotFoundException($"Ticket offer with GUID {ticketOfferGuid} not found");
+        }
+
+        return MapToDto(ticketOffer);
+    }
+
+    /// <inheritdoc />
+    public async Task<TicketOfferDto> UpdateTicketOfferAsync(Guid ticketOfferGuid, UpdateTicketOfferDto dto, CancellationToken cancellationToken = default)
+    {
+        // Use a transaction to ensure thread-safe capacity validation
+        await using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        
+        try
+        {
+            // Find ticket offer with tenant filtering through Show → Venue relationship
+            // Include Show with Venue and TicketOffers for capacity validation
+            var ticketOffer = await _dbContext.Set<TicketOffer>()
+                .IgnoreQueryFilters()
+                .Include(to => to.Show.Venue)
+                .Include(to => to.Show.TicketOffers)
+                .Where(to => to.TicketOfferGuid == ticketOfferGuid)
+                .Where(to => _tenantContext.CurrentTenantId == null || to.Show.Venue.TenantId == _tenantContext.CurrentTenantId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (ticketOffer == null)
+            {
+                throw new KeyNotFoundException($"Ticket offer with GUID {ticketOfferGuid} not found");
+            }
+
+            // Validate capacity using domain logic if ticket count is being changed
+            if (dto.TicketCount != ticketOffer.TicketCount)
+            {
+                if (!ticketOffer.Show.CanUpdateTicketOffer(ticketOffer, dto.TicketCount))
+                {
+                    // Calculate available capacity for error message
+                    var otherOffersTicketCount = ticketOffer.Show.TicketOffers
+                        .Where(o => o.Id != ticketOffer.Id)
+                        .Sum(o => o.TicketCount);
+                    var availableCapacity = ticketOffer.Show.TicketCount - otherOffersTicketCount;
+                    
+                    throw new ArgumentException(
+                        $"Cannot update ticket offer. Requested {dto.TicketCount} tickets, but only {availableCapacity} tickets available for this offer (including its current allocation). " +
+                        $"Show capacity: {ticketOffer.Show.TicketCount}, Other offers allocated: {otherOffersTicketCount}",
+                        nameof(dto.TicketCount));
+                }
+            }
+
+            // Update ticket offer properties
+            ticketOffer.Name = dto.Name;
+            ticketOffer.Price = dto.Price;
+            ticketOffer.TicketCount = dto.TicketCount;
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return MapToDto(ticketOffer);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
     /// <summary>
     /// Maps a TicketOffer entity to a TicketOfferDto.
     /// </summary>
@@ -156,7 +233,8 @@ public class TicketOfferService : ITicketOfferService
             Name = ticketOffer.Name,
             Price = ticketOffer.Price,
             TicketCount = ticketOffer.TicketCount,
-            CreatedAt = ticketOffer.CreatedAt
+            CreatedAt = ticketOffer.CreatedAt,
+            UpdatedAt = ticketOffer.UpdatedAt
         };
     }
 }

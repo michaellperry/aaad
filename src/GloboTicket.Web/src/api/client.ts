@@ -7,7 +7,7 @@ import type {
 import type { Venue, CreateVenueDto, UpdateVenueDto } from '../types/venue';
 import type { Act, CreateActDto, UpdateActDto } from '../types/act';
 import type { Show, CreateShowDto, NearbyShowsResponse } from '../types/show';
-import type { TicketOffer, CreateTicketOfferDto, ShowCapacity } from '../types/ticketOffer';
+import type { TicketOffer, CreateTicketOfferDto, UpdateTicketOfferDto, ShowCapacity } from '../types/ticketOffer';
 
 const API_BASE_URL = '';
 
@@ -276,6 +276,33 @@ export async function createTicketOffer(
 ): Promise<TicketOffer> {
   const response = await fetch(`${API_BASE_URL}/api/shows/${showGuid}/ticket-offers`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(dto),
+  });
+  return handleResponse<TicketOffer>(response);
+}
+
+/**
+ * Get a specific ticket offer by GUID
+ */
+export async function getTicketOffer(ticketOfferGuid: string): Promise<TicketOffer> {
+  const response = await fetch(`${API_BASE_URL}/api/ticket-offers/${ticketOfferGuid}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return handleResponse<TicketOffer>(response);
+}
+
+/**
+ * Update an existing ticket offer
+ */
+export async function updateTicketOffer(
+  ticketOfferGuid: string,
+  dto: UpdateTicketOfferDto
+): Promise<TicketOffer> {
+  const response = await fetch(`${API_BASE_URL}/api/ticket-offers/${ticketOfferGuid}`, {
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify(dto),

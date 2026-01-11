@@ -14,6 +14,7 @@ import {
   EditActPage,
 } from '../pages/acts';
 import { ShowDetailPage, CreateShowPage } from '../pages/shows';
+import { EditTicketOfferPage } from '../pages/ticketOffers/EditTicketOfferPage';
 import { ProtectedRoute } from '../components/routing/ProtectedRoute';
 import { ROUTES } from './routes';
 
@@ -145,6 +146,16 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <ShowDetailPage />
+          </ProtectedRoute>
+        ),
+      },
+      
+      // Ticket Offers
+      {
+        path: ROUTES.TICKET_OFFER_EDIT,
+        element: (
+          <ProtectedRoute>
+            <EditTicketOfferPage />
           </ProtectedRoute>
         ),
       },

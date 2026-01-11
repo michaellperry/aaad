@@ -38,4 +38,25 @@ public interface ITicketOfferService
     /// <returns>A capacity information DTO.</returns>
     /// <exception cref="KeyNotFoundException">Thrown when the show is not found.</exception>
     Task<ShowCapacityDto> GetShowCapacityAsync(Guid showGuid, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves a specific ticket offer by its GUID.
+    /// </summary>
+    /// <param name="ticketOfferGuid">The ticket offer GUID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The ticket offer DTO.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown when the ticket offer is not found or belongs to a different tenant.</exception>
+    Task<TicketOfferDto> GetTicketOfferByGuidAsync(Guid ticketOfferGuid, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates an existing ticket offer's name, price, or ticket count.
+    /// Validates that the updated ticket count does not exceed available capacity using a database transaction.
+    /// </summary>
+    /// <param name="ticketOfferGuid">The ticket offer GUID.</param>
+    /// <param name="dto">The ticket offer update details.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The updated ticket offer DTO.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown when the ticket offer is not found or belongs to a different tenant.</exception>
+    /// <exception cref="ArgumentException">Thrown when ticket count exceeds available capacity.</exception>
+    Task<TicketOfferDto> UpdateTicketOfferAsync(Guid ticketOfferGuid, UpdateTicketOfferDto dto, CancellationToken cancellationToken = default);
 }
