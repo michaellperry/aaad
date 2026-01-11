@@ -12,8 +12,8 @@
 - **Frontend After Backend**: Do not begin UI component work until backend steps 6–10 have fully succeeded.
 
 ## Delegation Sequence (Enforced Order)
-1. **user-story-writer** → Create user story in docs/user-stories/ → pauses for approval.
-2. **spec-writer** → Create specification in docs/specs/ → pauses for approval; spec is the single source of truth.
+1. **user-story-writer** → Create user story in docs/user-stories/.
+2. **spec-writer** → Create specification in docs/specs/; spec is the single source of truth.
 3. **frontend-architect** → Define frontend architecture (may proceed in parallel later, but not before backend completes).
 4. **TDD Cycle (repeat per behavior)**:
    - **tdd-test-first** → Write ONE failing unit test.
