@@ -4,7 +4,6 @@ using GloboTicket.Application.Interfaces;
 using GloboTicket.Application.MultiTenancy;
 using GloboTicket.Application.Services;
 using GloboTicket.Infrastructure.Data;
-using GloboTicket.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
