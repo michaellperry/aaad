@@ -146,21 +146,22 @@ public class TicketOfferService : ITicketOfferService
     public async Task<TicketOfferDto> UpdateTicketOfferAsync(Guid ticketOfferGuid, UpdateTicketOfferDto dto, CancellationToken cancellationToken = default)
     {
         // Use a transaction to ensure thread-safe capacity validation
-        // Note: For production databases (SQL Server), set isolation level to SERIALIZABLE to prevent
-        // phantom reads and ensure consistent capacity calculations under high concurrency.
-        // The in-memory database used in tests does not support transactions, but the pattern is correct.
+        // Note: In production with SQL Server, consider using SERIALIZABLE isolation level for stricter
+        // concurrency control. The default READ COMMITTED level with transactions still provides good
+        // protection against most race conditions for this use case.
         await using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
         
         try
         {
             // Find ticket offer with tenant filtering through Show → Venue relationship
-            // Include Show and its TicketOffers for capacity validation
+            // IgnoreQueryFilters() is used because we need to manually apply tenant filtering
+            // through the Show → Venue navigation path (child entity pattern) instead of
+            // relying on automatic filtering which doesn't work for non-root tenant entities
+            // Include Show with both Venue (for tenant checking) and TicketOffers (for capacity validation)
             var ticketOffer = await _dbContext.Set<TicketOffer>()
                 .IgnoreQueryFilters()
-                .Include(to => to.Show)
-                    .ThenInclude(s => s.Venue)
-                .Include(to => to.Show)
-                    .ThenInclude(s => s.TicketOffers)
+                .Include(to => to.Show.Venue)
+                .Include(to => to.Show.TicketOffers)
                 .Where(to => to.TicketOfferGuid == ticketOfferGuid)
                 .Where(to => _tenantContext.CurrentTenantId == null || to.Show.Venue.TenantId == _tenantContext.CurrentTenantId)
                 .FirstOrDefaultAsync(cancellationToken);
