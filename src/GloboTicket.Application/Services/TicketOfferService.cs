@@ -4,6 +4,7 @@ using GloboTicket.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using GloboTicket.Application.MultiTenancy;
+using System.Data;
 
 namespace GloboTicket.Application.Services;
 
@@ -145,6 +146,9 @@ public class TicketOfferService : ITicketOfferService
     public async Task<TicketOfferDto> UpdateTicketOfferAsync(Guid ticketOfferGuid, UpdateTicketOfferDto dto, CancellationToken cancellationToken = default)
     {
         // Use a transaction to ensure thread-safe capacity validation
+        // Note: For production databases (SQL Server), set isolation level to SERIALIZABLE to prevent
+        // phantom reads and ensure consistent capacity calculations under high concurrency.
+        // The in-memory database used in tests does not support transactions, but the pattern is correct.
         await using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
         
         try

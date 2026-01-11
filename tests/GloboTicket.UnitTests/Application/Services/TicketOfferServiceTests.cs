@@ -64,7 +64,7 @@ public class TicketOfferServiceTests
         {
             Name = "General Admission",
             Price = 50.00m,
-            TicketCount = 900 // Increase from 500 to 900 (400 increase, 100 available remaining)
+            TicketCount = 900 // Increase from 500 to 900 (+400 tickets, 100 remaining capacity after update)
         };
 
         // Act

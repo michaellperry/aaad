@@ -11,7 +11,7 @@ public class UpdateTicketOfferDto
     /// Gets or sets the name of the ticket offer (e.g., "General Admission", "VIP").
     /// </summary>
     [Required(ErrorMessage = "Offer name is required")]
-    [StringLength(100, ErrorMessage = "Offer name cannot exceed 100 characters")]
+    [StringLength(200, ErrorMessage = "Offer name cannot exceed 200 characters")]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
