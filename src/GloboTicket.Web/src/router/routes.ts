@@ -24,6 +24,9 @@ export const ROUTES = {
   SHOWS: '/shows',
   SHOW_DETAIL: '/shows/:id',
   SHOW_CREATE: '/acts/:id/shows/new',
+  
+  // Ticket Offers
+  TICKET_OFFER_EDIT: '/ticket-offers/:ticketOfferGuid/edit',
 } as const;
 
 /**
@@ -38,4 +41,6 @@ export const routeHelpers = {
   
   showDetail: (id: string) => `/shows/${id}`,
   showCreate: (actId: string) => `/acts/${actId}/shows/new`,
+  
+  ticketOfferEdit: (ticketOfferGuid: string) => `/ticket-offers/${ticketOfferGuid}/edit`,
 };
