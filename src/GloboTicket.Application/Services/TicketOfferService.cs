@@ -169,13 +169,11 @@ public class TicketOfferService : ITicketOfferService
         try
         {
             // Find ticket offer with tenant filtering through Show → Venue relationship
-            // Include Show and TicketOffers for capacity validation
+            // Include Show with Venue and TicketOffers for capacity validation
             var ticketOffer = await _dbContext.Set<TicketOffer>()
                 .IgnoreQueryFilters()
-                .Include(to => to.Show)
-                    .ThenInclude(s => s.Venue)
-                .Include(to => to.Show)
-                    .ThenInclude(s => s.TicketOffers)
+                .Include(to => to.Show.Venue)
+                .Include(to => to.Show.TicketOffers)
                 .Where(to => to.TicketOfferGuid == ticketOfferGuid)
                 .Where(to => _tenantContext.CurrentTenantId == null || to.Show.Venue.TenantId == _tenantContext.CurrentTenantId)
                 .FirstOrDefaultAsync(cancellationToken);
