@@ -42,6 +42,11 @@ public class GloboTicketDbContext : DbContext
     public DbSet<Show> Shows { get; set; } = null!;
 
     /// <summary>
+    /// Gets or sets the TicketOffers DbSet for managing ticket offer entities.
+    /// </summary>
+    public DbSet<TicketOffer> TicketOffers { get; set; } = null!;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="GloboTicketDbContext"/> class.
     /// </summary>
     /// <param name="options">The DbContext options.</param>
@@ -87,6 +92,11 @@ public class GloboTicketDbContext : DbContext
         modelBuilder.Entity<Show>()
             .HasQueryFilter(s => _tenantContext.CurrentTenantId == null ||
                                 s.Venue.TenantId == _tenantContext.CurrentTenantId);
+
+        // TicketOffer is a child entity - filter through Show → Venue navigation property chain
+        modelBuilder.Entity<TicketOffer>()
+            .HasQueryFilter(to => _tenantContext.CurrentTenantId == null ||
+                                 to.Show.Venue.TenantId == _tenantContext.CurrentTenantId);
     }
 
     /// <summary>

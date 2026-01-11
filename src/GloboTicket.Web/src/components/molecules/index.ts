@@ -31,3 +31,9 @@ export type { MapDisplayProps } from './MapDisplay';
 
 export { ShowCard } from './ShowCard';
 export type { ShowCardProps } from './ShowCard';
+
+export { CapacityDisplay } from './CapacityDisplay';
+export type { CapacityDisplayProps } from './CapacityDisplay';
+
+export { TicketOfferCard } from './TicketOfferCard';
+export type { TicketOfferCardProps } from './TicketOfferCard';
