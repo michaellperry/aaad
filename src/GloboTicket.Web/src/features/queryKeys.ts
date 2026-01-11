@@ -16,6 +16,7 @@ export const queryKeys = {
   },
   ticketOffers: {
     byShow: (showGuid: string) => ['ticket-offers', 'by-show', showGuid] as const,
+    byGuid: (ticketOfferGuid: string) => ['ticket-offers', ticketOfferGuid] as const,
   },
   capacity: {
     byShow: (showGuid: string) => ['capacity', 'by-show', showGuid] as const,

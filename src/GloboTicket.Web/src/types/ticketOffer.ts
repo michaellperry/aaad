@@ -25,6 +25,12 @@ export interface CreateTicketOfferDto {
   ticketCount: number;
 }
 
+export interface UpdateTicketOfferDto {
+  name: string;
+  price: number;
+  ticketCount: number;
+}
+
 export interface ShowCapacity {
   showGuid: string;
   totalTickets: number;
