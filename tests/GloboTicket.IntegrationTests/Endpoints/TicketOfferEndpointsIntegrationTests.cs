@@ -541,6 +541,173 @@ public class TicketOfferEndpointsIntegrationTests : IClassFixture<DatabaseFixtur
 
     #endregion
 
+    #region Update Ticket Offer Tests
+
+    [Fact]
+    public async Task UpdateTicketOffer_WithValidData_UpdatesOffer()
+    {
+        // Arrange
+        var (showGuid, tenantId) = await CreateTestShowAsync(capacity: 1000);
+        var offerGuid = await CreateTicketOfferForShowAsync(showGuid, tenantId, ticketCount: 500, name: "Original Name");
+
+        var updateDto = new UpdateTicketOfferDto
+        {
+            Name = "Updated Name",
+            Price = 75.00m,
+            TicketCount = 600
+        };
+
+        // Act
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, tenantId);
+        using (context)
+        {
+            var service = new TicketOfferService(context, tenantContext);
+            var result = await service.UpdateTicketOfferAsync(offerGuid, updateDto);
+
+            // Assert - Simulates 200 OK response
+            result.Should().NotBeNull("endpoint should return 200 OK with updated ticket offer data");
+            result.Name.Should().Be(updateDto.Name);
+            result.Price.Should().Be(updateDto.Price);
+            result.TicketCount.Should().Be(updateDto.TicketCount);
+            result.UpdatedAt.Should().NotBeNull().And.BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+        }
+    }
+
+    [Fact]
+    public async Task UpdateTicketOffer_ExceedingCapacity_ThrowsArgumentException()
+    {
+        // Arrange
+        var (showGuid, tenantId) = await CreateTestShowAsync(capacity: 1000);
+        var offerGuid = await CreateTicketOfferForShowAsync(showGuid, tenantId, ticketCount: 500);
+
+        var updateDto = new UpdateTicketOfferDto
+        {
+            Name = "Exceed Capacity",
+            Price = 50.00m,
+            TicketCount = 1100 // Exceeds show capacity
+        };
+
+        // Act & Assert - Simulates 400 Bad Request response
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, tenantId);
+        using (context)
+        {
+            var service = new TicketOfferService(context, tenantContext);
+            Func<Task> act = async () => await service.UpdateTicketOfferAsync(offerGuid, updateDto);
+
+            await act.Should().ThrowAsync<ArgumentException>()
+                .WithMessage("*capacity*", "endpoint should return 400 Bad Request for capacity validation failure");
+        }
+    }
+
+    [Fact]
+    public async Task UpdateTicketOffer_WithMultipleOffers_ValidatesAgainstTotalCapacity()
+    {
+        // Arrange
+        var (showGuid, tenantId) = await CreateTestShowAsync(capacity: 1000);
+        var offer1Guid = await CreateTicketOfferForShowAsync(showGuid, tenantId, ticketCount: 600);
+        var offer2Guid = await CreateTicketOfferForShowAsync(showGuid, tenantId, ticketCount: 200);
+
+        var updateDto = new UpdateTicketOfferDto
+        {
+            Name = "Updated Offer",
+            Price = 50.00m,
+            TicketCount = 500 // Total would be 600 + 500 = 1100, exceeding 1000
+        };
+
+        // Act & Assert - Simulates 400 Bad Request response
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, tenantId);
+        using (context)
+        {
+            var service = new TicketOfferService(context, tenantContext);
+            Func<Task> act = async () => await service.UpdateTicketOfferAsync(offer2Guid, updateDto);
+
+            await act.Should().ThrowAsync<ArgumentException>()
+                .WithMessage("*available*", "endpoint should return 400 Bad Request when update would exceed remaining capacity");
+        }
+    }
+
+    [Fact]
+    public async Task UpdateTicketOffer_DecreasingTicketCount_Succeeds()
+    {
+        // Arrange
+        var (showGuid, tenantId) = await CreateTestShowAsync(capacity: 1000);
+        var offerGuid = await CreateTicketOfferForShowAsync(showGuid, tenantId, ticketCount: 800);
+
+        var updateDto = new UpdateTicketOfferDto
+        {
+            Name = "Decreased Offer",
+            Price = 50.00m,
+            TicketCount = 400 // Decreasing from 800 to 400
+        };
+
+        // Act
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, tenantId);
+        using (context)
+        {
+            var service = new TicketOfferService(context, tenantContext);
+            var result = await service.UpdateTicketOfferAsync(offerGuid, updateDto);
+
+            // Assert - Simulates 200 OK response
+            result.Should().NotBeNull();
+            result.TicketCount.Should().Be(400, "decreasing ticket count should succeed");
+        }
+    }
+
+    [Fact]
+    public async Task UpdateTicketOffer_NonExistentOffer_ThrowsKeyNotFoundException()
+    {
+        // Arrange
+        var (_, tenantId) = await CreateTestShowAsync(capacity: 1000);
+        var nonExistentGuid = Guid.NewGuid();
+
+        var updateDto = new UpdateTicketOfferDto
+        {
+            Name = "Non-existent",
+            Price = 50.00m,
+            TicketCount = 100
+        };
+
+        // Act & Assert - Simulates 404 Not Found response
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, tenantId);
+        using (context)
+        {
+            var service = new TicketOfferService(context, tenantContext);
+            Func<Task> act = async () => await service.UpdateTicketOfferAsync(nonExistentGuid, updateDto);
+
+            await act.Should().ThrowAsync<KeyNotFoundException>(
+                "endpoint should return 404 Not Found for non-existent ticket offer");
+        }
+    }
+
+    [Fact]
+    public async Task UpdateTicketOffer_FromDifferentTenant_ThrowsKeyNotFoundException()
+    {
+        // Arrange
+        var (showGuid, tenant1Id) = await CreateTestShowAsync(capacity: 1000);
+        var offerGuid = await CreateTicketOfferForShowAsync(showGuid, tenant1Id, ticketCount: 500);
+
+        var updateDto = new UpdateTicketOfferDto
+        {
+            Name = "Cross-tenant Update",
+            Price = 50.00m,
+            TicketCount = 600
+        };
+
+        // Act & Assert - Try to update from different tenant context
+        var tenant2Id = _fixture.GenerateRandomTenantId();
+        var (context, tenantContext) = _fixture.CreateDbContextWithTenant(_fixture.ConnectionString, tenant2Id);
+        using (context)
+        {
+            var service = new TicketOfferService(context, tenantContext);
+            Func<Task> act = async () => await service.UpdateTicketOfferAsync(offerGuid, updateDto);
+
+            await act.Should().ThrowAsync<KeyNotFoundException>(
+                "endpoint should return 404 Not Found when trying to update ticket offer from different tenant");
+        }
+    }
+
+    #endregion
+
     #region Multi-Tenancy Tests
 
     [Fact]
