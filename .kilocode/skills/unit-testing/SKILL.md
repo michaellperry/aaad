@@ -20,59 +20,18 @@ Unit testing patterns for .NET applications covering test structure, EF Core in-
 - **Given-When-Then Comments**: Describe test flow and intent
 
 ## EF Core In-Memory Database Setup
-
-**CRITICAL: Use EF Core In-Memory Provider for all database operations. Do NOT mock repositories.**
-
-```csharp
-private GloboTicketDbContext CreateInMemoryDbContext(int? tenantId = 1)
-{
-    var options = new DbContextOptionsBuilder<GloboTicketDbContext>()
-        .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-        .Options;
-
-    var tenantContext = new TestTenantContext { CurrentTenantId = tenantId };
-    return new GloboTicketDbContext(options, tenantContext);
-}
-```
-
-**For detailed setup patterns**, see [`patterns/ef-core-in-memory-setup.md`](patterns/ef-core-in-memory-setup.md).
+Load the resource when configuring DbContext for unit tests, setting up `ITenantContext`, ensuring per-test database isolation, and understanding provider limitations. See [patterns/ef-core-in-memory-setup.md](patterns/ef-core-in-memory-setup.md).
 
 ## Multi-Tenancy Testing
-
-**Direct Tenant Filtering** (works in unit tests): Entities with direct `TenantId` properties
-
-**Navigation Property Filtering** (integration tests only): EF Core In-Memory does NOT support query filters using navigation properties.
-
-**For child entities filtered through navigation properties:**
-- **Unit Tests**: Focus on business logic (validation, transformations, error handling)
-- **Integration Tests**: Test tenant isolation with real database
-
-**For detailed multi-tenancy patterns**, see [`patterns/ef-core-in-memory-setup.md`](patterns/ef-core-in-memory-setup.md).
+Use the in-memory setup resource for guidance on tenant filtering, admin/null-tenant behavior, and navigation property filter limitations. Load [patterns/ef-core-in-memory-setup.md](patterns/ef-core-in-memory-setup.md) when multi-tenancy affects your tests.
 
 ## Test Data Helper Patterns
-
-**CRITICAL**: Always initialize parent navigation properties, never foreign keys.
-
-**❌ WRONG:**
-```csharp
-private Show GivenShow(int actId, int venueId) // Don't do this
-```
-
-**✅ CORRECT:**
-```csharp
-private Show GivenShow(Act act, Venue venue, int ticketCount = 500)
-```
-
-**Required vs. Optional Parameters:**
-- **Required**: Parent navigation properties (no default, non-nullable)
-- **Optional**: Scalar values (with defaults)
-
-**For detailed patterns**, see [`patterns/test-data-helpers.md`](patterns/test-data-helpers.md).
+Load the resource when authoring `Given` helpers: require parent navigation properties for child entities, use sensible defaults for scalars, and avoid foreign keys. See [patterns/test-data-helpers.md](patterns/test-data-helpers.md).
 
 ## Mocking Strategy
 
-- **✅ In-Memory Database**: All repository and service tests with data persistence
-- **✅ Mocking**: External dependencies only (email, payment gateways, APIs)
+- Use EF Core In-Memory for data operations; avoid mocking data access.
+- Mock external dependencies only (email, payment gateways, APIs).
 
 
 ## Best Practices
@@ -86,9 +45,9 @@ private Show GivenShow(Act act, Venue venue, int ticketCount = 500)
 7. Focus unit tests on business logic
 8. Use integration tests for navigation property tenant isolation
 
-## Additional Resources
+## Resources
 
-- [`patterns/ef-core-in-memory-setup.md`](patterns/ef-core-in-memory-setup.md) - EF Core in-memory database setup and multi-tenancy testing
-- [`patterns/test-data-helpers.md`](patterns/test-data-helpers.md) - Comprehensive test data helper patterns
-- [`examples/service-tests.md`](examples/service-tests.md) - Complete service testing examples
-- [`examples/domain-tests.md`](examples/domain-tests.md) - Entity and value object testing examples
+- [patterns/ef-core-in-memory-setup.md](patterns/ef-core-in-memory-setup.md): Load when setting up the in-memory DbContext, tenant context, or needing isolation/limitations guidance.
+- [patterns/test-data-helpers.md](patterns/test-data-helpers.md): Load when creating `Given` helpers, distinguishing required parents vs optional scalars, and avoiding foreign keys.
+- [examples/service-tests.md](examples/service-tests.md): Load when you want concrete service test examples using DbContext + `ITenantContext` and `Given` helpers.
+- [examples/domain-tests.md](examples/domain-tests.md): Load when testing domain entities/value objects with invariants and equality.
