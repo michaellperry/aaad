@@ -98,4 +98,27 @@ public class Show : Entity
     {
         return ticketCount <= GetAvailableCapacity();
     }
+
+    /// <summary>
+    /// Validates whether an existing ticket offer can be updated to a new ticket count.
+    /// </summary>
+    /// <param name="currentOffer">The ticket offer being updated.</param>
+    /// <param name="newTicketCount">The new number of tickets for the offer.</param>
+    /// <returns>True if the offer can be updated to the new ticket count; otherwise, false.</returns>
+    public bool CanUpdateTicketOffer(TicketOffer currentOffer, int newTicketCount)
+    {
+        if (currentOffer == null)
+        {
+            return false;
+        }
+
+        // Calculate available capacity excluding the current offer's tickets
+        var allocatedTicketsExcludingCurrent = TicketOffers
+            .Where(o => o.Id != currentOffer.Id)
+            .Sum(o => o.TicketCount);
+        
+        var availableCapacity = TicketCount - allocatedTicketsExcludingCurrent;
+        
+        return newTicketCount <= availableCapacity;
+    }
 }
