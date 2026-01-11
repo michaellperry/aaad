@@ -1,9 +1,9 @@
 using GloboTicket.API.Endpoints;
 using GloboTicket.API.Middleware;
 using GloboTicket.Application.Interfaces;
+using GloboTicket.Application.MultiTenancy;
+using GloboTicket.Application.Services;
 using GloboTicket.Infrastructure.Data;
-using GloboTicket.Infrastructure.MultiTenancy;
-using GloboTicket.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,6 +22,9 @@ builder.Services.AddDbContext<GloboTicketDbContext>(options =>
         builder.Configuration.GetConnectionString("DefaultConnection"),
         sqlOptions => sqlOptions.UseNetTopologySuite()));
 
+// Map base DbContext to the concrete GloboTicketDbContext for DI
+builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<GloboTicketDbContext>());
+
 // Register tenant services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ITenantContext, TenantContext>();
@@ -29,6 +32,7 @@ builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IVenueService, VenueService>();
 builder.Services.AddScoped<IActService, ActService>();
 builder.Services.AddScoped<IShowService, ShowService>();
+builder.Services.AddScoped<ITicketOfferService, TicketOfferService>();
 
 // Register rate limiting service
 builder.Services.AddSingleton<GloboTicket.API.Services.IRateLimitService, GloboTicket.API.Services.RateLimitService>();
@@ -115,6 +119,9 @@ app.MapActEndpoints();
 
 // Map show endpoints
 app.MapShowEndpoints();
+
+// Map ticket offer endpoints
+app.MapTicketOfferEndpoints();
 
 // Map geocoding endpoints
 app.MapGeocodingEndpoints();

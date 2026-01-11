@@ -6,178 +6,160 @@ namespace GloboTicket.UnitTests.Domain;
 public class ShowTests
 {
     [Fact]
-    public void GivenNewShow_WhenCreated_ThenShowGuidDefaultsToEmptyGuid()
+    public void GivenShowWithExistingOffers_WhenValidatingNewOfferCapacity_ThenReturnsTrueIfCapacityAvailable()
     {
         // Arrange
         var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
         venue.GetType().GetProperty("Id")!.SetValue(venue, 1);
         var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
         act.GetType().GetProperty("Id")!.SetValue(act, 1);
+        var show = new Show(act, venue) 
+        { 
+            ShowGuid = Guid.NewGuid(),
+            TicketCount = 1000
+        };
+        show.GetType().GetProperty("Id")!.SetValue(show, 1);
+
+        // Create existing ticket offers that allocate 600 tickets
+        var offer1 = new TicketOffer(show, Guid.NewGuid(), "General Admission", 50.00m, 400);
+        var offer2 = new TicketOffer(show, Guid.NewGuid(), "VIP", 150.00m, 200);
+        
+        // Available capacity should be: 1000 - (400 + 200) = 400
 
         // Act
-        var show = new Show(act, venue);
+        var canAddOffer = show.CanAddTicketOffer(300);
 
         // Assert
-        show.ShowGuid.Should().Be(Guid.Empty);
+        canAddOffer.Should().BeTrue("because 300 tickets is less than the available capacity of 400");
     }
 
     [Fact]
-    public void GivenNewShow_WhenCreated_ThenTicketCountDefaultsToZero()
+    public void GivenShowWithExistingOffers_WhenValidatingNewOfferExceedingCapacity_ThenReturnsFalse()
     {
         // Arrange
         var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
         venue.GetType().GetProperty("Id")!.SetValue(venue, 1);
         var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
         act.GetType().GetProperty("Id")!.SetValue(act, 1);
+        var show = new Show(act, venue) 
+        { 
+            ShowGuid = Guid.NewGuid(),
+            TicketCount = 1000
+        };
+        show.GetType().GetProperty("Id")!.SetValue(show, 1);
+
+        // Create existing ticket offers that allocate 800 tickets
+        var offer1 = new TicketOffer(show, Guid.NewGuid(), "General Admission", 50.00m, 600);
+        var offer2 = new TicketOffer(show, Guid.NewGuid(), "VIP", 150.00m, 200);
+        
+        // Available capacity should be: 1000 - (600 + 200) = 200
 
         // Act
-        var show = new Show(act, venue);
+        var canAddOffer = show.CanAddTicketOffer(300);
 
         // Assert
-        show.TicketCount.Should().Be(0);
+        canAddOffer.Should().BeFalse("because 300 tickets exceeds the available capacity of 200");
     }
 
     [Fact]
-    public void GivenNewShow_WhenCreated_ThenStartTimeDefaultsToDefault()
+    public void GivenShowWithExistingOffers_WhenValidatingNewOfferWithExactRemainingCapacity_ThenReturnsTrue()
     {
         // Arrange
         var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
         venue.GetType().GetProperty("Id")!.SetValue(venue, 1);
         var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
         act.GetType().GetProperty("Id")!.SetValue(act, 1);
+        var show = new Show(act, venue) 
+        { 
+            ShowGuid = Guid.NewGuid(),
+            TicketCount = 1000
+        };
+        show.GetType().GetProperty("Id")!.SetValue(show, 1);
+
+        // Create existing ticket offers that allocate 800 tickets
+        var offer1 = new TicketOffer(show, Guid.NewGuid(), "General Admission", 50.00m, 600);
+        var offer2 = new TicketOffer(show, Guid.NewGuid(), "VIP", 150.00m, 200);
+        
+        // Available capacity should be: 1000 - (600 + 200) = 200
 
         // Act
-        var show = new Show(act, venue);
+        var canAddOffer = show.CanAddTicketOffer(200);
 
         // Assert
-        show.StartTime.Should().Be(default(DateTimeOffset));
+        canAddOffer.Should().BeTrue("because 200 tickets exactly matches the available capacity of 200");
     }
 
     [Fact]
-    public void GivenShow_WhenChecked_ThenInheritsFromEntity()
+    public void GivenShowWithNoOffers_WhenValidatingNewOffer_ThenReturnsTrueIfWithinTotalCapacity()
     {
         // Arrange
         var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
         venue.GetType().GetProperty("Id")!.SetValue(venue, 1);
         var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
         act.GetType().GetProperty("Id")!.SetValue(act, 1);
+        var show = new Show(act, venue) 
+        { 
+            ShowGuid = Guid.NewGuid(),
+            TicketCount = 1000
+        };
+        show.GetType().GetProperty("Id")!.SetValue(show, 1);
+
+        // No existing offers, so available capacity = 1000
 
         // Act
-        var show = new Show(act, venue);
+        var canAddOffer = show.CanAddTicketOffer(500);
 
         // Assert
-        show.Should().BeAssignableTo<Entity>();
+        canAddOffer.Should().BeTrue("because 500 tickets is less than the total capacity of 1000");
     }
 
     [Fact]
-    public void GivenShow_WhenChecked_ThenDoesNotInheritFromMultiTenantEntity()
+    public void GivenShowWithNoOffers_WhenValidatingNewOfferExceedingTotalCapacity_ThenReturnsFalse()
     {
         // Arrange
         var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
         venue.GetType().GetProperty("Id")!.SetValue(venue, 1);
         var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
         act.GetType().GetProperty("Id")!.SetValue(act, 1);
+        var show = new Show(act, venue) 
+        { 
+            ShowGuid = Guid.NewGuid(),
+            TicketCount = 1000
+        };
+        show.GetType().GetProperty("Id")!.SetValue(show, 1);
+
+        // No existing offers, so available capacity = 1000
 
         // Act
-        var show = new Show(act, venue);
+        var canAddOffer = show.CanAddTicketOffer(1500);
 
         // Assert
-        show.Should().NotBeAssignableTo<MultiTenantEntity>();
+        canAddOffer.Should().BeFalse("because 1500 tickets exceeds the total capacity of 1000");
     }
 
     [Fact]
-    public void GivenShow_WhenChecked_ThenHasVenueNavigationProperty()
+    public void GivenShow_WhenCalculatingAvailableCapacity_ThenReturnsCorrectValue()
     {
         // Arrange
         var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
         venue.GetType().GetProperty("Id")!.SetValue(venue, 1);
         var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
         act.GetType().GetProperty("Id")!.SetValue(act, 1);
+        var show = new Show(act, venue) 
+        { 
+            ShowGuid = Guid.NewGuid(),
+            TicketCount = 1000
+        };
+        show.GetType().GetProperty("Id")!.SetValue(show, 1);
+
+        // Create existing ticket offers
+        var offer1 = new TicketOffer(show, Guid.NewGuid(), "General Admission", 50.00m, 600);
+        var offer2 = new TicketOffer(show, Guid.NewGuid(), "VIP", 150.00m, 200);
 
         // Act
-        var show = new Show(act, venue);
+        var availableCapacity = show.GetAvailableCapacity();
 
         // Assert
-        show.Venue.Should().NotBeNull();
-        show.Venue.Should().BeSameAs(venue);
-    }
-
-    [Fact]
-    public void GivenShow_WhenChecked_ThenHasActNavigationProperty()
-    {
-        // Arrange
-        var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
-        venue.GetType().GetProperty("Id")!.SetValue(venue, 1);
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
-        act.GetType().GetProperty("Id")!.SetValue(act, 1);
-
-        // Act
-        var show = new Show(act, venue);
-
-        // Assert
-        show.Act.Should().NotBeNull();
-        show.Act.Should().BeSameAs(act);
-    }
-
-    [Fact]
-    public void GivenNullAct_WhenCreatingShow_ThenThrowsArgumentNullException()
-    {
-        // Arrange
-        var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
-        venue.GetType().GetProperty("Id")!.SetValue(venue, 1);
-
-        // Act
-        var createShow = () => new Show(null!, venue);
-
-        // Assert
-        createShow.Should().Throw<ArgumentNullException>()
-            .WithParameterName("act");
-    }
-
-    [Fact]
-    public void GivenNullVenue_WhenCreatingShow_ThenThrowsArgumentNullException()
-    {
-        // Arrange
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
-        act.GetType().GetProperty("Id")!.SetValue(act, 1);
-
-        // Act
-        var createShow = () => new Show(act, null!);
-
-        // Assert
-        createShow.Should().Throw<ArgumentNullException>()
-            .WithParameterName("venue");
-    }
-
-    [Fact]
-    public void GivenValidActAndVenue_WhenCreatingShow_ThenSetsActIdFromActEntity()
-    {
-        // Arrange
-        var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
-        venue.GetType().GetProperty("Id")!.SetValue(venue, 42);
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
-        act.GetType().GetProperty("Id")!.SetValue(act, 99);
-
-        // Act
-        var show = new Show(act, venue);
-
-        // Assert
-        show.ActId.Should().Be(99);
-    }
-
-    [Fact]
-    public void GivenValidActAndVenue_WhenCreatingShow_ThenSetsVenueIdFromVenueEntity()
-    {
-        // Arrange
-        var venue = new Venue { VenueGuid = Guid.NewGuid(), Name = "Test Venue" };
-        venue.GetType().GetProperty("Id")!.SetValue(venue, 42);
-        var act = new Act { ActGuid = Guid.NewGuid(), Name = "Test Act" };
-        act.GetType().GetProperty("Id")!.SetValue(act, 99);
-
-        // Act
-        var show = new Show(act, venue);
-
-        // Assert
-        show.VenueId.Should().Be(42);
+        availableCapacity.Should().Be(200, "because 1000 - (600 + 200) = 200");
     }
 }

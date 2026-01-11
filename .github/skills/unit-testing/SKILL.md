@@ -1,11 +1,19 @@
 ---
 name: unit-testing
-description: Unit testing patterns for .NET applications using EF Core In-Memory Provider, AAA structure, test data helpers, and TDD workflows. Use when writing unit tests for services, repositories, or domain logic.
+description: Unit testing patterns for .NET applications using EF Core In-Memory Provider, AAA structure, test data helpers, and TDD workflows. Use when writing unit tests for Application Services, domain logic, or data access.
 ---
 
 # Unit Testing Patterns for .NET
 
 Unit testing patterns for .NET applications covering test structure, EF Core in-memory database setup, test data helpers, and TDD workflows.
+
+## GloboTicket Architecture Context
+
+**Application Services Location:** `GloboTicket.Application/Services/`
+- Application Services inject base `DbContext` class (not concrete `GloboTicketDbContext`)
+- Use `_dbContext.Set<TEntity>()` for data access instead of specific DbSets
+- Inject `ITenantContext` from `GloboTicket.Application.MultiTenancy`
+- Unit tests use EF Core In-Memory Provider to test services without Infrastructure dependencies
 
 ## TDD Philosophy
 
@@ -100,76 +108,95 @@ private Show GivenShow(Act act, Venue venue, int ticketCount = 500)
 
 ## Example Unit Tests
 
-### Service Test Example
+### Application Service Test Example (GloboTicket Pattern)
+**Application Services reside in `GloboTicket.Application/Services/`** and inject base `DbContext` to use `Set<TEntity>()` for data access.
+
 ```csharp
 [TestFixture]
 public class VenueServiceTests : TestBase
 {
     private VenueService _service;
-    private VenueRepository _repository;
     
     [SetUp]
     public override void Setup()
     {
         base.Setup();
-        _repository = new VenueRepository(_context);
-        _service = new VenueService(_repository);
+        // Application Services inject DbContext and ITenantContext
+        var tenantContext = new TestTenantContext { CurrentTenantId = _tenantId };
+        _service = new VenueService(_context, tenantContext);
     }
     
     [Test]
-    public async Task CreateVenue_ValidData_CreatesVenue()
+    public async Task CreateAsync_ValidData_CreatesVenue()
     {
         // Arrange (Given)
         var createVenueDto = new CreateVenueDto
         {
+            VenueGuid = Guid.NewGuid(),
             Name = "Test Arena",
-            Address = new AddressDto 
-            { 
-                Street = "123 Test St",
-                City = "Test City",
-                State = "TS",
-                PostalCode = "12345"
-            }
+            Address = "123 Test St",
+            Latitude = 40.7128,
+            Longitude = -74.0060,
+            SeatingCapacity = 500,
+            Description = "Test venue"
         };
         
         // Act (When)
-        var result = await _service.CreateVenueAsync(createVenueDto, _tenantId);
+        var result = await _service.CreateAsync(createVenueDto, CancellationToken.None);
         
         // Assert (Then)
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Name, Is.EqualTo("Test Arena"));
-        Assert.That(result.Address.Street, Is.EqualTo("123 Test St"));
+        Assert.That(result.VenueGuid, Is.EqualTo(createVenueDto.VenueGuid));
         
-        // Verify persistence
-        var savedVenue = await _context.Venues
-            .FirstOrDefaultAsync(v => v.Id == result.Id);
+        // Verify persistence using DbContext.Set<T>()
+        var savedVenue = await _context.Set<Venue>()
+            .FirstOrDefaultAsync(v => v.VenueGuid == result.VenueGuid);
         Assert.That(savedVenue, Is.Not.Null);
         Assert.That(savedVenue.TenantId, Is.EqualTo(_tenantId));
     }
     
     [Test]
-    public async Task GetVenue_DifferentTenant_ReturnsNull()
+    public async Task GetByIdAsync_DifferentTenant_ReturnsNull()
     {
         // Arrange (Given)
         var venue = GivenVenue("Test Venue");
         var differentTenantId = Guid.NewGuid();
+        var differentTenantContext = new TestTenantContext { CurrentTenantId = differentTenantId };
+        var differentTenantService = new VenueService(_context, differentTenantContext);
         
         // Act (When)
-        var result = await _service.GetVenueAsync(venue.Id, differentTenantId);
+        var result = await differentTenantService.GetByIdAsync(venue.Id, CancellationToken.None);
         
         // Assert (Then)
-        Assert.That(result, Is.Null);
+        Assert.That(result, Is.Null, "Should not retrieve venue from different tenant");
     }
     
-    private Venue GivenVenue(string name, bool isActive = true)
+    private Venue GivenVenue(string name, bool seedTenant = true)
     {
-        var address = new Address("123 Test St", "Test City", "TS", "12345", "USA");
-        var venue = new Venue(name, address, _tenantId);
+        if (seedTenant)
+        {
+            // Seed tenant entity for FK constraint
+            _context.Set<Tenant>().Add(new Tenant 
+            { 
+                Id = (int)_tenantId, 
+                Slug = "test", 
+                Name = "Test Tenant", 
+                IsActive = true 
+            });
+        }
         
-        if (!isActive)
-            venue.Deactivate();
+        var venue = new Venue
+        {
+            VenueGuid = Guid.NewGuid(),
+            Name = name,
+            Address = "123 Test St",
+            Location = GeographyService.CreatePoint(40.7128, -74.0060),
+            SeatingCapacity = 500,
+            Description = "Test venue"
+        };
             
-        _context.Venues.Add(venue);
+        _context.Set<Venue>().Add(venue);
         _context.SaveChanges();
         return venue;
     }

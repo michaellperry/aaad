@@ -1,5 +1,5 @@
 using GloboTicket.Domain.Entities;
-using GloboTicket.Infrastructure.MultiTenancy;
+using GloboTicket.Application.MultiTenancy;
 using Microsoft.EntityFrameworkCore;
 
 namespace GloboTicket.Infrastructure.Data;
@@ -40,6 +40,11 @@ public class GloboTicketDbContext : DbContext
     /// Gets or sets the Shows DbSet for managing show entities.
     /// </summary>
     public DbSet<Show> Shows { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the TicketOffers DbSet for managing ticket offer entities.
+    /// </summary>
+    public DbSet<TicketOffer> TicketOffers { get; set; } = null!;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GloboTicketDbContext"/> class.
@@ -87,6 +92,11 @@ public class GloboTicketDbContext : DbContext
         modelBuilder.Entity<Show>()
             .HasQueryFilter(s => _tenantContext.CurrentTenantId == null ||
                                 s.Venue.TenantId == _tenantContext.CurrentTenantId);
+
+        // TicketOffer is a child entity - filter through Show → Venue navigation property chain
+        modelBuilder.Entity<TicketOffer>()
+            .HasQueryFilter(to => _tenantContext.CurrentTenantId == null ||
+                                 to.Show.Venue.TenantId == _tenantContext.CurrentTenantId);
     }
 
     /// <summary>

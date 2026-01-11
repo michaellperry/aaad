@@ -254,6 +254,55 @@ namespace GloboTicket.Infrastructure.Data.Migrations
                     b.ToTable("Tenants", (string)null);
                 });
 
+            modelBuilder.Entity("GloboTicket.Domain.Entities.TicketOffer", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ShowId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TicketCount")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("TicketOfferGuid")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShowId");
+
+                    b.HasIndex("TicketOfferGuid")
+                        .IsUnique();
+
+                    b.HasIndex("ShowId", "CreatedAt");
+
+                    b.ToTable("TicketOffers", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_TicketOffers_Price", "[Price] > 0");
+
+                            t.HasCheckConstraint("CK_TicketOffers_TicketCount", "[TicketCount] > 0");
+                        });
+                });
+
             modelBuilder.Entity("GloboTicket.Domain.Entities.Venue", b =>
                 {
                     b.Property<int>("Id")
@@ -327,13 +376,13 @@ namespace GloboTicket.Infrastructure.Data.Migrations
             modelBuilder.Entity("GloboTicket.Domain.Entities.Show", b =>
                 {
                     b.HasOne("GloboTicket.Domain.Entities.Act", "Act")
-                        .WithMany()
+                        .WithMany("Shows")
                         .HasForeignKey("ActId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("GloboTicket.Domain.Entities.Venue", "Venue")
-                        .WithMany()
+                        .WithMany("Shows")
                         .HasForeignKey("VenueId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -341,6 +390,17 @@ namespace GloboTicket.Infrastructure.Data.Migrations
                     b.Navigation("Act");
 
                     b.Navigation("Venue");
+                });
+
+            modelBuilder.Entity("GloboTicket.Domain.Entities.TicketOffer", b =>
+                {
+                    b.HasOne("GloboTicket.Domain.Entities.Show", "Show")
+                        .WithMany("TicketOffers")
+                        .HasForeignKey("ShowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Show");
                 });
 
             modelBuilder.Entity("GloboTicket.Domain.Entities.Venue", b =>
@@ -352,6 +412,21 @@ namespace GloboTicket.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("GloboTicket.Domain.Entities.Act", b =>
+                {
+                    b.Navigation("Shows");
+                });
+
+            modelBuilder.Entity("GloboTicket.Domain.Entities.Show", b =>
+                {
+                    b.Navigation("TicketOffers");
+                });
+
+            modelBuilder.Entity("GloboTicket.Domain.Entities.Venue", b =>
+                {
+                    b.Navigation("Shows");
                 });
 #pragma warning restore 612, 618
         }
