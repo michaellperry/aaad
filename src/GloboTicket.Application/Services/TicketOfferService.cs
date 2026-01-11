@@ -141,6 +141,69 @@ public class TicketOfferService : ITicketOfferService
         };
     }
 
+    /// <inheritdoc />
+    public async Task<TicketOfferDto> UpdateTicketOfferAsync(Guid ticketOfferGuid, UpdateTicketOfferDto dto, CancellationToken cancellationToken = default)
+    {
+        // Use a transaction to ensure thread-safe capacity validation
+        await using IDbContextTransaction transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+        
+        try
+        {
+            // Find ticket offer with tenant filtering through Show → Venue relationship
+            // Include Show and its TicketOffers for capacity validation
+            var ticketOffer = await _dbContext.Set<TicketOffer>()
+                .IgnoreQueryFilters()
+                .Include(to => to.Show)
+                    .ThenInclude(s => s.Venue)
+                .Include(to => to.Show)
+                    .ThenInclude(s => s.TicketOffers)
+                .Where(to => to.TicketOfferGuid == ticketOfferGuid)
+                .Where(to => _tenantContext.CurrentTenantId == null || to.Show.Venue.TenantId == _tenantContext.CurrentTenantId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (ticketOffer == null)
+            {
+                throw new KeyNotFoundException($"Ticket offer with GUID {ticketOfferGuid} not found");
+            }
+
+            // Calculate capacity change (positive = needs more, negative = freeing capacity)
+            var ticketCountChange = dto.TicketCount - ticketOffer.TicketCount;
+
+            // If increasing ticket count, validate capacity
+            if (ticketCountChange > 0)
+            {
+                // Get available capacity without counting current offer's tickets
+                var otherOffersTotal = ticketOffer.Show.TicketOffers
+                    .Where(o => o.Id != ticketOffer.Id)
+                    .Sum(o => o.TicketCount);
+                var availableCapacity = ticketOffer.Show.TicketCount - otherOffersTotal;
+
+                if (dto.TicketCount > availableCapacity)
+                {
+                    throw new ArgumentException(
+                        $"Cannot update ticket offer. Requested {dto.TicketCount} tickets, but only {availableCapacity} tickets available. " +
+                        $"Show capacity: {ticketOffer.Show.TicketCount}, Already allocated (excluding this offer): {otherOffersTotal}",
+                        nameof(dto.TicketCount));
+                }
+            }
+
+            // Update ticket offer properties
+            ticketOffer.Name = dto.Name;
+            ticketOffer.Price = dto.Price;
+            ticketOffer.TicketCount = dto.TicketCount;
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return MapToDto(ticketOffer);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
     /// <summary>
     /// Maps a TicketOffer entity to a TicketOfferDto.
     /// </summary>
@@ -156,7 +219,8 @@ public class TicketOfferService : ITicketOfferService
             Name = ticketOffer.Name,
             Price = ticketOffer.Price,
             TicketCount = ticketOffer.TicketCount,
-            CreatedAt = ticketOffer.CreatedAt
+            CreatedAt = ticketOffer.CreatedAt,
+            UpdatedAt = ticketOffer.UpdatedAt
         };
     }
 }

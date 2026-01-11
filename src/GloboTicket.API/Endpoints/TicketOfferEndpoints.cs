@@ -105,6 +105,57 @@ public static class TicketOfferEndpoints
         })
         .WithName("GetShowCapacity");
 
+        // PUT /api/ticket-offers/{ticketOfferGuid}
+        app.MapPut("/api/ticket-offers/{ticketOfferGuid:guid}", async (
+            Guid ticketOfferGuid,
+            UpdateTicketOfferDto dto,
+            ITicketOfferService ticketOfferService,
+            CancellationToken cancellationToken) =>
+        {
+            try
+            {
+                var ticketOffer = await ticketOfferService.UpdateTicketOfferAsync(ticketOfferGuid, dto, cancellationToken);
+                return Results.Ok(ticketOffer);
+            }
+            catch (ArgumentException ex)
+            {
+                // Return validation error in problem details format
+                var errors = new Dictionary<string, string[]>();
+
+                // Parse the parameter name from the exception to determine which field failed
+                if (ex.ParamName == "TicketCount" || ex.Message.Contains("capacity"))
+                {
+                    errors["TicketCount"] = new[] { ex.Message };
+                }
+                else if (ex.ParamName == "Name")
+                {
+                    errors["Name"] = new[] { ex.Message };
+                }
+                else if (ex.ParamName == "Price")
+                {
+                    errors["Price"] = new[] { ex.Message };
+                }
+                else
+                {
+                    errors["General"] = new[] { ex.Message };
+                }
+
+                return Results.BadRequest(new
+                {
+                    type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    title = "One or more validation errors occurred.",
+                    status = 400,
+                    errors
+                });
+            }
+            catch (KeyNotFoundException)
+            {
+                return Results.NotFound(new { message = $"Ticket offer with GUID {ticketOfferGuid} not found" });
+            }
+        })
+        .RequireAuthorization()
+        .WithName("UpdateTicketOffer");
+
         return app;
     }
 }
