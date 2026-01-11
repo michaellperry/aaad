@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using GloboTicket.Application.MultiTenancy;
 
-namespace GloboTicket.Infrastructure.Services;
+namespace GloboTicket.Application.Services;
 
 /// <summary>
 /// Service implementation for managing ticket offer operations.
